@@ -56,7 +56,7 @@ public:
     MSGoogleDrive();
 
      void saveTokenFile(QString path);  // reimplemented from MSCloudProvider
-     void loadTokenFile(QString path);  // reimplemented from MSCloudProvider
+     bool loadTokenFile(QString path);  // reimplemented from MSCloudProvider
      void refreshToken();               // reimplemented from MSCloudProvider
      void loadStateFile();              // reimplemented from MSCloudProvider
 

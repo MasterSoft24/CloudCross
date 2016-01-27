@@ -65,10 +65,10 @@ void MSProvidersPool::saveTokenFile(QString providerName){
 }
 
 
-void MSProvidersPool::loadTokenFile(QString providerName){
+bool MSProvidersPool::loadTokenFile(QString providerName){
     MSCloudProvider* cp=this->getProvider(providerName);
     if(cp!=NULL){
-        cp->loadTokenFile(this->workPath);
+        return cp->loadTokenFile(this->workPath);
 
     }
 

@@ -38,7 +38,7 @@ public:
 
     void saveTokenFile(QString providerName);
 
-    void loadTokenFile(QString providerName);
+    bool loadTokenFile(QString providerName);
 
     void refreshToken(QString providerName);
 

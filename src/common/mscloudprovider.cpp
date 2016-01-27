@@ -25,8 +25,8 @@ void MSCloudProvider::saveTokenFile(QString path){
     return;
 }
 
-void MSCloudProvider::loadTokenFile(QString path){
-    return;
+bool MSCloudProvider::loadTokenFile(QString path){
+    return false;
 }
 
 void MSCloudProvider::refreshToken(){

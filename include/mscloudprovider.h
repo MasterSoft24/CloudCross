@@ -70,7 +70,7 @@ public:
 
 
     virtual void saveTokenFile(QString path) =0 ;
-    virtual void loadTokenFile(QString path)=0;
+    virtual bool loadTokenFile(QString path)=0;
     virtual void loadStateFile()=0;
     virtual void refreshToken()=0;
     virtual MSFSObject::ObjectState filelist_defineObjectState(MSLocalFSObject local, MSRemoteFSObject remote)=0;

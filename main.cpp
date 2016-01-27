@@ -139,7 +139,9 @@ void syncGrive(MSProvidersPool* providers){
     MSGoogleDrive* gdp=new MSGoogleDrive();
 
     providers->addProvider(gdp);
-    providers->loadTokenFile("GoogleDrive");
+    if(! providers->loadTokenFile("GoogleDrive")){
+        exit(0);
+    }
 
     providers->refreshToken("GoogleDrive");
 

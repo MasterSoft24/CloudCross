@@ -33,14 +33,14 @@ void MSGoogleDrive::saveTokenFile(QString path){
 
 //=======================================================================================
 
-void MSGoogleDrive::loadTokenFile(QString path){
+bool MSGoogleDrive::loadTokenFile(QString path){
 
     QFile key(path+"/"+this->tokenFileName);
 
     if(!key.open(QIODevice::ReadOnly))
     {
         qDebug() << "Access key missing or corrupt. Start CloudCross with -a option for obtained private key." ;
-        return;
+        return false;
     }
 
     QTextStream instream(&key);
@@ -57,7 +57,7 @@ void MSGoogleDrive::loadTokenFile(QString path){
     this->token=v;
 
     key.close();
-    return;
+    return true;
 
 }
 
