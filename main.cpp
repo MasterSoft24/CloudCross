@@ -59,7 +59,7 @@ void authGrive(MSProvidersPool* providers){
     req->addQueryItem("scope",                  "https://www.googleapis.com/auth/drive+https://www.googleapis.com/auth/userinfo.email+https://www.googleapis.com/auth/userinfo.profile+https://docs.google.com/feeds/+https://docs.googleusercontent.com/+https://spreadsheets.google.com/feeds/");
     req->addQueryItem("redirect_uri",           "urn:ietf:wg:oauth:2.0:oob");
     req->addQueryItem("response_type",          "code");
-    req->addQueryItem("client_id",              "502802353894-fjbma0deq577lug7hrui8ma3ogv03se2.apps.googleusercontent.com");
+    req->addQueryItem("client_id",              "834415955748-oq0p2m5dro2bvh3bu0o5bp19ok3qrs3f.apps.googleusercontent.com");
     req->addQueryItem("access_type",            "offline");
     req->addQueryItem("approval_prompt",        "force");
     req->addQueryItem("state",                  "1");
@@ -84,8 +84,8 @@ void authGrive(MSProvidersPool* providers){
     req->setRequestUrl("https://accounts.google.com/o/oauth2/token");
     req->setMethod("post");
 
-    req->addQueryItem("client_id",          "502802353894-fjbma0deq577lug7hrui8ma3ogv03se2.apps.googleusercontent.com");
-    req->addQueryItem("client_secret",      "HMQXlR2HDhrw58KR5lDQYKea");
+    req->addQueryItem("client_id",          "834415955748-oq0p2m5dro2bvh3bu0o5bp19ok3qrs3f.apps.googleusercontent.com");
+    req->addQueryItem("client_secret",      "YMBWydU58CvF3UP9CSna-BwS");
     req->addQueryItem("code",               authCode.trimmed());
     req->addQueryItem("grant_type",         "authorization_code");
     req->addQueryItem("redirect_uri",       "urn:ietf:wg:oauth:2.0:oob");

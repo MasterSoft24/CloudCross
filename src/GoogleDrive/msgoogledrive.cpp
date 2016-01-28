@@ -1,3 +1,24 @@
+/*
+    CloudCross: Opensource program for syncronization of local files and folders with Google Drive
+
+    Copyright (C) 2016  Vladimir Kamensky
+    Copyright (C) 2016  Master Soft LLC.
+
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation version 2
+    of the License.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
+
 #include "msgoogledrive.h"
 #include "include/msrequest.h"
 #include <QDebug>
@@ -14,9 +35,6 @@ MSGoogleDrive::MSGoogleDrive() :
     this->tokenFileName=".grive";
     this->stateFileName=".grive_state";
     this->trashFileName=".trash";
-
-   // this->loadStateFile();
-
 
 }
 
@@ -61,6 +79,7 @@ bool MSGoogleDrive::loadTokenFile(QString path){
 
 }
 
+//=======================================================================================
 
 void MSGoogleDrive::loadStateFile(){
 
@@ -99,8 +118,8 @@ void MSGoogleDrive::refreshToken(){
     req->setMethod("post");
 
     req->addQueryItem("refresh_token",          this->token);
-    req->addQueryItem("client_id",              "502802353894-fjbma0deq577lug7hrui8ma3ogv03se2.apps.googleusercontent.com");
-    req->addQueryItem("client_secret",          "HMQXlR2HDhrw58KR5lDQYKea");
+    req->addQueryItem("client_id",              "834415955748-oq0p2m5dro2bvh3bu0o5bp19ok3qrs3f.apps.googleusercontent.com");
+    req->addQueryItem("client_secret",          "YMBWydU58CvF3UP9CSna-BwS");
     req->addQueryItem("grant_type",             "refresh_token");
 
     req->exec();
@@ -132,14 +151,11 @@ void MSGoogleDrive::createHashFromRemote(){
 
     QString list=req->lastReply->readAll();
 
-    //qDebug()<<list;
 
     // collect all files in GoogleDrive to array driveJSONFileList
     QJsonDocument jsonList = QJsonDocument::fromJson(list.toUtf8());
     QJsonObject job = jsonList.object();
 
-
-    //while(job["nextPageToken"].toString()!=""){
     do{
 
         delete(req);
@@ -161,10 +177,6 @@ void MSGoogleDrive::createHashFromRemote(){
             driveJSONFileList.insert(items[i].toObject()["id"].toString(),items[i]);
 
         }
-
-//        if(nextPageToken==""){
-//            break;
-//        }
 
         req->addQueryItem("pageToken",           nextPageToken);
 
@@ -396,7 +408,7 @@ void MSGoogleDrive::readRemote(QString parentId,QString currentPath){
         this->syncFileList.insert(currentPath+fsObject.fileName, fsObject);
 
         if(this->isFolder(o)){// recursive self calling
-            this->readRemote(o["id"].toString(),currentPath+fsObject.fileName+"/");//
+            this->readRemote(o["id"].toString(),currentPath+fsObject.fileName+"/");
         }
 
 
@@ -478,8 +490,6 @@ void MSGoogleDrive::readLocal(QString path){
 
                 fsObject.state=MSFSObject::ObjectState::NewLocal;
 
-                //fsObject.path=relPath.replace(fi.fileName(),"");
-
                 if(relPath.lastIndexOf("/")==0){
                     fsObject.path="/";
                 }
@@ -510,8 +520,6 @@ void MSGoogleDrive::readLocal(QString path){
                 this->syncFileList.insert(relPath,fsObject);
 
             }
-
-
 
 
             if(fi.isDir()){
@@ -549,7 +557,6 @@ bool MSGoogleDrive::filterIncludeFileNames(QString path){// return false if inpu
         return true;
     }
 
-    //QString reg=this->trashFileName+"*|"+this->tokenFileName+"|"+this->stateFileName+"|.include|.exclude";
     QRegExp regex(this->includeList);
     bool ind = regex.exactMatch(path);
 
@@ -568,7 +575,6 @@ bool MSGoogleDrive::filterExcludeFileNames(QString path){// return false if inpu
         return true;
     }
 
-    //QString reg=this->trashFileName+"*|"+this->tokenFileName+"|"+this->stateFileName+"|.include|.exclude";
     QRegExp regex(this->excludeList);
     bool ind = regex.exactMatch(path);
 
@@ -635,9 +641,6 @@ void MSGoogleDrive::createSyncFileList(){
     qDebug()<<"Start syncronization";
 
     this->doSync();
-
-    //this->ids_list.getID();
-    int qq=97;
 
 }
 
@@ -856,19 +859,6 @@ void MSGoogleDrive::filelist_populateChanges(MSFSObject changedFSObject){
 
 void MSGoogleDrive::doSync(){
 
-//    QHash<QString,MSFSObject> newObjects=this->filelist_getFSObjectsByState(MSFSObject::ObjectState::NewLocal);
-
-//    this->remote_generateIDs(newObjects.size());
-
-        // debug block
-//    QHash<QString,MSFSObject> so=this->filelist_getFSObjectsByState(MSFSObject::ObjectState::Sync);
-//    this->remote_file_insert(so.begin().value());
-
-        // debug block
-//    QHash<QString,MSFSObject>::iterator so=this->syncFileList.find("/Папка 2");
-//    this->remote_file_trash(so.value());
-
-
     QHash<QString,MSFSObject>::iterator lf;
 
     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
@@ -932,10 +922,7 @@ void MSGoogleDrive::doSync(){
 
         MSFSObject obj=lf.value();
 
-        if((obj.state == MSFSObject::ObjectState::Sync)//||
-          // (obj.local.objectType == MSLocalFSObject::Type::folder)||
-          // (obj.remote.objectType == MSRemoteFSObject::Type::folder))
-        ){
+        if((obj.state == MSFSObject::ObjectState::Sync)){
 
             continue;
         }
@@ -1182,7 +1169,6 @@ void MSGoogleDrive::remote_file_get(MSFSObject* object){
     req->addHeader("Authorization","Bearer "+this->access_token);
 
     req->addQueryItem("alt",                    "media");
-    //req->addQueryItem("access_token",           this->access_token);
 
     req->exec();
 
@@ -1322,7 +1308,7 @@ void MSGoogleDrive::remote_file_update(MSFSObject *object){
 
     //make file metadata in json representation
     QJsonObject metaJson;
-    //metaJson.insert("title",object.remote.data["title"].toString());
+
     metaJson.insert("id",object->remote.data["id"].toString());
 
     if(parentID != ""){
@@ -1620,20 +1606,5 @@ void MSGoogleDrive::local_removeFolder(QString path){
         ef.removeRecursively();
         f.rename(origPath,trashedPath);
     }
-
-
-//    QDir dir(path);
-
-//     if (dir.exists(path)) {
-//         Q_FOREACH(QFileInfo info, dir.entryInfoList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden  | QDir::AllDirs | QDir::Files, QDir::DirsFirst)) {
-//             if (info.isDir()) {
-//                 local_removeFolder(info.absoluteFilePath());
-//             }
-//             else {
-//                 QFile::remove(info.absoluteFilePath());
-//             }
-//         }
-//         dir.rmdir(path);
-//     }
 
 }
