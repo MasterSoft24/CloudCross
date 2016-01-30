@@ -1,12 +1,18 @@
 
 CloudCross v1.0.1-rc1
+
 Kamensky Vladimir
+
 27.01.2016
+
 
 http://cloudcross.mastersoft24.ru
 
+
+
 CloudCross it's opensource software for syncronization of local files and folders with Google Drive.
 This program was written on pure Qt, without any third-party libraries and is compatible analogue of Grive2 (https://github.com/MasterSoft24/Grive2).
+
 But unlike Grive2 it adds several new features, fixes old algorithmic bugs and added some new :-)
 The program works with Qt version 5 and above. Qt version 4.x are not supported.
 
@@ -15,9 +21,11 @@ At the same time you have the opportunity to choose which files have the advanta
 
 
 In the near future will be added:
+
 	- possibility of record new revision, instead of overwriting the file to Google Drive.
 	- Google Document support
 	- build on Windows (yet questionable)
+	
 	
 	
 For install on deb-based distributions (Debian,Ubuntu,Linux Mint):
@@ -25,14 +33,19 @@ For install on deb-based distributions (Debian,Ubuntu,Linux Mint):
 sudo apt-get install build-essential qt5-default qtbase5-dev qt5-qmake
 
 
+
 For install on rpm-based distributions (Redhat,CentOS, Fedora, Alt Linux):
 
 yum groupinstall 'Development Tools'
+
 yum install qt5-qtbase qt5-qtbase-devel
+
+
 
 For install on  Arch Linux:
 
 pacman -S base-devel qt5-base
+
 
 
 Next,basic install sequence is:
