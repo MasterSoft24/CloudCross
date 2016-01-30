@@ -20,6 +20,7 @@
 */
 
 #include "include/msidslist.h"
+#include <QString>
 
 MSIDsList::MSIDsList()
 {
@@ -39,6 +40,6 @@ QString MSIDsList::getID(){
         return id;
     }
     else{
-        return "";
+        return QString();
     }
 }

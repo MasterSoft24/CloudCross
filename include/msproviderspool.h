@@ -52,7 +52,7 @@ public:
 
 
 
-    void addProvider(MSCloudProvider* provider);
+    void addProvider(MSCloudProvider* provider, bool statelessMode=false);
 
     void getCurrentPath();
     void setWorkPath(QString path);
@@ -61,7 +61,7 @@ public:
 
     bool loadTokenFile(QString providerName);
 
-    void refreshToken(QString providerName);
+    bool refreshToken(QString providerName);
 
     void setStrategy(MSCloudProvider::SyncStrategy strategy);
 

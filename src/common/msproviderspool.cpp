@@ -31,7 +31,7 @@ MSProvidersPool::MSProvidersPool()
 }
 
 
-void MSProvidersPool::addProvider(MSCloudProvider *provider){
+void MSProvidersPool::addProvider(MSCloudProvider *provider,bool statelessMode){
 
     MSCloudProvider* cp=this->getProvider(provider->providerName);
     if(cp==NULL){
@@ -42,11 +42,13 @@ void MSProvidersPool::addProvider(MSCloudProvider *provider){
         QHash<QString,bool>::iterator it=this->flags.begin();
         while(it != this->flags.end()){
 
-            provider->setFlag(it.key(),it.value());
+            provider->flags.insert(it.key(),it.value());
             it++;
         }
 
-        provider->loadStateFile();
+        if(!statelessMode){
+            provider->loadStateFile();
+        }
 
         this->pool.append(provider);
 
@@ -96,11 +98,11 @@ bool MSProvidersPool::loadTokenFile(QString providerName){
 }
 
 
-void MSProvidersPool::refreshToken(QString providerName){
+bool MSProvidersPool::refreshToken(QString providerName){
 
     MSCloudProvider* cp=this->getProvider(providerName);
     if(cp!=NULL){
-        cp->refreshToken();
+        return cp->refreshToken();
 
     }
 }

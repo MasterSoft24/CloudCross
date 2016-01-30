@@ -30,9 +30,11 @@
 #include <QDataStream>
 #include <QCryptographicHash>
 #include <QList>
+#include <QRegularExpression>
 
 #include "msfsobject.h"
 #include "msidslist.h"
+#include "qstdout.h"
 
 
 class MSCloudProvider
@@ -84,7 +86,7 @@ public:
     virtual void saveTokenFile(QString path) =0 ;
     virtual bool loadTokenFile(QString path)=0;
     virtual void loadStateFile()=0;
-    virtual void refreshToken()=0;
+    virtual bool refreshToken()=0;
     virtual MSFSObject::ObjectState filelist_defineObjectState(MSLocalFSObject local, MSRemoteFSObject remote)=0;
     virtual void doSync()=0;
     virtual bool remote_file_generateIDs(int count) =0 ;

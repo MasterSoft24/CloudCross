@@ -78,7 +78,7 @@ public:
 
      void saveTokenFile(QString path);  // reimplemented from MSCloudProvider
      bool loadTokenFile(QString path);  // reimplemented from MSCloudProvider
-     void refreshToken();               // reimplemented from MSCloudProvider
+     bool refreshToken();               // reimplemented from MSCloudProvider
      void loadStateFile();              // reimplemented from MSCloudProvider
 
      void createSyncFileList();

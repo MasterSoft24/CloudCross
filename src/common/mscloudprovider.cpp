@@ -47,8 +47,8 @@ bool MSCloudProvider::loadTokenFile(QString path){
     return false;
 }
 
-void MSCloudProvider::refreshToken(){
-    return;
+bool MSCloudProvider::refreshToken(){
+    return false;
 }
 
 

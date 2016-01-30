@@ -66,7 +66,8 @@ bool MSRequest::setMethod(QString method){
 
 void MSRequest::addHeader(QString headerName, QString headerValue){
 
-    this->setRawHeader(QByteArray::fromStdString(headerName.toStdString())  ,QByteArray::fromStdString(headerValue.toStdString()));
+    //this->setRawHeader(QByteArray::fromStdString(headerName.toStdString())  ,QByteArray::fromStdString(headerValue.toStdString()));
+    this->setRawHeader(QByteArray(headerName.toStdString().c_str()),QByteArray(headerValue.toStdString().c_str()));
 
 }
 

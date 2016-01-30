@@ -28,6 +28,7 @@
 
 
 
+
 MSGoogleDrive::MSGoogleDrive() :
     MSCloudProvider()
 {
@@ -57,7 +58,7 @@ bool MSGoogleDrive::loadTokenFile(QString path){
 
     if(!key.open(QIODevice::ReadOnly))
     {
-        qDebug() << "Access key missing or corrupt. Start CloudCross with -a option for obtained private key." ;
+        qStdOut() << "Access key missing or corrupt. Start CloudCross with -a option for obtained private key."  <<endl;
         return false;
     }
 
@@ -87,7 +88,7 @@ void MSGoogleDrive::loadStateFile(){
 
     if(!key.open(QIODevice::ReadOnly))
     {
-        qDebug() << "Previous state file not found. Start in stateless mode."<<endl ;
+        qStdOut() << "Previous state file not found. Start in stateless mode."<<endl ;
         return;
     }
 
@@ -101,7 +102,7 @@ void MSGoogleDrive::loadStateFile(){
     QJsonDocument json = QJsonDocument::fromJson(line.toUtf8());
     QJsonObject job = json.object();
 
-    this->lastSyncTime=job["last_sync"].toObject()["sec"].toVariant().toULongLong();
+    this->lastSyncTime=QJsonValue(job["last_sync"].toObject()["sec"]).toVariant().toULongLong();
 
     key.close();
     return;
@@ -110,7 +111,7 @@ void MSGoogleDrive::loadStateFile(){
 
 //=======================================================================================
 
-void MSGoogleDrive::refreshToken(){
+bool MSGoogleDrive::refreshToken(){
 
     MSRequest* req=new MSRequest();
 
@@ -132,6 +133,10 @@ void MSGoogleDrive::refreshToken(){
 
     if(v!=""){
        this->access_token=v;
+        return true;
+    }
+    else{
+        return false;
     }
 
 }
@@ -331,7 +336,7 @@ bool MSGoogleDrive::isFolder(QJsonValue remoteObject){
 
 void MSGoogleDrive::readRemote(QString parentId,QString currentPath){
 
-    qDebug()<<"Read remote files and folders";
+
 
     QHash<QString,QJsonValue> list=this->get(parentId,MSCloudProvider::CloudObjects::FilesAndFolders | MSCloudProvider::CloudObjects::NoTrash);
 
@@ -422,7 +427,7 @@ void MSGoogleDrive::readRemote(QString parentId,QString currentPath){
 
 void MSGoogleDrive::readLocal(QString path){
 
-    qDebug()<<"Read local files and folders";
+
 
     QDir dir(path);
     QDir::Filters entryInfoList_flags=QDir::Files|QDir::Dirs |QDir::NoDotAndDotDot;
@@ -557,13 +562,18 @@ bool MSGoogleDrive::filterIncludeFileNames(QString path){// return false if inpu
         return true;
     }
 
-    QRegExp regex(this->includeList);
-    bool ind = regex.exactMatch(path);
+    QRegularExpression regex2(this->includeList);
 
-    if(ind){
+    int error= regex2.patternErrorOffset();
+
+    QRegularExpressionMatch m = regex2.match(path);
+
+    if(m.hasMatch()){
         return false;
     }
-    return true;
+    else{
+        return true;
+    }
 
 }
 
@@ -571,23 +581,27 @@ bool MSGoogleDrive::filterIncludeFileNames(QString path){// return false if inpu
 
 bool MSGoogleDrive::filterExcludeFileNames(QString path){// return false if input path contain one of exclude mask
 
-    if(this->excludeList==""){
+    QRegularExpression regex2(this->excludeList);
+
+    int error= regex2.patternErrorOffset();
+
+    QRegularExpressionMatch m = regex2.match(path);
+
+    if(m.hasMatch()){
+        return false;
+    }
+    else{
         return true;
     }
 
-    QRegExp regex(this->excludeList);
-    bool ind = regex.exactMatch(path);
-
-    if(ind){
-        return false;
-    }
-    return true;
 
 }
 
 //=======================================================================================
 
 QHash<QString,MSFSObject> MSGoogleDrive::getRemoteFileList(){
+
+
 
     this->createHashFromRemote();
     this->readRemote(this->getRoot(),"/");// top level files and folders
@@ -611,6 +625,14 @@ void MSGoogleDrive::createSyncFileList(){
                 this->includeList=this->includeList+instream.readLine()+"|";
             }
             this->includeList=this->includeList.left(this->includeList.size()-1);
+
+            QRegularExpression regex2(this->includeList);
+
+            if(regex2.patternErrorOffset()!=-1){
+                qStdOut()<<"Include filelist contains errors. Program will be terminated.";
+                exit(0);
+            }
+
         }
     }
     else{
@@ -625,20 +647,32 @@ void MSGoogleDrive::createSyncFileList(){
                 this->excludeList=this->excludeList+instream.readLine()+"|";
             }
             this->excludeList=this->excludeList.left(this->excludeList.size()-1);
+
+            QRegularExpression regex2(this->excludeList);
+
+            if(regex2.patternErrorOffset()!=-1){
+                qStdOut()<<"Exclude filelist contains errors. Program will be terminated.";
+                exit(0);
+            }
         }
     }
 
+
+    qStdOut()<< "Reading remote files"<<endl;
 
 
     this->createHashFromRemote();
 
     // begin create
 
+
+
     this->readRemote(this->getRoot(),"/");// top level files and folders
+
+    qStdOut()<<"Reading local files and folders" <<endl;
 
     this->readLocal(this->workPath);
 
-    qDebug()<<"Start syncronization";
 
     this->doSync();
 
@@ -865,7 +899,7 @@ void MSGoogleDrive::doSync(){
 
         // create new folder structure on remote
 
-        qDebug()<<"Create new folder structure on remote";
+        qStdOut()<<"Checking folder structure on remote" <<endl;
 
         QHash<QString,MSFSObject> localFolders=this->filelist_getFSObjectsByTypeLocal(MSLocalFSObject::Type::folder);
         localFolders=this->filelist_getFSObjectsByState(localFolders,MSFSObject::ObjectState::NewLocal);
@@ -883,7 +917,7 @@ void MSGoogleDrive::doSync(){
 
         // create new folder structure on local
 
-        qDebug()<<"Create new folder structure on local";
+        qStdOut()<<"Checking folder structure on local" <<endl;
 
         QHash<QString,MSFSObject> remoteFolders=this->filelist_getFSObjectsByTypeRemote(MSRemoteFSObject::Type::folder);
         remoteFolders=this->filelist_getFSObjectsByState(remoteFolders,MSFSObject::ObjectState::NewRemote);
@@ -916,6 +950,9 @@ void MSGoogleDrive::doSync(){
 
 
     // sync files
+
+    qStdOut()<<"Start syncronization" <<endl;
+
     lf=this->syncFileList.begin();
 
     for(;lf != this->syncFileList.end();lf++){
@@ -931,7 +968,7 @@ void MSGoogleDrive::doSync(){
 
             case MSFSObject::ObjectState::ChangedLocal:
 
-                qDebug()<< obj.fileName <<" Changed local. Uploading.";
+                qStdOut()<< obj.path<<obj.fileName <<" Changed local. Uploading." <<endl;
 
                 this->remote_file_update(&obj);
 
@@ -941,7 +978,7 @@ void MSGoogleDrive::doSync(){
 
                 if((obj.local.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                    qDebug()<< obj.fileName <<" New local. Uploading.";
+                    qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
 
                     this->remote_file_insert(&obj);
 
@@ -950,14 +987,14 @@ void MSGoogleDrive::doSync(){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qDebug()<< obj.fileName <<" New local. Uploading.";
+                        qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
 
                         this->remote_file_insert(&obj);
 
                     }
                     else{
 
-                        qDebug()<< obj.fileName <<" Delete remote. Delete local.";
+                        qStdOut()<< obj.path<<obj.fileName <<" Delete remote. Delete local." <<endl;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -975,7 +1012,7 @@ void MSGoogleDrive::doSync(){
 
             case MSFSObject::ObjectState::ChangedRemote:
 
-                qDebug()<< obj.fileName <<" Changed remote. Downloading.";
+                qStdOut()<< obj.path<<obj.fileName <<" Changed remote. Downloading." <<endl;
 
                 this->remote_file_get(&obj);
 
@@ -986,7 +1023,7 @@ void MSGoogleDrive::doSync(){
 
                 if((obj.remote.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                    qDebug()<< obj.fileName <<" New remote. Downloading.";
+                    qStdOut()<< obj.path<<obj.fileName <<" New remote. Downloading." <<endl;
 
                     this->remote_file_get(&obj);
 
@@ -995,13 +1032,13 @@ void MSGoogleDrive::doSync(){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qDebug()<< obj.fileName <<" Delete local. Deleting remote.";
+                        qStdOut()<< obj.path<<obj.fileName <<" Delete local. Deleting remote." <<endl;
 
                         this->remote_file_trash(&obj);
                     }
                     else{
 
-                        qDebug()<< obj.fileName <<" New remote. Downloading.";
+                        qStdOut()<< obj.path<<obj.fileName <<" New remote. Downloading." <<endl;
 
                         this->remote_file_get(&obj);
                     }
@@ -1014,14 +1051,14 @@ void MSGoogleDrive::doSync(){
 
                 if((obj.remote.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                    qDebug()<< obj.fileName <<" New remote. Downloading.";
+                    qStdOut()<< obj.path<<obj.fileName <<" New remote. Downloading." <<endl;
 
                     this->remote_file_get(&obj);
 
                     break;
                 }
 
-                qDebug()<< obj.fileName <<" Delete local. Delete remote.";
+                qStdOut()<< obj.fileName <<" Delete local. Delete remote." <<endl;
 
                 this->remote_file_trash(&obj);
 
@@ -1031,7 +1068,7 @@ void MSGoogleDrive::doSync(){
 
                 if((obj.local.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                    qDebug()<< obj.fileName <<" New local. Uploading.";
+                    qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
 
                     this->remote_file_insert(&obj);
                 }
@@ -1039,14 +1076,14 @@ void MSGoogleDrive::doSync(){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qDebug()<< obj.fileName <<" New local. Uploading.";
+                        qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
 
                         this->remote_file_insert(&obj);
 
                     }
                     else{
 
-                        qDebug()<< obj.fileName <<" Delete remote. Delete local.";
+                        qStdOut()<< obj.path<<obj.fileName <<" Delete remote. Delete local." <<endl;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1092,7 +1129,7 @@ void MSGoogleDrive::doSync(){
     key.close();
 
 
-
+        qStdOut()<<"Syncronization end" <<endl;
 }
 
 
@@ -1242,7 +1279,7 @@ void MSGoogleDrive::remote_file_insert(MSFSObject *object){
     if (!file.open(QIODevice::ReadOnly)){
 
         //error file not found
-        qDebug()<<"Unable to open of "+filePath;
+        qStdOut()<<"Unable to open of "+filePath <<endl;
         return;
     }
     mediaData.append(file.readAll());
@@ -1263,7 +1300,7 @@ void MSGoogleDrive::remote_file_insert(MSFSObject *object){
     object->local.newRemoteID=job["id"].toString();
 
     if(job["id"].toString()==""){
-        qDebug()<< "Error when upload "+filePath+" on remote";
+        qStdOut()<< "Error when upload "+filePath+" on remote" <<endl;
     }
 
     delete(req);
@@ -1334,7 +1371,7 @@ void MSGoogleDrive::remote_file_update(MSFSObject *object){
     if (!file.open(QIODevice::ReadOnly)){
 
         //error file not found
-        qDebug()<<"Unable to open of "+filePath;
+        qStdOut()<<"Unable to open of "+filePath <<endl;
         return;
     }
     mediaData.append(file.readAll());
@@ -1353,7 +1390,7 @@ void MSGoogleDrive::remote_file_update(MSFSObject *object){
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject job = json.object();
     if(job["id"].toString()==""){
-        qDebug()<< "Error when update "+filePath+" on remote";
+        qStdOut()<< "Error when update "+filePath+" on remote" <<endl;
     }
 
     delete(req);
@@ -1398,7 +1435,7 @@ void MSGoogleDrive::remote_file_makeFolder(MSFSObject *object){
     object->remote.exist=true;
 
     if(job["id"].toString()==""){
-        qDebug()<< "Error when folder create "+filePath+" on remote";
+        qStdOut()<< "Error when folder create "+filePath+" on remote" <<endl;
     }
 
     delete(req);
@@ -1455,7 +1492,7 @@ void MSGoogleDrive::remote_file_makeFolder(MSFSObject *object, QString parentID)
     object->remote.exist=true;
 
     if(job["id"].toString()==""){
-        qDebug()<< "Error when folder create "+filePath+" on remote";
+        qStdOut()<< "Error when folder create "+filePath+" on remote" <<endl;
     }
 
     delete(req);
@@ -1490,7 +1527,7 @@ void MSGoogleDrive::remote_file_trash(MSFSObject *object){
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject job = json.object();
     if(job["id"].toString()==""){
-        qDebug()<< "Error when move to trash "+filePath+" on remote";
+        qStdOut()<< "Error when move to trash "+filePath+" on remote" <<endl;
     }
 
     delete(req);
