@@ -32,3 +32,7 @@ HEADERS += \
     include/msfsobject.h \
     include/msidslist.h \
     include/qstdout.h
+
+target.path = /usr/bin
+INSTALLS += target
+

@@ -581,6 +581,10 @@ bool MSGoogleDrive::filterIncludeFileNames(QString path){// return false if inpu
 
 bool MSGoogleDrive::filterExcludeFileNames(QString path){// return false if input path contain one of exclude mask
 
+    if(this->excludeList==""){
+        return true;
+    }
+
     QRegularExpression regex2(this->excludeList);
 
     int error= regex2.patternErrorOffset();
