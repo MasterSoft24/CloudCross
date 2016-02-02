@@ -32,6 +32,7 @@ void printHelp(){
     qStdOut()<< QObject::tr("   --use-include         Use .include file. Without this option by default use .exclude file.\nIf these files does'nt exists, they  are ignore") <<endl;
     qStdOut()<< QObject::tr("   --prefer arg          Define sync strategy. It can be a one of \"remote\" or \"local\". By default it's \"local\"") <<endl;
     qStdOut()<< QObject::tr("   --no-hidden           Not sync hidden files and folders") <<endl;
+
 //    qStdOut()<< QObject::tr("");
 //    qStdOut()<< QObject::tr("");
 //    qStdOut()<< QObject::tr("");
@@ -110,6 +111,7 @@ void authGrive(MSProvidersPool* providers){
         qStdOut() << "Token was succesfully accepted and saved. To start working with the program run ccross without any options for start full synchronize."<<endl;
     }
 
+    delete(req);
 }
 
 
@@ -176,6 +178,8 @@ void syncGrive(MSProvidersPool* providers){
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
+
+
 
     // create main objects
 

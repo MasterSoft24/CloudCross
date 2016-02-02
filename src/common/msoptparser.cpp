@@ -164,6 +164,7 @@ QString MSOptParser::getShort(QStringList list){
     if(QString(list[0].trimmed().at(1))!=("-")){
         return list[0];
     }
+    return QString();
 }
 
 
@@ -180,7 +181,7 @@ QString MSOptParser::getLong(QStringList list){
     if(QString(list[1].trimmed().at(1))==("-")){
         return list[1];
     }
-
+    return QString();
 }
 
 
@@ -199,6 +200,7 @@ int MSOptParser::getParamCount(QStringList list){
     if(ok){
         return QString(list[2].trimmed()).toInt();
     }
+    return -1;
 }
 
 int MSOptParser::get(){

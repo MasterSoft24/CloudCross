@@ -33,6 +33,9 @@ MSRequest::MSRequest()
     this->manager=new QNetworkAccessManager();
     this->query=new QUrlQuery();
 
+    this->lastReply=0;
+
+
 
     connect((QObject*)this->manager,SIGNAL(finished(QNetworkReply*)),(QObject*)this,SLOT(requestFinished(QNetworkReply*)));
 
@@ -100,6 +103,8 @@ void MSRequest::methodCharger(QNetworkRequest req){
     connect(replySync, SIGNAL(finished()),&loop, SLOT(quit()));
     loop.exec();
 
+    delete(replySync);
+
 }
 
 
@@ -115,6 +120,8 @@ void MSRequest::post(QByteArray data){
     QEventLoop loop;
     connect(replySync, SIGNAL(finished()),&loop, SLOT(quit()));
     loop.exec();
+
+    delete(replySync);
 }
 
 
@@ -131,6 +138,8 @@ void MSRequest::put(QByteArray data){
     QEventLoop loop;
     connect(replySync, SIGNAL(finished()),&loop, SLOT(quit()));
     loop.exec();
+
+    delete(replySync);
 }
 
 
@@ -144,7 +153,7 @@ void MSRequest::exec(){
     // 301 redirect handling
     while(true){
 
-        QVariant possible_redirected_url= this->lastReply->attribute(QNetworkRequest::RedirectionTargetAttribute);
+        QVariant possible_redirected_url= this->replyAttribute;//this->lastReply->attribute(QNetworkRequest::RedirectionTargetAttribute);
 
         if(!possible_redirected_url.isNull()) {
 
@@ -164,16 +173,21 @@ void MSRequest::exec(){
 
 
 void MSRequest::requestFinished(QNetworkReply *reply){
-
-    this->lastReply= reply;
+    this->lastReply=reply;
+    this->replyText=reply->readAll();
+    this->replyAttribute=reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
+//    delete(reply);
 
 }
 
 
+QString MSRequest::readReplyText(){
+    return this->replyText;
+}
 
 
 
-
+\
 
 
 

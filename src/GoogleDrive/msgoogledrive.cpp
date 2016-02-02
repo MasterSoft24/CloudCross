@@ -125,7 +125,7 @@ bool MSGoogleDrive::refreshToken(){
 
     req->exec();
 
-    QString content= req->lastReply->readAll();
+    QString content= req->readReplyText();
 
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject job = json.object();
@@ -133,9 +133,11 @@ bool MSGoogleDrive::refreshToken(){
 
     if(v!=""){
        this->access_token=v;
+        delete(req);
         return true;
     }
     else{
+        delete(req);
         return false;
     }
 
@@ -154,7 +156,7 @@ void MSGoogleDrive::createHashFromRemote(){
 
     req->exec();
 
-    QString list=req->lastReply->readAll();
+    QString list=req->readReplyText();
 
 
     // collect all files in GoogleDrive to array driveJSONFileList
@@ -172,6 +174,7 @@ void MSGoogleDrive::createHashFromRemote(){
         req->setMethod("get");
 
         req->addQueryItem("access_token",           this->access_token);
+        req->addQueryItem("maxResults",           "1000");
 
         QString nextPageToken=job["nextPageToken"].toString();
 
@@ -187,7 +190,7 @@ void MSGoogleDrive::createHashFromRemote(){
 
         req->exec();
 
-        list=req->lastReply->readAll();
+        list=req->readReplyText();
 
         jsonList = QJsonDocument::fromJson(list.toUtf8());
 
@@ -197,6 +200,7 @@ void MSGoogleDrive::createHashFromRemote(){
 
     }while(job["nextPageToken"].toString()!=""); //while(false);
 
+    delete(req);
 }
 
 
@@ -1167,7 +1171,7 @@ bool MSGoogleDrive::remote_file_generateIDs(int count){
 
         req->exec();
 
-        QString content= req->lastReply->readAll();
+        QString content= req->readReplyText();
 
         QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
         QJsonObject job = json.object();
@@ -1219,10 +1223,13 @@ void MSGoogleDrive::remote_file_get(MSFSObject* object){
     file.open(QIODevice::WriteOnly );
     QDataStream outk(&file);
 
-    QByteArray ba=req->lastReply->readAll();
+    QByteArray ba;
+    ba.append(req->readReplyText());
 
     outk.writeRawData(ba.data(),ba.size()) ;
     file.close();
+
+    delete(req);
 
 }
 
@@ -1284,6 +1291,7 @@ void MSGoogleDrive::remote_file_insert(MSFSObject *object){
 
         //error file not found
         qStdOut()<<"Unable to open of "+filePath <<endl;
+        delete(req);
         return;
     }
     mediaData.append(file.readAll());
@@ -1297,7 +1305,7 @@ void MSGoogleDrive::remote_file_insert(MSFSObject *object){
     req->post(metaData+mediaData);
 
 
-    QString content=req->lastReply->readAll();
+    QString content=req->readReplyText();
 
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject job = json.object();
@@ -1376,6 +1384,7 @@ void MSGoogleDrive::remote_file_update(MSFSObject *object){
 
         //error file not found
         qStdOut()<<"Unable to open of "+filePath <<endl;
+        delete(req);
         return;
     }
     mediaData.append(file.readAll());
@@ -1389,7 +1398,7 @@ void MSGoogleDrive::remote_file_update(MSFSObject *object){
     req->put(metaData+mediaData);
 
 
-    QString content=req->lastReply->readAll();
+    QString content=req->readReplyText();
 
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject job = json.object();
@@ -1430,7 +1439,7 @@ void MSGoogleDrive::remote_file_makeFolder(MSFSObject *object){
 
     QString filePath=this->workPath+object->path+object->fileName;
 
-    QString content=req->lastReply->readAll();
+    QString content=req->readReplyText();
 
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject job = json.object();
@@ -1487,7 +1496,7 @@ void MSGoogleDrive::remote_file_makeFolder(MSFSObject *object, QString parentID)
 
     QString filePath=this->workPath+object->path+object->fileName;
 
-    QString content=req->lastReply->readAll();
+    QString content=req->readReplyText();
 
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject job = json.object();
@@ -1524,7 +1533,7 @@ void MSGoogleDrive::remote_file_trash(MSFSObject *object){
 
     req->exec();
 
-    QString content=req->lastReply->readAll();
+    QString content=req->readReplyText();
 
     QString filePath=this->workPath+object->path+object->fileName;
 

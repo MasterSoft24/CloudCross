@@ -46,7 +46,12 @@ private:
 
 public:
 
-    QNetworkReply* lastReply;
+    QNetworkReply* lastReply;// deprecated
+
+    QString replyText;
+    QVariant replyAttribute;
+
+    QString     readReplyText();
 
 
     bool setMethod(QString method);
