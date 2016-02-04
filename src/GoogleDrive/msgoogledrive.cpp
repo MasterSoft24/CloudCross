@@ -1226,7 +1226,11 @@ void MSGoogleDrive::remote_file_get(MSFSObject* object){
     QByteArray ba;
     ba.append(req->readReplyText());
 
-    outk.writeRawData(ba.data(),ba.size()) ;
+    int sz=ba.size();
+
+    if(object->remote.objectType==MSLocalFSObject::Type::file){
+        outk.writeRawData(ba.data(),ba.size()) ;
+    }
     file.close();
 
     delete(req);

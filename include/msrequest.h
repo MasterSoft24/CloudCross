@@ -28,6 +28,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QObject>
+#include <QEventLoop>
 
 class MSRequest : public QObject , QNetworkRequest
 {
@@ -35,6 +36,7 @@ class MSRequest : public QObject , QNetworkRequest
 
 public:
     MSRequest();
+    ~MSRequest();
 
 private:
 
@@ -43,15 +45,17 @@ private:
     QNetworkAccessManager* manager;
 
     QString requestMethod; // get, post, put, post-multipart etc
+    QEventLoop* loop;
+
 
 public:
 
     QNetworkReply* lastReply;// deprecated
 
-    QString replyText;
+    QByteArray replyText;
     QVariant replyAttribute;
 
-    QString     readReplyText();
+    QByteArray readReplyText();
 
 
     bool setMethod(QString method);

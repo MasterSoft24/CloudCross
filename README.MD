@@ -1,9 +1,9 @@
 
-CloudCross v1.0.1-rc1
+# CloudCross v1.0.1-rc3
 
 Kamensky Vladimir
 
-27.01.2016
+04.02.2016
 
 
 http://cloudcross.mastersoft24.ru
@@ -22,29 +22,29 @@ At the same time you have the opportunity to choose which files have the advanta
 
 In the near future will be added:
 
-	- possibility of record new revision, instead of overwriting the file to Google Drive.
-	- Google Document support
-	- build on Windows (yet questionable)
+- possibility of record new revision, instead of overwriting the file to Google Drive.
+- Google Document support
+- build on Windows (yet questionable)
 	
 	
 	
 For install on deb-based distributions (Debian,Ubuntu,Linux Mint):
 
-sudo apt-get install build-essential qt5-default qtbase5-dev qt5-qmake
+	sudo apt-get install build-essential qt5-default qtbase5-dev qt5-qmake
 
 
 
 For install on rpm-based distributions (Redhat,CentOS, Fedora, Alt Linux):
 
-yum groupinstall 'Development Tools'
+	yum groupinstall 'Development Tools'
 
-yum install qt5-qtbase qt5-qtbase-devel
+	yum install qt5-qtbase qt5-qtbase-devel
 
 
 
 For install on  Arch Linux:
 
-pacman -S base-devel qt5-base
+	pacman -S base-devel qt5-base
 
 
 
@@ -66,16 +66,28 @@ For detailed usage instructions see http://cloudcross.mastersoft24.ru/#usage
 	
 Change log:
 
+v1.0.1-rc3 - fixed bag with threads count overhead. fixed bag with corruption of downloaded files
+
+v1.0.1-rc2 - bugs fixed
+
 v1.0.1-rc1 - first pre-release version of CloudCross	
 
 
-############################################################################################
 
-CloudCross v1.0.1-rc1
+
+
+
+
+
+
+# CloudCross v1.0.1-rc3
+
 Каменский Владимир
-27.01.2016
+
+04.02.2016
 
 http://cloudcross.mastersoft24.ru
+
 
 CloudCross - это свободная программа для синхронизации локальных файлов и папок с Google Drive. 
 Программа написана на чистом Qt, без каких либо сторонних библиотек и является совместимым аналогом Grive2 (https://github.com/MasterSoft24/Grive2).
@@ -87,24 +99,24 @@ CloudCross позволяет синхронизировать только ча
 актуальность либо локальных файлов, либо файлов на Google Drive. 
 
 В скором будущем будут добавлены:
-	- возможность записи новой ревизии, вместо перезаписи файла на Google Drive.
-	- работа с Google документами.
-	- возможность сборки по Windows (пока под вопросом)
+- возможность записи новой ревизии, вместо перезаписи файла на Google Drive.
+- работа с Google документами.
+- возможность сборки по Windows (пока под вопросом)
 	
 	
 Для установки на deb-based дистрибутивы (Debian,Ubuntu,Linux Mint):
 
-sudo apt-get install build-essential qt5-default qtbase5-dev qt5-qmake
+	sudo apt-get install build-essential qt5-default qtbase5-dev qt5-qmake
 
 
 Для установки на rpm-based дистрибутивы (Redhat,CentOS, Fedora, Alt Linux):
 
-yum groupinstall 'Development Tools'
-yum install qt5-qtbase qt5-qtbase-devel
+	yum groupinstall 'Development Tools'
+	yum install qt5-qtbase qt5-qtbase-devel
 
 Для установки на Arch Linux:
 
-pacman -S base-devel qt5-base
+	pacman -S base-devel qt5-base
 
 
 
@@ -126,6 +138,10 @@ pacman -S base-devel qt5-base
 	
 Список изменений:
 
-v1.0.1-rc1 - первая предварительная версия CloudCross	
+v1.0.1-rc3 - Исправлена ошибка превышения количества потоков на процесс. Испрвлена ошибка с повреждением скачиваемых файлов
+
+v1.0.1-rc2 - Исправление некоторых ошибок
+
+v1.0.1-rc1 - первый предварительный релиз CloudCross
 
 

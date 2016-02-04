@@ -21,7 +21,7 @@
 
 #include "include/msrequest.h"
 #include <QDebug>
-#include <QEventLoop>
+
 
 
 
@@ -35,10 +35,20 @@ MSRequest::MSRequest()
 
     this->lastReply=0;
 
+    this->loop=new QEventLoop(this);
 
 
     connect((QObject*)this->manager,SIGNAL(finished(QNetworkReply*)),(QObject*)this,SLOT(requestFinished(QNetworkReply*)));
 
+}
+
+
+MSRequest::~MSRequest(){
+
+    delete(this->loop);
+    delete(this->manager);
+
+    //QNetworkRequest::~QNetworkRequest();
 }
 
 
@@ -99,12 +109,13 @@ void MSRequest::methodCharger(QNetworkRequest req){
         replySync=this->manager->post(req,ba);
     }
 
-    QEventLoop loop;
-    connect(replySync, SIGNAL(finished()),&loop, SLOT(quit()));
-    loop.exec();
+//    QEventLoop loop;
+    connect(replySync, SIGNAL(finished()),this->loop, SLOT(quit()));
+    this->loop->exec();
 
     delete(replySync);
-
+    //this->loop->exit(0);
+    //loop.deleteLater();
 }
 
 
@@ -117,11 +128,13 @@ void MSRequest::post(QByteArray data){
 
     replySync=this->manager->post(*this,data);
 
-    QEventLoop loop;
-    connect(replySync, SIGNAL(finished()),&loop, SLOT(quit()));
-    loop.exec();
+    //QEventLoop loop;
+    connect(replySync, SIGNAL(finished()),this->loop, SLOT(quit()));
+    loop->exec();
 
     delete(replySync);
+    //this->loop->exit(0);
+    //this->loop.deleteLater();
 }
 
 
@@ -135,11 +148,13 @@ void MSRequest::put(QByteArray data){
 
     replySync=this->manager->put(*this,data);
 
-    QEventLoop loop;
-    connect(replySync, SIGNAL(finished()),&loop, SLOT(quit()));
-    loop.exec();
+    //QEventLoop loop;
+    connect(replySync, SIGNAL(finished()),this->loop, SLOT(quit()));
+    this->loop->exec();
 
     delete(replySync);
+    //this->loop->exit(0);
+    //loop.deleteLater();
 }
 
 
@@ -181,7 +196,7 @@ void MSRequest::requestFinished(QNetworkReply *reply){
 }
 
 
-QString MSRequest::readReplyText(){
+QByteArray MSRequest::readReplyText(){
     return this->replyText;
 }
 

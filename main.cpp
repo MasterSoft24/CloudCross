@@ -13,7 +13,7 @@
 #define APP_MAJOR_VERSION 1
 #define APP_MINOR_VERSION 0
 #define APP_BUILD_NUMBER  1
-#define APP_SUFFIX "-rc1"
+#define APP_SUFFIX "-rc3"
 #define APP_NAME "CloudCross"
 
 
