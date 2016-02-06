@@ -54,6 +54,7 @@ public:
 
     QByteArray replyText;
     QVariant replyAttribute;
+    QString replyURL;
 
     QByteArray readReplyText();
 

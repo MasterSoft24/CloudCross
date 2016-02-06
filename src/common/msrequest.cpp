@@ -191,6 +191,7 @@ void MSRequest::requestFinished(QNetworkReply *reply){
     this->lastReply=reply;
     this->replyText=reply->readAll();
     this->replyAttribute=reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
+    this->replyURL=reply->url().toString();
 //    delete(reply);
 
 }
