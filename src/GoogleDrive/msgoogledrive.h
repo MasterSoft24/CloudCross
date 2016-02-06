@@ -88,6 +88,8 @@ public:
      bool filterServiceFileNames(QString path);
      bool filterIncludeFileNames(QString path);
      bool filterExcludeFileNames(QString path);
+     bool filterGoogleDocsMimeTypes(QString mime);
+     bool filterOfficeMimeTypes(QString mime);
 
 
      void doSync();

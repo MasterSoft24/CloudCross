@@ -355,9 +355,11 @@ void MSGoogleDrive::readRemote(QString parentId,QString currentPath){
             continue; // skip trashed objects
         }
 
-        if(o["mimeType"].toString()=="application/vnd.google-apps.document"){
-            i++;
-            continue; // skip google docs objects
+        if( this->filterGoogleDocsMimeTypes(o["mimeType"].toString()) ){
+            if(!this->getFlag("convertDoc")){
+                i++;
+                continue; // skip google docs objects
+            }
         }
 
         MSFSObject fsObject;
@@ -370,6 +372,69 @@ void MSGoogleDrive::readRemote(QString parentId,QString currentPath){
         fsObject.remote.exist=true;
 
         fsObject.state=MSFSObject::ObjectState::NewRemote;
+
+        if(this->getFlag("convertDoc") && this->filterGoogleDocsMimeTypes(o["mimeType"].toString())){
+
+            fsObject.isDocFormat=true;
+
+
+//            // get real data for remote doc object
+//            MSRequest *req = new MSRequest();
+
+
+//            req->setMethod("get");
+
+//            req->addHeader("Authorization","Bearer "+this->access_token);
+
+//            if(fsObject.remote.data["mimeType"].toString()=="application/vnd.google-apps.spreadsheet"){
+
+//                QString url=fsObject.remote.data["exportLinks"].toObject()["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"].toString();
+//                req->setRequestUrl(fsObject.remote.data["exportLinks"].toObject()["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"].toString());
+
+//                req->addQueryItem("id",fsObject.remote.data["id"].toString());
+//                req->addQueryItem("exportFormat","xlsx");
+//            }
+
+//            if(fsObject.remote.data["mimeType"].toString()=="application/vnd.google-apps.document"){
+
+//                req->setRequestUrl(fsObject.remote.data["exportLinks"].toObject()["application/vnd.openxmlformats-officedocument.wordprocessingml.document"].toString());
+
+//                req->addQueryItem("id",fsObject.remote.data["id"].toString());
+//                req->addQueryItem("exportFormat","docx");
+//            }
+
+//            if(fsObject.remote.data["mimeType"].toString()=="application/vnd.google-apps.presentation"){
+
+//                req->setRequestUrl(fsObject.remote.data["exportLinks"].toObject()["application/vnd.openxmlformats-officedocument.presentationml.presentation"].toString());
+
+//                req->addQueryItem("id",fsObject.remote.data["id"].toString());
+//                req->addQueryItem("exportFormat","pptx");
+//            }
+
+//            req->exec();
+
+//            QString filePath=this->workPath+fsObject.path+"ro.tmp";
+
+//            QFile file(filePath);
+//            file.open(QIODevice::WriteOnly );
+//            QDataStream outk(&file);
+
+//            QByteArray ba;
+//            ba.append(req->readReplyText());
+
+//            int sz=ba.size();
+//            fsObject.remote.fileSize=sz;
+
+
+//            outk.writeRawData(ba.data(),ba.size()) ;
+
+//            file.close();
+
+//            fsObject.remote.md5Hash=this->fileChecksum(filePath,QCryptographicHash::Md5);
+//            file.remove();
+
+//            delete(req);
+        }
 
 
         if(this->isFile(o)){
@@ -490,6 +555,11 @@ void MSGoogleDrive::readLocal(QString path){
 
                 }
 
+                if(this->getFlag("convertDoc") && this->filterOfficeMimeTypes(fsObject->local.mimeType )){
+
+                    fsObject->isDocFormat=true;
+                }
+
                 fsObject->state=this->filelist_defineObjectState(fsObject->local,fsObject->remote);
 
             }
@@ -526,6 +596,11 @@ void MSGoogleDrive::readLocal(QString path){
 
                 fsObject.state=this->filelist_defineObjectState(fsObject.local,fsObject.remote);
 
+                if(this->getFlag("convertDoc") && this->filterOfficeMimeTypes(fsObject.local.mimeType )){
+
+                    fsObject.isDocFormat=true;
+                }
+
                 this->syncFileList.insert(relPath,fsObject);
 
             }
@@ -547,7 +622,7 @@ void MSGoogleDrive::readLocal(QString path){
 
 bool MSGoogleDrive::filterServiceFileNames(QString path){// return false if input path is service filename
 
-    QString reg=this->trashFileName+"*|"+this->tokenFileName+"|"+this->stateFileName+"|.include|.exclude";
+    QString reg=this->trashFileName+"*|"+this->tokenFileName+"|"+this->stateFileName+"|.include|.exclude|~";
     QRegExp regex(reg);
     int ind = regex.indexIn(path);
 
@@ -602,6 +677,40 @@ bool MSGoogleDrive::filterExcludeFileNames(QString path){// return false if inpu
         return true;
     }
 
+
+}
+
+//=======================================================================================
+
+bool MSGoogleDrive::filterGoogleDocsMimeTypes(QString mime){// return true if this mime is Google document
+
+    if((mime == "application/vnd.google-apps.document")||
+       (mime == "application/vnd.google-apps.presentation")||
+       (mime == "application/vnd.google-apps.spreadsheet")){
+
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+
+//=======================================================================================
+
+bool MSGoogleDrive::filterOfficeMimeTypes(QString mime){// return true if this mime is Office document
+
+    QRegularExpression regex2("word|excel|powerpoint|ppt|xls|doc|opendocument");
+
+    int error= regex2.patternErrorOffset();
+
+    QRegularExpressionMatch m = regex2.match(mime);
+
+    if(m.hasMatch()){
+        return true;
+    }
+    else{
+        return false;
+    }
 
 }
 
@@ -696,7 +805,9 @@ MSFSObject::ObjectState MSGoogleDrive::filelist_defineObjectState(MSLocalFSObjec
 
             if(local.md5Hash==remote.md5Hash){
 
-                return MSFSObject::ObjectState::Sync;
+
+                    return MSFSObject::ObjectState::Sync;
+
             }
             else{
 
@@ -1215,6 +1326,74 @@ void MSGoogleDrive::remote_file_get(MSFSObject* object){
 
     req->addQueryItem("alt",                    "media");
 
+    // document conversion support
+    if(object->isDocFormat && this->getFlag("convertDoc")){
+
+        QString ftype= object->fileName.right(object->fileName.size()- object->fileName.lastIndexOf(".")-1)  ;
+
+        if(object->remote.data["mimeType"].toString()=="application/vnd.google-apps.spreadsheet"){
+            object->local.mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+            if(object->local.exist== false){
+                object->fileName=object->fileName+".xlsx";
+            }
+
+
+            req->setRequestUrl(object->remote.data["exportLinks"].toObject()[object->local.mimeType].toString());
+
+            req->addQueryItem("id",id);
+
+            if(ftype=="ods"){
+                req->addQueryItem("exportFormat","ods");
+            }
+            else{
+                req->addQueryItem("exportFormat","xlsx");
+            }
+
+        }
+
+        if(object->remote.data["mimeType"].toString()=="application/vnd.google-apps.document"){
+            object->local.mimeType="application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+            if(object->local.exist== false){
+                object->fileName=object->fileName+".docx";
+            }
+
+            req->setRequestUrl(object->remote.data["exportLinks"].toObject()[object->local.mimeType].toString());
+
+            req->addQueryItem("id",id);
+
+            if(ftype=="odt"){
+                req->addQueryItem("exportFormat","odt");
+            }
+            else{
+                req->addQueryItem("exportFormat","docx");
+            }
+        }
+
+        if(object->remote.data["mimeType"].toString()=="application/vnd.google-apps.presentation"){
+            object->local.mimeType="application/vnd.openxmlformats-officedocument.presentationml.presentation";
+
+            if(object->local.exist== false){
+                object->fileName=object->fileName+".pptx";
+            }
+
+            req->setRequestUrl(object->remote.data["exportLinks"].toObject()[object->local.mimeType].toString());
+
+            req->addQueryItem("id",id);
+            req->addQueryItem("exportFormat","pptx");
+//            if(ftype=="odp"){
+//                req->addQueryItem("exportFormat","odp");
+//            }
+//            else{
+//                req->addQueryItem("exportFormat","pptx");
+//            }
+
+        }
+
+    }
+
+
     req->exec();
 
     QString filePath=this->workPath+object->path+object->fileName;
@@ -1261,6 +1440,52 @@ void MSGoogleDrive::remote_file_insert(MSFSObject *object){
     req->addHeader("Content-Type",                      "multipart/related; boundary="+QString(bound).toLocal8Bit());
     req->addQueryItem("uploadType",                     "multipart");
 
+    // document conversion support
+    if(object->isDocFormat && this->getFlag("convertDoc")){
+
+        req->addQueryItem("convert",                     "true");
+        // correct mime type to ms office mime type
+
+        QString ftype= object->fileName.right(object->fileName.size()- object->fileName.lastIndexOf(".")-1)  ;
+
+        if(ftype=="xlsx"){
+            object->local.mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        }
+
+        if(ftype=="xls"){
+            object->local.mimeType="application/vnd.ms-excel";
+        }
+
+        if(ftype=="docx"){
+            object->local.mimeType="application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        }
+
+        if(ftype=="doc"){
+            object->local.mimeType="application/msword";
+        }
+
+        if(ftype=="pptx"){
+            object->local.mimeType="application/vnd.openxmlformats-officedocument.presentationml.presentation";
+        }
+
+        if(ftype=="ppt"){
+            object->local.mimeType="application/vnd.ms-powerpoint";
+        }
+
+//        if(ftype=="odp"){
+//            object->local.mimeType="application/vnd.oasis.opendocument.presentation";
+//        }
+
+        if(ftype=="ods"){
+            object->local.mimeType="application/vnd.oasis.opendocument.spreadsheet";
+        }
+
+        if(ftype=="odt"){
+            object->local.mimeType="application/vnd.oasis.opendocument.text";
+        }
+
+    }
+
     // collect request data body
 
     QByteArray metaData;
@@ -1269,7 +1494,16 @@ void MSGoogleDrive::remote_file_insert(MSFSObject *object){
 
     //make file metadata in json representation
     QJsonObject metaJson;
-    metaJson.insert("title",object->fileName);
+
+    if(object->isDocFormat && this->getFlag("convertDoctt")){
+
+        // remove file extension
+
+        metaJson.insert("title",object->fileName.left(object->fileName.lastIndexOf(".")));
+    }
+    else{
+        metaJson.insert("title",object->fileName);
+    }
 
     if(parentID != ""){
         // create parents section
@@ -1285,6 +1519,7 @@ void MSGoogleDrive::remote_file_insert(MSFSObject *object){
     metaData.append(QString("\r\n--"+bound+"\r\n").toLocal8Bit());
 
     QByteArray mediaData;
+
     mediaData.append(QString("Content-Type: "+object->local.mimeType+"\r\n\r\n").toLocal8Bit());
 
     QString filePath=this->workPath+object->path+object->fileName;
@@ -1351,6 +1586,11 @@ void MSGoogleDrive::remote_file_update(MSFSObject *object){
     req->addHeader("Authorization",                     "Bearer "+this->access_token);
     req->addHeader("Content-Type",                      "multipart/related; boundary="+QString(bound).toLocal8Bit());
     req->addQueryItem("uploadType",                     "multipart");
+
+    if(this->getFlag("noNewRev")){
+        req->addQueryItem("newRevision",                     "false");
+        req->addQueryItem("pinned",                          "true");
+    }
 
 
     // collect request data body

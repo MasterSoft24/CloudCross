@@ -32,4 +32,5 @@ void MSFSObject::getLocalMimeType(QString path){
         QMimeDatabase db;
         QMimeType type = db.mimeTypeForFile(path+this->path+this->fileName);
         this->local.mimeType=type.name();
+        this->isDocFormat=false;
 }

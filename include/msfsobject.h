@@ -50,6 +50,7 @@ public:
 
     QString path;
     QString fileName;
+    bool isDocFormat;
 
     void getLocalMimeType(QString path);
 

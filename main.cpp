@@ -12,8 +12,8 @@
 
 #define APP_MAJOR_VERSION 1
 #define APP_MINOR_VERSION 0
-#define APP_BUILD_NUMBER  1
-#define APP_SUFFIX "-rc3"
+#define APP_BUILD_NUMBER  2
+#define APP_SUFFIX ""
 #define APP_NAME "CloudCross"
 
 
@@ -26,22 +26,17 @@ void printHelp(){
     qStdOut()<< QObject::tr("   -h [ --help ]         Produce help message") <<endl;
     qStdOut()<< QObject::tr("   -v [ --version ]      Display CloudCross version") <<endl;
     qStdOut()<< QObject::tr("   -a [ --auth ]         Request authorization token") <<endl;
-    qStdOut()<< QObject::tr("   -p [ --path ] arg     Path to sync") <<endl;
-    qStdOut()<< QObject::tr("   --dry-run             Only detect which files need to be uploaded/downloaded,\nwithout actually performing them.") <<endl;
+    qStdOut()<< QObject::tr("   -p [ --path ] arg     Path to sync directory") <<endl;
+    qStdOut()<< QObject::tr("   --dry-run             Only detect which files need to be uploaded/downloaded,\n"
+                            "                         without actually performing them.") <<endl;
     qStdOut()<< QObject::tr("   -s [ --list ]         Print Google drive remote file list") <<endl;
-    qStdOut()<< QObject::tr("   --use-include         Use .include file. Without this option by default use .exclude file.\nIf these files does'nt exists, they  are ignore") <<endl;
+    qStdOut()<< QObject::tr("   --use-include         Use .include file. Without this option by default use .exclude file.\n"
+                            "                         If these files does'nt exists, they  are ignore") <<endl;
     qStdOut()<< QObject::tr("   --prefer arg          Define sync strategy. It can be a one of \"remote\" or \"local\". By default it's \"local\"") <<endl;
     qStdOut()<< QObject::tr("   --no-hidden           Not sync hidden files and folders") <<endl;
-
-//    qStdOut()<< QObject::tr("");
-//    qStdOut()<< QObject::tr("");
-//    qStdOut()<< QObject::tr("");
-//    qStdOut()<< QObject::tr("");
-//    qStdOut()<< QObject::tr("");
-//    qStdOut()<< QObject::tr("");
-//    qStdOut()<< QObject::tr("");
-
-//    qStdOut()<< QObject::tr("");
+    qStdOut()<< QObject::tr("   --no-new-rev          Do not create new revisions of files, overwrite their instead") <<endl;
+    qStdOut()<< QObject::tr("   --convert-doc         Convert office document to Google Doc format when upload\n"
+                            "                         and convert him back when download") <<endl;
 
 }
 
@@ -111,7 +106,6 @@ void authGrive(MSProvidersPool* providers){
         qStdOut() << "Token was succesfully accepted and saved. To start working with the program run ccross without any options for start full synchronize."<<endl;
     }
 
-    delete(req);
 }
 
 
@@ -165,6 +159,7 @@ void syncGrive(MSProvidersPool* providers){
     }
 
     if(!providers->refreshToken("GoogleDrive")){
+        qStdOut()<<"Unauthorized access. Aborted."<<endl;
         exit(0);
     }
 
@@ -178,8 +173,6 @@ void syncGrive(MSProvidersPool* providers){
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-
-
 
     // create main objects
 
@@ -199,8 +192,9 @@ int main(int argc, char *argv[])
 
     parser->insertOption(5," --prefer 1"); // local or remote
     parser->insertOption(6,"--no-hidden");// don't sync hidden files and folders
-//    parser->insertOption(9,"--new-rev");
+    parser->insertOption(9,"--no-new-rev");// do not create new revision of file, overwrite him instead
     parser->insertOption(10,"--dry-run");
+    parser->insertOption(11,"--convert-doc");
 
     //...............
 
@@ -246,7 +240,7 @@ int main(int argc, char *argv[])
                 s=MSCloudProvider::SyncStrategy::PreferRemote;
             }
             else{
-                qStdOut()<< "--prefer option value must be an one of \"local\" or \"remote\"";
+                qStdOut()<< "--prefer option value must be an one of \"local\" or \"remote\""<<endl;
                 exit(0);
                 break;
             }
@@ -270,10 +264,21 @@ int main(int argc, char *argv[])
             providers->setFlag("useInclude",true);
             break;
 
+        case 9: // --no-new-rev
+
+            providers->setFlag("noNewRev",true);
+            break;
+
         case 10: // --dry-run
 
             providers->setFlag("dryRun",true);
             break;
+
+        case 11: // --convert-doc
+
+            providers->setFlag("convertDoc",true);
+            break;
+
 
         default: // syn execute without any params by default
 
@@ -289,7 +294,7 @@ int main(int argc, char *argv[])
     }
 
     if(parser->erorrNum!=0){
-        qStdOut()<< parser->errorString;
+        qStdOut()<< parser->errorString<<endl;
         exit(1);
     }
 
