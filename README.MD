@@ -1,31 +1,31 @@
 
-# CloudCross v1.0.1-rc3
+# CloudCross v1.0.2
 
 Kamensky Vladimir
 
-04.02.2016
+07.02.2016
 
 
 http://cloudcross.mastersoft24.ru
 
 
 
-CloudCross it's opensource software for syncronization of local files and folders with Google Drive.
-This program was written on pure Qt, without any third-party libraries and is compatible analogue of Grive2 (https://github.com/MasterSoft24/Grive2).
-
-But unlike Grive2 it adds several new features, fixes old algorithmic bugs and added some new :-)
-The program works with Qt version 5 and above. Qt version 4.x are not supported.
+CloudCross it's opensource software for synchronization of local files and folders with Google Drive.
+This program was written on pure Qt, without any third-party libraries.
+The program works with Qt version 5 and above. Qt version 4.x are not supported. 
 
 CloudCross allows you to sync only a portion of the local/remote files and folders using black or white lists (.include and .exclude files).
 At the same time you have the opportunity to choose which files have the advantage - local or remote. Thus, you can keep relevance either local files or files on Google Drive.
 
+In addition, CloudCross supports automatic bidirectional conversion of documents from MS Office or Open Office format to Google Docs.
+Also, you can control the versioning of files synchronized on Google Drive. 
 
-In the near future will be added:
+In version 1.1 will be added:
 
-- possibility of record new revision, instead of overwriting the file to Google Drive.
-- Google Document support
+- DropBox support
+- Support run with predefined (customizable) profiles
 - build on Windows (yet questionable)
-	
+
 	
 	
 For install on deb-based distributions (Debian,Ubuntu,Linux Mint):
@@ -65,42 +65,48 @@ For detailed usage instructions see http://cloudcross.mastersoft24.ru/#usage
 	
 	
 Change log:
+v1.0.2	   -	Added --no-new-rev option for server side versioning control
+		Added --convert-doc option for auto conversion from office formats (MS/Open) to Google Doc and back. 
 
-v1.0.1-rc3 - fixed bag with threads count overhead. fixed bag with corruption of downloaded files
+v1.0.1-rc3 -	fixed bag with threads count overhead. fixed bag with corruption of downloaded files
 
-v1.0.1-rc2 - bugs fixed
+v1.0.1-rc2 -	bugs fixed
 
-v1.0.1-rc1 - first pre-release version of CloudCross	
-
-
-
-
+v1.0.1-rc1 -	first pre-release version of CloudCross	
 
 
 
 
 
-# CloudCross v1.0.1-rc3
+
+
+
+
+# CloudCross v1.0.2
 
 Каменский Владимир
 
-04.02.2016
+07.02.2016
 
 http://cloudcross.mastersoft24.ru
 
 
-CloudCross - это свободная программа для синхронизации локальных файлов и папок с Google Drive. 
-Программа написана на чистом Qt, без каких либо сторонних библиотек и является совместимым аналогом Grive2 (https://github.com/MasterSoft24/Grive2).
-Но в отличии от Grive2, в нее добавлено несколько новых функций, исправлены старые алгоритмические ошибки и добавлены новые :-)
-Программа работает с Qt версии 5 и выше. Версии Qt 4.x не поддерживаются.
+CloudCross - это свободная программа для синхронизации локальных файлов и папок с Google Drive.
+Программа написана на чистом Qt, без каких либо сторонних библиотек.
+CloudCross работает с Qt версии 5 и выше. Версии Qt 4.x не поддерживаются. 
 
 CloudCross позволяет синхронизировать только часть локальных/удаленных файлов и папок используя черные или белые списки (файлы .include и .exclude).
 При этом у вас есть возможность выбрать какие файлы имеют преимущество - локальные или удаленные. Таким образом, вы сможете поддерживать
 актуальность либо локальных файлов, либо файлов на Google Drive. 
 
-В скором будущем будут добавлены:
-- возможность записи новой ревизии, вместо перезаписи файла на Google Drive.
-- работа с Google документами.
+Кроме того, CloudCross поддерживает автоматическую двунаправленную конвертацию документов из формата MS Office или Open Office в формат Google Docs.
+Так же, доступно управление версионированием синхронизируемых файлов на Google Drive. 
+
+
+В версии 1.1 будут добавлены:
+
+- работа с DropBox
+- поддержка запуска с предустановленым (настраиваемым) профилем
 - возможность сборки по Windows (пока под вопросом)
 	
 	
@@ -133,15 +139,18 @@ CloudCross позволяет синхронизировать только ча
 В результате в папке build появится файл ccross
 
 
-Чтобы посмотреть инструкцию по использованию прейдите на http://cloudcross.mastersoft24.ru/#usage	
+Чтобы посмотреть инструкцию по использованию зайдите на http://cloudcross.mastersoft24.ru/#usage	
 	
 	
 Список изменений:
 
-v1.0.1-rc3 - Исправлена ошибка превышения количества потоков на процесс. Испрвлена ошибка с повреждением скачиваемых файлов
+v1.0.2		Добавлена опция --no-new-rev для управления версионированием файлов на сервере
+		Добавлена опция --convert-doc для автоматической конвертации файлов из формата офиса (MS/Open) в формат Google Doc и обратно. 
 
-v1.0.1-rc2 - Исправление некоторых ошибок
+v1.0.1-rc3 -	Исправлена ошибка превышения количества потоков на процесс. Испрвлена ошибка с повреждением скачиваемых файлов
 
-v1.0.1-rc1 - первый предварительный релиз CloudCross
+v1.0.1-rc2 -	Исправление некоторых ошибок
+
+v1.0.1-rc1 -	первый предварительный релиз CloudCross
 
 
