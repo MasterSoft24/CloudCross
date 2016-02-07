@@ -18,7 +18,6 @@
 
 
 
-
 void printHelp(){
     qStdOut() << APP_NAME << " v"<<APP_MAJOR_VERSION<<"."<<APP_MINOR_VERSION<<"."<<APP_BUILD_NUMBER<<APP_SUFFIX <<endl;
     qStdOut()<< QObject::tr("is a opensource application for sync local files with a Google drive cloud storage.\n") <<endl;
@@ -236,13 +235,15 @@ int main(int argc, char *argv[])
                 s=MSCloudProvider::SyncStrategy::PreferLocal;
             }
 
-            if(parser->optarg=="remote"){
-                s=MSCloudProvider::SyncStrategy::PreferRemote;
-            }
             else{
-                qStdOut()<< "--prefer option value must be an one of \"local\" or \"remote\""<<endl;
-                exit(0);
-                break;
+                if(parser->optarg=="remote"){
+                s=MSCloudProvider::SyncStrategy::PreferRemote;
+                }
+                else{
+                    qStdOut()<< "--prefer option value must be an one of \"local\" or \"remote\""<<endl;
+                    exit(0);
+                    break;
+                }
             }
 
             providers->setStrategy(s);
