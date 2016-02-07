@@ -1,5 +1,5 @@
 
-# CloudCross v1.0.2
+# CloudCross v1.0.3
 
 Kamensky Vladimir
 
@@ -65,6 +65,9 @@ For detailed usage instructions see http://cloudcross.mastersoft24.ru/#usage
 	
 	
 Change log:
+
+v1.0.3		Enhance working with .include and .exclude lists
+
 v1.0.2	   -	Added --no-new-rev option for server side versioning control
 		Added --convert-doc option for auto conversion from office formats (MS/Open) to Google Doc and back. 
 
@@ -82,7 +85,7 @@ v1.0.1-rc1 -	first pre-release version of CloudCross
 
 
 
-# CloudCross v1.0.2
+# CloudCross v1.0.3
 
 Каменский Владимир
 
@@ -143,6 +146,8 @@ CloudCross позволяет синхронизировать только ча
 	
 	
 Список изменений:
+
+v1.0.3		Улучшена обработка списков .include и .exclude
 
 v1.0.2		Добавлена опция --no-new-rev для управления версионированием файлов на сервере
 		Добавлена опция --convert-doc для автоматической конвертации файлов из формата офиса (MS/Open) в формат Google Doc и обратно. 
