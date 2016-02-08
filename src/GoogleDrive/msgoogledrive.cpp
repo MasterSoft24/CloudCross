@@ -653,6 +653,21 @@ bool MSGoogleDrive::filterIncludeFileNames(QString path){// return false if inpu
         return true;
     }
 
+    // catch paths with  beginning masks from include/exclude lists
+    bool isBegin=false;
+    QRegularExpression regex3(path);
+    regex3.patternErrorOffset();
+    QRegularExpressionMatch m1= regex3.match(this->includeList);
+
+    if(m1.hasMatch()){
+        r=true;
+        start=m1.capturedStart();
+
+        if((this->includeList.mid(start-1,1)=="|") ||(start==0)){
+            isBegin=true;
+        }
+    }
+
     QRegularExpression regex2(this->includeList);
 
     int error= regex2.patternErrorOffset();
@@ -663,7 +678,12 @@ bool MSGoogleDrive::filterIncludeFileNames(QString path){// return false if inpu
         return false;
     }
     else{
-        return true;
+        if(isBegin){
+            return false;
+        }
+        else{
+            return true;
+        }
     }
 
 }
@@ -676,6 +696,22 @@ bool MSGoogleDrive::filterExcludeFileNames(QString path){// return false if inpu
         return true;
     }
 
+    // catch paths with  beginning masks from include/exclude lists
+    bool isBegin=false;
+    QRegularExpression regex3(path);
+    regex3.patternErrorOffset();
+    QRegularExpressionMatch m1= regex3.match(this->excludeList);
+
+    if(m1.hasMatch()){
+        r=true;
+        start=m1.capturedStart();
+
+        if((this->excludeList.mid(start-1,1)=="|") ||(start==0)){
+            isBegin=true;
+        }
+    }
+
+
     QRegularExpression regex2(this->excludeList);
 
     int error= regex2.patternErrorOffset();
@@ -686,7 +722,12 @@ bool MSGoogleDrive::filterExcludeFileNames(QString path){// return false if inpu
         return false;
     }
     else{
-        return true;
+        if(isBegin){
+            return false;
+        }
+        else{
+            return true;
+        }
     }
 
 
@@ -755,6 +796,7 @@ void MSGoogleDrive::createSyncFileList(){
                 if(line.isEmpty()){
                         continue;
                 }
+
                 this->includeList=this->includeList+line+"|";
             }
             this->includeList=this->includeList.left(this->includeList.size()-1);
@@ -793,6 +835,17 @@ void MSGoogleDrive::createSyncFileList(){
             }
         }
     }
+
+
+
+    bool r= this->filterIncludeFileNames("/f1/f1-2");
+    r=      this->filterIncludeFileNames("/f1/f1-2/qq");
+    r=      this->filterIncludeFileNames("/f1/qee");
+    r=      this->filterIncludeFileNames("/f1-2");
+
+
+
+
 
 
     qStdOut()<< "Reading remote files"<<endl;
@@ -1168,12 +1221,6 @@ void MSGoogleDrive::doSync(){
 
                         this->remote_file_trash(&obj);
 
-//                        if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
-//                            this->local_removeFile(obj.path+obj.fileName);
-//                        }
-//                        else{
-//                            this->local_removeFolder(obj.path+obj.fileName);
-//                        }
                     }
                     else{
                         qStdOut()<< obj.path<<obj.fileName <<" New remote. Downloading." <<endl;
@@ -1876,6 +1923,18 @@ void MSGoogleDrive::remote_createDirectory(QString path){
                 this->remote_file_makeFolder(&f.value());
             }
         }
+//        else{// if this path not exists on remote and not listed as local because include/exclude filter working
+
+//            currPath=currPath+"/"+dirs[i];
+
+//            if(this->filelist_FSObjectHasParent(currPath)){
+
+//            }
+//            else{
+//                this->remote_file_makeFolder();
+//            }
+
+//        }
     }
 }
 
