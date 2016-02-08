@@ -655,6 +655,7 @@ bool MSGoogleDrive::filterIncludeFileNames(QString path){// return false if inpu
 
     // catch paths with  beginning masks from include/exclude lists
     bool isBegin=false;
+    bool r,start;
     QRegularExpression regex3(path);
     regex3.patternErrorOffset();
     QRegularExpressionMatch m1= regex3.match(this->includeList);
@@ -698,6 +699,7 @@ bool MSGoogleDrive::filterExcludeFileNames(QString path){// return false if inpu
 
     // catch paths with  beginning masks from include/exclude lists
     bool isBegin=false;
+    bool r,start;
     QRegularExpression regex3(path);
     regex3.patternErrorOffset();
     QRegularExpressionMatch m1= regex3.match(this->excludeList);
