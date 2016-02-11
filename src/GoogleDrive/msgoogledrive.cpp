@@ -1143,7 +1143,105 @@ void MSGoogleDrive::doSync(){
 
 
 
-    // sync files
+
+    // FORCING UPLOAD OR DOWNLOAD FILES AND FOLDERS
+    if(this->getFlag("force")){
+
+        if(this->getOption("force")=="download"){
+
+            qStdOut()<<"Start downloading in force mode" <<endl;
+
+            lf=this->syncFileList.begin();
+
+            for(;lf != this->syncFileList.end();lf++){
+
+                MSFSObject obj=lf.value();
+
+                if((obj.state == MSFSObject::ObjectState::Sync)||
+                   (obj.state == MSFSObject::ObjectState::NewRemote)||
+                   (obj.state == MSFSObject::ObjectState::DeleteLocal)||
+                   (obj.state == MSFSObject::ObjectState::ChangedLocal)||
+                   (obj.state == MSFSObject::ObjectState::ChangedRemote) ){
+
+                    qStdOut()<< obj.path<<obj.fileName <<" Forced downloading." <<endl;
+
+                    this->remote_file_get(&obj);
+                }
+
+            }
+
+        }
+        else{
+            if(this->getOption("force")=="upload"){
+
+                qStdOut()<<"Start uploading in force mode" <<endl;
+
+                lf=this->syncFileList.begin();
+
+                for(;lf != this->syncFileList.end();lf++){
+
+                    MSFSObject obj=lf.value();
+
+                    if((obj.state == MSFSObject::ObjectState::Sync)||
+                       (obj.state == MSFSObject::ObjectState::NewLocal)||
+                       (obj.state == MSFSObject::ObjectState::DeleteRemote)||
+                       (obj.state == MSFSObject::ObjectState::ChangedLocal)||
+                       (obj.state == MSFSObject::ObjectState::ChangedRemote) ){
+
+                        qStdOut()<< obj.path<<obj.fileName <<" Forced uploading." <<endl;
+
+                        if(obj.remote.exist){
+
+                            this->remote_file_update(&obj);
+                        }
+                        else{
+
+                            this->remote_file_insert(&obj);
+                        }
+
+
+                    }
+
+                }
+            }
+            else{
+                // error
+            }
+        }
+
+
+        if(this->getFlag("dryRun")){
+            return;
+        }
+
+        // save state file
+
+        QJsonDocument state;
+        QJsonObject jso;
+        jso.insert("change_stamp","0");
+
+        QJsonObject jts;
+        jts.insert("nsec","0");
+        jts.insert("sec",QString::number(QDateTime( QDateTime::currentDateTime()).toMSecsSinceEpoch()));
+
+        jso.insert("last_sync",jts);
+        state.setObject(jso);
+
+        QFile key(this->workPath+"/"+this->stateFileName);
+        key.open(QIODevice::WriteOnly | QIODevice::Text);
+        QTextStream outk(&key);
+        outk << state.toJson();
+        key.close();
+
+
+            qStdOut()<<"Syncronization end" <<endl;
+
+            return;
+    }
+
+
+
+    // SYNC FILES AND FOLDERS
 
     qStdOut()<<"Start syncronization" <<endl;
 

@@ -12,7 +12,7 @@
 
 #define APP_MAJOR_VERSION 1
 #define APP_MINOR_VERSION 0
-#define APP_BUILD_NUMBER  3
+#define APP_BUILD_NUMBER  4
 #define APP_SUFFIX ""
 #define APP_NAME "CloudCross"
 
@@ -36,6 +36,8 @@ void printHelp(){
     qStdOut()<< QObject::tr("   --no-new-rev          Do not create new revisions of files, overwrite their instead") <<endl;
     qStdOut()<< QObject::tr("   --convert-doc         Convert office document to Google Doc format when upload\n"
                             "                         and convert him back when download") <<endl;
+    qStdOut()<< QObject::tr("   --force arg           Forcing upload or download files. It can be a one of \"upload\" or \"download\".\n"
+                            "                         This option overrides --prefer option value.") <<endl;
 
 }
 
@@ -194,6 +196,7 @@ int main(int argc, char *argv[])
     parser->insertOption(9,"--no-new-rev");// do not create new revision of file, overwrite him instead
     parser->insertOption(10,"--dry-run");
     parser->insertOption(11,"--convert-doc");
+    parser->insertOption(12,"--force 1");
 
     //...............
 
@@ -205,29 +208,32 @@ int main(int argc, char *argv[])
     while((ret=parser->get())!=-1){
         switch(ret){
 
-        case 1:
+        case 1: // --help
+
             printHelp();
             exit(0);
             //qStdOut()<< "HELP arg="+parser->optarg;
             break;
 
-        case 2:
+        case 2: //-- auth
 
             authGrive(providers);
             exit(0);
             break;
 
-        case 3:
+        case 3: // --version
+
             printVersion();
             exit(0);
             break;
 
 
-        case 4:
+        case 4: // --path
+
             providers->setWorkPath(parser->optarg);
             break;
 
-        case 5:
+        case 5: // --prefer
 
             MSCloudProvider::SyncStrategy s;
 
@@ -278,6 +284,20 @@ int main(int argc, char *argv[])
         case 11: // --convert-doc
 
             providers->setFlag("convertDoc",true);
+            break;
+
+        case 12: // --force
+
+
+            if((parser->optarg=="upload")||(parser->optarg=="download")){
+                providers->setOption("force",parser->optarg);
+                providers->setFlag("force",true);
+            }
+            else{
+                qStdOut()<< "--force option value must be an one of \"upload\" or \"download\""<<endl;
+                exit(0);
+                break;
+            }
             break;
 
 

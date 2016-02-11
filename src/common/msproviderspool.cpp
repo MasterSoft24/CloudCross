@@ -46,6 +46,13 @@ void MSProvidersPool::addProvider(MSCloudProvider *provider,bool statelessMode){
             it++;
         }
 
+        QHash<QString,QString>::iterator ito=this->options.begin();
+        while(ito != this->options.end()){
+
+            provider->options.insert(ito.key(),ito.value());
+            ito++;
+        }
+
         if(!statelessMode){
             provider->loadStateFile();
         }
@@ -120,4 +127,13 @@ void MSProvidersPool::setFlag(QString flagName, bool flagVal){
     this->flags.insert(flagName,flagVal);
 
 }
+
+
+void MSProvidersPool::setOption(QString optionName, QString optVal){
+
+    this->options.insert(optionName,optVal);
+
+}
+
+
 

@@ -36,3 +36,7 @@ HEADERS += \
 target.path = /usr/bin
 INSTALLS += target
 
+DISTFILES += \
+    README.MD \
+    doc/ccross.1
+

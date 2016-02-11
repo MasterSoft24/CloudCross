@@ -1,9 +1,9 @@
 
-# CloudCross v1.0.3
+# CloudCross v1.0.4
 
 Kamensky Vladimir
 
-07.02.2016
+12.02.2016
 
 
 http://cloudcross.mastersoft24.ru
@@ -66,18 +66,18 @@ For detailed usage instructions see http://cloudcross.mastersoft24.ru/#usage
 	
 Change log:
 
-v1.0.3		Enhance working with .include and .exclude lists
+v1.0.4          Added an option --force to force a download or upload files and folders.
 
-v1.0.2	   -	Added --no-new-rev option for server side versioning control
+v1.0.3          Enhance working with .include and .exclude lists
+
+v1.0.2	   -    Added --no-new-rev option for server side versioning control
 		Added --convert-doc option for auto conversion from office formats (MS/Open) to Google Doc and back. 
 
-v1.0.1-rc3 -	fixed bag with threads count overhead. fixed bag with corruption of downloaded files
+v1.0.1-rc3 -    fixed bag with threads count overhead. fixed bag with corruption of downloaded files
 
-v1.0.1-rc2 -	bugs fixed
+v1.0.1-rc2 -    bugs fixed
 
-v1.0.1-rc1 -	first pre-release version of CloudCross	
-
-
+v1.0.1-rc1 -    first pre-release version of CloudCross
 
 
 
@@ -85,11 +85,13 @@ v1.0.1-rc1 -	first pre-release version of CloudCross
 
 
 
-# CloudCross v1.0.3
+
+
+# CloudCross v1.0.4
 
 Каменский Владимир
 
-07.02.2016
+12.02.2016
 
 http://cloudcross.mastersoft24.ru
 
@@ -147,15 +149,17 @@ CloudCross позволяет синхронизировать только ча
 	
 Список изменений:
 
-v1.0.3		Улучшена обработка списков .include и .exclude
+v1.0.4          Добавлена опция --force для принудительного скачивания или выгрузки файлов и папок.
 
-v1.0.2		Добавлена опция --no-new-rev для управления версионированием файлов на сервере
-		Добавлена опция --convert-doc для автоматической конвертации файлов из формата офиса (MS/Open) в формат Google Doc и обратно. 
+v1.0.3          Улучшена обработка списков .include и .exclude
 
-v1.0.1-rc3 -	Исправлена ошибка превышения количества потоков на процесс. Испрвлена ошибка с повреждением скачиваемых файлов
+v1.0.2          Добавлена опция --no-new-rev для управления версионированием файлов на сервере
+                Добавлена опция --convert-doc для автоматической конвертации файлов из формата офиса (MS/Open) в формат Google Doc и обратно.
 
-v1.0.1-rc2 -	Исправление некоторых ошибок
+v1.0.1-rc3 -    Исправлена ошибка превышения количества потоков на процесс. Испрвлена ошибка с повреждением скачиваемых файлов
 
-v1.0.1-rc1 -	первый предварительный релиз CloudCross
+v1.0.1-rc2 -    Исправление некоторых ошибок
+
+v1.0.1-rc1 -    первый предварительный релиз CloudCross
 
 

@@ -141,4 +141,13 @@ bool MSCloudProvider::getFlag(QString flagName){
     }
 }
 
+QString MSCloudProvider::getOption(QString optionName){
 
+    QHash<QString,QString>::iterator it=this->options.find(optionName);
+    if(it != this->options.end()){
+        return it.value();
+    }
+    else{
+        return QString();
+    }
+}

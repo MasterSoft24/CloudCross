@@ -118,12 +118,15 @@ public:
     bool newRev; //???????
 
     QHash<QString,bool>flags;
+    QHash<QString,QString>options;
 
     QString includeList;
     QString excludeList;
 
     void setFlag(QString flagName, bool flagVal);
     bool getFlag(QString flagName);
+
+    QString getOption(QString optionName);
 
 };
 

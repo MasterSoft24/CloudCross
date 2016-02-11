@@ -49,6 +49,7 @@ public:
     MSCloudProvider::SyncStrategy strategy; // sync strategy
 
     QHash<QString,bool>flags;
+    QHash<QString,QString>options;
 
 
 
@@ -66,6 +67,8 @@ public:
     void setStrategy(MSCloudProvider::SyncStrategy strategy);
 
     void setFlag(QString flagName,bool flagVal);
+
+    void setOption(QString optionName,QString optVal);
 
 };
 
