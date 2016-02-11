@@ -1331,10 +1331,10 @@ void MSGoogleDrive::doSync(){
 
     QJsonDocument state;
     QJsonObject jso;
-    jso.insert("change_stamp","0");
+    jso.insert("change_stamp",QString("0"));
 
     QJsonObject jts;
-    jts.insert("nsec","0");
+    jts.insert("nsec",QString("0"));
     jts.insert("sec",QString::number(QDateTime( QDateTime::currentDateTime()).toMSecsSinceEpoch()));
 
     jso.insert("last_sync",jts);
@@ -1774,7 +1774,7 @@ void MSGoogleDrive::remote_file_makeFolder(MSFSObject *object){
     //make file metadata in json representation
     QJsonObject metaJson;
     metaJson.insert("title",object->fileName);
-    metaJson.insert("mimeType","application/vnd.google-apps.folder");
+    metaJson.insert("mimeType",QString("application/vnd.google-apps.folder"));
 
     metaData.append(QString(QJsonDocument(metaJson).toJson()).toLocal8Bit());
 
@@ -1821,7 +1821,7 @@ void MSGoogleDrive::remote_file_makeFolder(MSFSObject *object, QString parentID)
     //make file metadata in json representation
     QJsonObject metaJson;
     metaJson.insert("title",object->fileName);
-    metaJson.insert("mimeType","application/vnd.google-apps.folder");
+    metaJson.insert("mimeType",QString("application/vnd.google-apps.folder"));
 
     if(parentID != ""){
         // create parents section
