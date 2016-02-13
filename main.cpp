@@ -48,65 +48,15 @@ void printVersion(){
 
 void authGrive(MSProvidersPool* providers){
 
-    MSRequest* req=new MSRequest();
+    MSGoogleDrive* gdp=new MSGoogleDrive();
+    if(gdp->auth()){
 
-    req->setRequestUrl("https://accounts.google.com/o/oauth2/v2/auth");
-    req->setMethod("get");
-
-    req->addQueryItem("scope",                  "https://www.googleapis.com/auth/drive+https://www.googleapis.com/auth/userinfo.email+https://www.googleapis.com/auth/userinfo.profile+https://docs.google.com/feeds/+https://docs.googleusercontent.com/+https://spreadsheets.google.com/feeds/");
-    req->addQueryItem("redirect_uri",           "urn:ietf:wg:oauth:2.0:oob");
-    req->addQueryItem("response_type",          "code");
-    req->addQueryItem("client_id",              "834415955748-oq0p2m5dro2bvh3bu0o5bp19ok3qrs3f.apps.googleusercontent.com");
-    req->addQueryItem("access_type",            "offline");
-    req->addQueryItem("approval_prompt",        "force");
-    req->addQueryItem("state",                  "1");
-
-    req->exec();
-
-    qStdOut()<<"-------------------------------------"<<endl;
-    qStdOut()<< QObject::tr("Please go to this URL and get an authentication code:\n")<<endl;
-
-    qStdOut() << req->replyURL;//lastReply->url().toString();
-    qStdOut()<<""<<endl;
-    qStdOut()<<"-------------------------------------"<<endl;
-    qStdOut()<<QObject::tr("Please input the authentication code here: ")<<endl;
-
-
-    QTextStream s(stdin);
-    QString authCode = s.readLine();
-
-    delete(req);
-
-    req=new MSRequest();
-
-    req->setRequestUrl("https://accounts.google.com/o/oauth2/token");
-    req->setMethod("post");
-
-    req->addQueryItem("client_id",          "834415955748-oq0p2m5dro2bvh3bu0o5bp19ok3qrs3f.apps.googleusercontent.com");
-    req->addQueryItem("client_secret",      "YMBWydU58CvF3UP9CSna-BwS");
-    req->addQueryItem("code",               authCode.trimmed());
-    req->addQueryItem("grant_type",         "authorization_code");
-    req->addQueryItem("redirect_uri",       "urn:ietf:wg:oauth:2.0:oob");
-
-    req->exec();
-
-    QString content= req->replyText;//lastReply->readAll();
-
-    //qStdOut() << content;
-
-    QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
-    QJsonObject job = json.object();
-    QString v=job["refresh_token"].toString();
-
-    if(v!=""){
-        MSGoogleDrive* gdp=new MSGoogleDrive();
-        gdp->token=v;
         providers->addProvider(gdp,true);
         providers->saveTokenFile("GoogleDrive");
-
-        qStdOut() << "Token was succesfully accepted and saved. To start working with the program run ccross without any options for start full synchronize."<<endl;
     }
-
+    else{
+       qStdOut() << "Authentication failed"<<endl;
+    }
 }
 
 
@@ -163,8 +113,6 @@ void syncGrive(MSProvidersPool* providers){
         qStdOut()<<"Unauthorized access. Aborted."<<endl;
         exit(0);
     }
-
-
 
     gdp->createSyncFileList();
 

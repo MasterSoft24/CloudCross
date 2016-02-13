@@ -34,6 +34,7 @@
 
 #include "msfsobject.h"
 #include "msidslist.h"
+#include "msrequest.h"
 #include "qstdout.h"
 
 
@@ -82,7 +83,7 @@ public:
 
 
 
-
+    virtual bool auth() = 0;
     virtual void saveTokenFile(QString path) =0 ;
     virtual bool loadTokenFile(QString path)=0;
     virtual void loadStateFile()=0;
@@ -101,6 +102,7 @@ public:
 //    virtual void                        filelist_populateChanges(QHash<QString,MSFSObject> changedFSObjectList)=0;
 
 
+    bool local_writeFileContent(QString filePath, MSRequest *req);
 
 
     QString fileChecksum(QString &fileName, QCryptographicHash::Algorithm hashAlgorithm);
@@ -127,6 +129,10 @@ public:
     bool getFlag(QString flagName);
 
     QString getOption(QString optionName);
+
+    virtual bool testReplyBodyForError(QString body) = 0;
+    virtual QString getReplyErrorString(QString body) = 0;
+
 
 };
 

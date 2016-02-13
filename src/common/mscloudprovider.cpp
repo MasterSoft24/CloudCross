@@ -151,3 +151,34 @@ QString MSCloudProvider::getOption(QString optionName){
         return QString();
     }
 }
+
+
+bool MSCloudProvider::local_writeFileContent(QString filePath, MSRequest* req){
+
+    if(req->replyError!= QNetworkReply::NetworkError::NoError){
+        qStdOut()<< "Request error. ";
+        req->printReplyError();
+        return false;
+    }
+
+
+    QFile file(filePath);
+    file.open(QIODevice::WriteOnly );
+    QDataStream outk(&file);
+
+    QByteArray ba;
+    ba.append(req->readReplyText());
+
+    int sz=ba.size();
+
+
+    outk.writeRawData(ba.data(),ba.size()) ;
+
+    file.close();
+    return true;
+}
+
+
+
+
+

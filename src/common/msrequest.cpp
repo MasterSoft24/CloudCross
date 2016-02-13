@@ -35,6 +35,8 @@ MSRequest::MSRequest()
 
     this->lastReply=0;
 
+    this->replyError= QNetworkReply::NetworkError::NoError;
+
     this->loop=new QEventLoop(this);
 
 
@@ -190,6 +192,8 @@ void MSRequest::exec(){
 void MSRequest::requestFinished(QNetworkReply *reply){
     this->lastReply=reply;
     this->replyText=reply->readAll();
+    this->replyError=reply->error();
+    this->replyErrorText=reply->errorString();
     this->replyAttribute=reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
     this->replyURL=reply->url().toString();
 //    delete(reply);
@@ -202,9 +206,21 @@ QByteArray MSRequest::readReplyText(){
 }
 
 
+bool MSRequest::replyOK(){
+
+    if(this->replyError == QNetworkReply::NetworkError::NoError){
+        return true;
+    }
+    else{
+        return false;
+    }
+}
 
 
+void MSRequest::printReplyError(){
 
+    qStdOut() << this->replyErrorText << endl;
+}
 
 
 

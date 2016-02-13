@@ -41,6 +41,96 @@ MSGoogleDrive::MSGoogleDrive() :
 
 //=======================================================================================
 
+bool MSGoogleDrive::auth(){
+
+    MSRequest* req=new MSRequest();
+
+    req->setRequestUrl("https://accounts.google.com/o/oauth2/v2/auth");
+    req->setMethod("get");
+
+    req->addQueryItem("scope",                  "https://www.googleapis.com/auth/drive+https://www.googleapis.com/auth/userinfo.email+https://www.googleapis.com/auth/userinfo.profile+https://docs.google.com/feeds/+https://docs.googleusercontent.com/+https://spreadsheets.google.com/feeds/");
+    req->addQueryItem("redirect_uri",           "urn:ietf:wg:oauth:2.0:oob");
+    req->addQueryItem("response_type",          "code");
+    req->addQueryItem("client_id",              "834415955748-oq0p2m5dro2bvh3bu0o5bp19ok3qrs3f.apps.googleusercontent.com");
+    req->addQueryItem("access_type",            "offline");
+    req->addQueryItem("approval_prompt",        "force");
+    req->addQueryItem("state",                  "1");
+
+    req->exec();
+
+
+    if(!req->replyOK()){
+        req->printReplyError();
+        exit(1);
+    }
+
+    if(!this->testReplyBodyForError(req->readReplyText())){
+        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+        exit(0);
+    }
+
+
+    qStdOut()<<"-------------------------------------"<<endl;
+    qStdOut()<< QObject::tr("Please go to this URL and get an authentication code:\n")<<endl;
+
+    qStdOut() << req->replyURL;//lastReply->url().toString();
+    qStdOut()<<""<<endl;
+    qStdOut()<<"-------------------------------------"<<endl;
+    qStdOut()<<QObject::tr("Please input the authentication code here: ")<<endl;
+
+
+    QTextStream s(stdin);
+    QString authCode = s.readLine();
+
+    delete(req);
+
+    req=new MSRequest();
+
+    req->setRequestUrl("https://accounts.google.com/o/oauth2/token");
+    req->setMethod("post");
+
+    req->addQueryItem("client_id",          "834415955748-oq0p2m5dro2bvh3bu0o5bp19ok3qrs3f.apps.googleusercontent.com");
+    req->addQueryItem("client_secret",      "YMBWydU58CvF3UP9CSna-BwS");
+    req->addQueryItem("code",               authCode.trimmed());
+    req->addQueryItem("grant_type",         "authorization_code");
+    req->addQueryItem("redirect_uri",       "urn:ietf:wg:oauth:2.0:oob");
+
+    req->exec();
+
+
+    if(!req->replyOK()){
+        req->printReplyError();
+        exit(1);
+    }
+
+    if(!this->testReplyBodyForError(req->readReplyText())){
+        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+        exit(0);
+    }
+
+
+    QString content= req->replyText;//lastReply->readAll();
+
+    //qStdOut() << content;
+
+    QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+    QJsonObject job = json.object();
+    QString v=job["refresh_token"].toString();
+
+    if(v!=""){
+
+        this->token=v;
+        qStdOut() << "Token was succesfully accepted and saved. To start working with the program run ccross without any options for start full synchronize."<<endl;
+        return true;
+    }
+    else{
+        return false;
+    }
+
+}
+
+//=======================================================================================
+
 void MSGoogleDrive::saveTokenFile(QString path){
 
         QFile key(path+"/"+this->tokenFileName);
@@ -125,6 +215,18 @@ bool MSGoogleDrive::refreshToken(){
 
     req->exec();
 
+
+    if(!req->replyOK()){
+        req->printReplyError();
+        exit(1);
+    }
+
+    if(!this->testReplyBodyForError(req->readReplyText())){
+        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+        exit(0);
+    }
+
+
     QString content= req->readReplyText();
 
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
@@ -155,6 +257,18 @@ void MSGoogleDrive::createHashFromRemote(){
     req->addQueryItem("access_token",           this->access_token);
 
     req->exec();
+
+
+    if(!req->replyOK()){
+        req->printReplyError();
+        exit(1);
+    }
+
+    if(!this->testReplyBodyForError(req->readReplyText())){
+        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+        exit(0);
+    }
+
 
     QString list=req->readReplyText();
 
@@ -189,6 +303,18 @@ void MSGoogleDrive::createHashFromRemote(){
         req->addQueryItem("pageToken",           nextPageToken);
 
         req->exec();
+
+
+        if(!req->replyOK()){
+            req->printReplyError();
+            exit(1);
+        }
+
+        if(!this->testReplyBodyForError(req->readReplyText())){
+            qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+            exit(0);
+        }
+
 
         list=req->readReplyText();
 
@@ -1479,6 +1605,18 @@ bool MSGoogleDrive::remote_file_generateIDs(int count){
 
         req->exec();
 
+
+        if(!req->replyOK()){
+            req->printReplyError();
+            exit(1);
+        }
+
+        if(!this->testReplyBodyForError(req->readReplyText())){
+            qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+            exit(0);
+        }
+
+
         QString content= req->readReplyText();
 
         QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
@@ -1595,19 +1733,31 @@ void MSGoogleDrive::remote_file_get(MSFSObject* object){
 
     QString filePath=this->workPath+object->path+object->fileName;
 
-    QFile file(filePath);
-    file.open(QIODevice::WriteOnly );
-    QDataStream outk(&file);
 
-    QByteArray ba;
-    ba.append(req->readReplyText());
+    if(this->testReplyBodyForError(req->readReplyText())){
 
-    int sz=ba.size();
+        if(object->remote.objectType==MSLocalFSObject::Type::file){
 
-    if(object->remote.objectType==MSLocalFSObject::Type::file){
-        outk.writeRawData(ba.data(),ba.size()) ;
+            this->local_writeFileContent(filePath,req);
+        }
     }
-    file.close();
+    else{
+        qStdOut() << "Service error. "<< this->getReplyErrorString(req->readReplyText());
+    }
+
+//    QFile file(filePath);
+//    file.open(QIODevice::WriteOnly );
+//    QDataStream outk(&file);
+
+//    QByteArray ba;
+//    ba.append(req->readReplyText());
+
+//    int sz=ba.size();
+
+//    if(object->remote.objectType==MSLocalFSObject::Type::file){
+//        outk.writeRawData(ba.data(),ba.size()) ;
+//    }
+//    file.close();
 
     delete(req);
 
@@ -1616,6 +1766,12 @@ void MSGoogleDrive::remote_file_get(MSFSObject* object){
 //=======================================================================================
 
 void MSGoogleDrive::remote_file_insert(MSFSObject *object){
+
+    if(object->local.objectType==MSLocalFSObject::Type::folder){
+
+        qStdOut()<< object->fileName << " is a folder. Skipped." <<endl;
+        return;
+    }
 
     if(this->getFlag("dryRun")){
         return;
@@ -1741,6 +1897,18 @@ void MSGoogleDrive::remote_file_insert(MSFSObject *object){
     req->post(metaData+mediaData);
 
 
+    if(!req->replyOK()){
+        req->printReplyError();
+        exit(1);
+    }
+
+    if(!this->testReplyBodyForError(req->readReplyText())){
+        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+        exit(0);
+    }
+
+
+
     QString content=req->readReplyText();
 
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
@@ -1759,6 +1927,12 @@ void MSGoogleDrive::remote_file_insert(MSFSObject *object){
 //=======================================================================================
 
 void MSGoogleDrive::remote_file_update(MSFSObject *object){
+
+    if(object->local.objectType==MSLocalFSObject::Type::folder){
+
+        qStdOut()<< object->fileName << " is a folder. Skipped." <<endl;
+        return;
+    }
 
     if(this->getFlag("dryRun")){
         return;
@@ -1839,6 +2013,18 @@ void MSGoogleDrive::remote_file_update(MSFSObject *object){
     req->put(metaData+mediaData);
 
 
+    if(!req->replyOK()){
+        req->printReplyError();
+        exit(1);
+    }
+
+    if(!this->testReplyBodyForError(req->readReplyText())){
+        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+        exit(0);
+    }
+
+
+
     QString content=req->readReplyText();
 
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
@@ -1877,6 +2063,19 @@ void MSGoogleDrive::remote_file_makeFolder(MSFSObject *object){
     metaData.append(QString(QJsonDocument(metaJson).toJson()).toLocal8Bit());
 
     req->post(metaData);
+
+
+    if(!req->replyOK()){
+        req->printReplyError();
+        exit(1);
+    }
+
+    if(!this->testReplyBodyForError(req->readReplyText())){
+        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+        exit(0);
+    }
+
+
 
     QString filePath=this->workPath+object->path+object->fileName;
 
@@ -1935,6 +2134,19 @@ void MSGoogleDrive::remote_file_makeFolder(MSFSObject *object, QString parentID)
 
     req->post(metaData);
 
+
+    if(!req->replyOK()){
+        req->printReplyError();
+        exit(1);
+    }
+
+    if(!this->testReplyBodyForError(req->readReplyText())){
+        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+        exit(0);
+    }
+
+
+
     QString filePath=this->workPath+object->path+object->fileName;
 
     QString content=req->readReplyText();
@@ -1973,6 +2185,18 @@ void MSGoogleDrive::remote_file_trash(MSFSObject *object){
     req->addHeader("Authorization",                     "Bearer "+this->access_token);
 
     req->exec();
+
+
+    if(!req->replyOK()){
+        req->printReplyError();
+        exit(1);
+    }
+
+    if(!this->testReplyBodyForError(req->readReplyText())){
+        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+        exit(0);
+    }
+
 
     QString content=req->readReplyText();
 
@@ -2111,3 +2335,45 @@ void MSGoogleDrive::local_removeFolder(QString path){
     }
 
 }
+
+
+bool MSGoogleDrive::testReplyBodyForError(QString body){// return true if reply is ok
+
+    if(body.contains("\"error\": {")){
+        QJsonDocument json = QJsonDocument::fromJson(body.toUtf8());
+        QJsonObject job = json.object();
+
+        QJsonValue e=(job["error"].toObject())["code"];
+        if(e.isNull()){
+            return true;
+        }
+        else{
+
+            int code=e.toInt(0);
+            if(code != 0){
+                return false;
+            }
+            else{
+                return true;
+            }
+        }
+
+    }
+    else{
+        return true;
+    }
+}
+
+
+QString MSGoogleDrive::getReplyErrorString(QString body){
+
+    QJsonDocument json = QJsonDocument::fromJson(body.toUtf8());
+    QJsonObject job = json.object();
+
+    QJsonValue e=(job["error"].toObject())["message"];
+
+    return e.toString();
+
+}
+
+

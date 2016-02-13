@@ -29,6 +29,7 @@
 #include <QNetworkReply>
 #include <QObject>
 #include <QEventLoop>
+#include "qstdout.h"
 
 class MSRequest : public QObject , QNetworkRequest
 {
@@ -55,6 +56,8 @@ public:
     QByteArray replyText;
     QVariant replyAttribute;
     QString replyURL;
+    QNetworkReply::NetworkError replyError;
+    QString replyErrorText;
 
     QByteArray readReplyText();
 
@@ -71,6 +74,8 @@ public:
     void put(QByteArray data);
     void methodCharger(QNetworkRequest req);
 
+    bool replyOK();
+    void printReplyError();
 
 private slots:
 

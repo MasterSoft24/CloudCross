@@ -76,10 +76,15 @@ private:
 public:
     MSGoogleDrive();
 
+     bool auth();
      void saveTokenFile(QString path);  // reimplemented from MSCloudProvider
      bool loadTokenFile(QString path);  // reimplemented from MSCloudProvider
      bool refreshToken();               // reimplemented from MSCloudProvider
      void loadStateFile();              // reimplemented from MSCloudProvider
+
+     bool testReplyBodyForError(QString body); // reimplemented from MSCloudProvider
+     QString getReplyErrorString(QString body);   // reimplemented from MSCloudProvider
+
 
      void createSyncFileList();
 
