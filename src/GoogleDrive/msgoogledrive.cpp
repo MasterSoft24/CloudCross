@@ -781,13 +781,12 @@ bool MSGoogleDrive::filterIncludeFileNames(QString path){// return false if inpu
 
     // catch paths with  beginning masks from include/exclude lists
     bool isBegin=false;
-    bool r,start;
+    bool start;
     QRegularExpression regex3(path);
     regex3.patternErrorOffset();
     QRegularExpressionMatch m1= regex3.match(this->includeList);
 
     if(m1.hasMatch()){
-        r=true;
         start=m1.capturedStart();
 
         if((this->includeList.mid(start-1,1)=="|") ||(start==0)){
@@ -797,7 +796,7 @@ bool MSGoogleDrive::filterIncludeFileNames(QString path){// return false if inpu
 
     QRegularExpression regex2(this->includeList);
 
-    int error= regex2.patternErrorOffset();
+    regex2.patternErrorOffset();
 
     QRegularExpressionMatch m = regex2.match(path);
 
@@ -825,13 +824,12 @@ bool MSGoogleDrive::filterExcludeFileNames(QString path){// return false if inpu
 
     // catch paths with  beginning masks from include/exclude lists
     bool isBegin=false;
-    bool r,start;
+    bool start;
     QRegularExpression regex3(path);
     regex3.patternErrorOffset();
     QRegularExpressionMatch m1= regex3.match(this->excludeList);
 
     if(m1.hasMatch()){
-        r=true;
         start=m1.capturedStart();
 
         if((this->excludeList.mid(start-1,1)=="|") ||(start==0)){
@@ -842,7 +840,7 @@ bool MSGoogleDrive::filterExcludeFileNames(QString path){// return false if inpu
 
     QRegularExpression regex2(this->excludeList);
 
-    int error= regex2.patternErrorOffset();
+    regex2.patternErrorOffset();
 
     QRegularExpressionMatch m = regex2.match(path);
 
@@ -882,7 +880,7 @@ bool MSGoogleDrive::filterOfficeMimeTypes(QString mime){// return true if this m
 
     QRegularExpression regex2("word|excel|powerpoint|ppt|xls|doc|opendocument");
 
-    int error= regex2.patternErrorOffset();
+    regex2.patternErrorOffset();
 
     QRegularExpressionMatch m = regex2.match(mime);
 
@@ -966,10 +964,10 @@ void MSGoogleDrive::createSyncFileList(){
 
 
 
-    bool r= this->filterIncludeFileNames("/f1/f1-2");
-    r=      this->filterIncludeFileNames("/f1/f1-2/qq");
-    r=      this->filterIncludeFileNames("/f1/qee");
-    r=      this->filterIncludeFileNames("/f1-2");
+    this->filterIncludeFileNames(QString("/f1/f1-2"));
+    this->filterIncludeFileNames(QString("/f1/f1-2/qq"));
+    this->filterIncludeFileNames(QString("/f1/qee"));
+    this->filterIncludeFileNames(QString("/f1-2"));
 
 
 
@@ -1344,10 +1342,10 @@ void MSGoogleDrive::doSync(){
 
         QJsonDocument state;
         QJsonObject jso;
-        jso.insert("change_stamp","0");
+        jso.insert("change_stamp",QString("0"));
 
         QJsonObject jts;
-        jts.insert("nsec","0");
+        jts.insert("nsec",QString("0"));
         jts.insert("sec",QString::number(QDateTime( QDateTime::currentDateTime()).toMSecsSinceEpoch()));
 
         jso.insert("last_sync",jts);

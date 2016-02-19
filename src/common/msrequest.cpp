@@ -96,7 +96,7 @@ void MSRequest::addHeader(QByteArray headerName, QByteArray headerValue){
 
 void MSRequest::methodCharger(QNetworkRequest req){
 
-    QNetworkReply* replySync;
+    QNetworkReply* replySync=0;
 
     if(this->requestMethod=="get"){
         replySync=this->manager->get(req);
