@@ -963,17 +963,6 @@ void MSGoogleDrive::createSyncFileList(){
     }
 
 
-
-    this->filterIncludeFileNames(QString("/f1/f1-2"));
-    this->filterIncludeFileNames(QString("/f1/f1-2/qq"));
-    this->filterIncludeFileNames(QString("/f1/qee"));
-    this->filterIncludeFileNames(QString("/f1-2"));
-
-
-
-
-
-
     qStdOut()<< "Reading remote files"<<endl;
 
 
