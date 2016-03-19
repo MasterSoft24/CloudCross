@@ -31,6 +31,30 @@ MSProvidersPool::MSProvidersPool()
 }
 
 
+QString MSProvidersPool::generateRandom(int count){
+
+    int Low=35;
+    int High=127;
+    qsrand(qrand());
+
+    QString token="";
+
+
+    for(int i=0; i<count;i++){
+        qint8 d=qrand() % ((High + 1) - Low) + Low;
+
+        if(d == 92){
+           token+="\\"; // экранируем символ
+        }
+        else{
+            token+=QChar(d);
+        }
+    }
+
+    return token;
+
+}
+
 void MSProvidersPool::addProvider(MSCloudProvider *provider,bool statelessMode){
 
     MSCloudProvider* cp=this->getProvider(provider->providerName);

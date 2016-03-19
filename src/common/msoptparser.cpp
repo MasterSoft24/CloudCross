@@ -283,3 +283,43 @@ bool MSOptParser::getArg(){
 }
 
 
+QString MSOptParser::getParamByName(QString paramName){
+
+    for(int i=0;i<this->input.size();i++){
+
+        if((this->input.at(i) == paramName) || (this->input.at(i) == ("--"+paramName))){
+
+            if(QString(this->input.at(i+1).at(0))!="-"){
+
+                QString p=this->input.at(i+1);
+                this->input.removeAt(i);
+                this->input.removeAt(i);
+                this->iit=this->input.begin();
+                *this->iit++;
+                return p;
+            }
+            else{
+                return "";
+            }
+
+        }
+
+
+    }
+
+    return "";
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

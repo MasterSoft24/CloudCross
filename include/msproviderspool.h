@@ -25,7 +25,7 @@
 #include <QObject>
 #include "qstdout.h"
 #include "src/GoogleDrive/msgoogledrive.h"
-
+#include "src/Dropbox/msdropbox.h"
 
 
 class MSProvidersPool
@@ -38,6 +38,8 @@ private:
 
 public:
     MSProvidersPool();
+
+    QString generateRandom(int count);
 
     QList<MSCloudProvider*> pool;
 

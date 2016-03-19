@@ -19,7 +19,8 @@ SOURCES += main.cpp \
     src/common/mslocalfsobject.cpp \
     src/common/msfsobject.cpp \
     src/common/msidslist.cpp \
-    src/common/qstdout.cpp
+    src/common/qstdout.cpp \
+    src/Dropbox/msdropbox.cpp
 
 HEADERS += \
     include/msrequest.h \
@@ -31,7 +32,8 @@ HEADERS += \
     include/mslocalfsobject.h \
     include/msfsobject.h \
     include/msidslist.h \
-    include/qstdout.h
+    include/qstdout.h \
+    src/Dropbox/msdropbox.h
 
 target.path = /usr/bin
 INSTALLS += target

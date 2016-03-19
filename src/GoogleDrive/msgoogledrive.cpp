@@ -503,63 +503,6 @@ void MSGoogleDrive::readRemote(QString parentId,QString currentPath){
 
             fsObject.isDocFormat=true;
 
-
-//            // get real data for remote doc object
-//            MSRequest *req = new MSRequest();
-
-
-//            req->setMethod("get");
-
-//            req->addHeader("Authorization","Bearer "+this->access_token);
-
-//            if(fsObject.remote.data["mimeType"].toString()=="application/vnd.google-apps.spreadsheet"){
-
-//                QString url=fsObject.remote.data["exportLinks"].toObject()["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"].toString();
-//                req->setRequestUrl(fsObject.remote.data["exportLinks"].toObject()["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"].toString());
-
-//                req->addQueryItem("id",fsObject.remote.data["id"].toString());
-//                req->addQueryItem("exportFormat","xlsx");
-//            }
-
-//            if(fsObject.remote.data["mimeType"].toString()=="application/vnd.google-apps.document"){
-
-//                req->setRequestUrl(fsObject.remote.data["exportLinks"].toObject()["application/vnd.openxmlformats-officedocument.wordprocessingml.document"].toString());
-
-//                req->addQueryItem("id",fsObject.remote.data["id"].toString());
-//                req->addQueryItem("exportFormat","docx");
-//            }
-
-//            if(fsObject.remote.data["mimeType"].toString()=="application/vnd.google-apps.presentation"){
-
-//                req->setRequestUrl(fsObject.remote.data["exportLinks"].toObject()["application/vnd.openxmlformats-officedocument.presentationml.presentation"].toString());
-
-//                req->addQueryItem("id",fsObject.remote.data["id"].toString());
-//                req->addQueryItem("exportFormat","pptx");
-//            }
-
-//            req->exec();
-
-//            QString filePath=this->workPath+fsObject.path+"ro.tmp";
-
-//            QFile file(filePath);
-//            file.open(QIODevice::WriteOnly );
-//            QDataStream outk(&file);
-
-//            QByteArray ba;
-//            ba.append(req->readReplyText());
-
-//            int sz=ba.size();
-//            fsObject.remote.fileSize=sz;
-
-
-//            outk.writeRawData(ba.data(),ba.size()) ;
-
-//            file.close();
-
-//            fsObject.remote.md5Hash=this->fileChecksum(filePath,QCryptographicHash::Md5);
-//            file.remove();
-
-//            delete(req);
         }
 
 

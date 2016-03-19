@@ -86,6 +86,8 @@ public:
 
     bool getArg();
 
+    QString getParamByName(QString paramName);// get named parameters value (if this parameter is exists) from input parameters list
+
 signals:
 
 public slots:
