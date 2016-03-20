@@ -340,6 +340,18 @@ int main(int argc, char *argv[])
                     if((parser->optarg=="upload")||(parser->optarg=="download")){
                         providers->setOption("force",parser->optarg);
                         providers->setFlag("force",true);
+
+
+
+                        if(parser->optarg == "download"){
+
+                            providers->setStrategy(MSCloudProvider::SyncStrategy::PreferRemote);
+                        }
+                        else{
+
+                            providers->setStrategy(MSCloudProvider::SyncStrategy::PreferLocal);
+                        }
+
                     }
                     else{
                         qStdOut()<< "--force option value must be an one of \"upload\" or \"download\""<<endl;
@@ -462,6 +474,18 @@ int main(int argc, char *argv[])
                 if((parser->optarg=="upload")||(parser->optarg=="download")){
                     providers->setOption("force",parser->optarg);
                     providers->setFlag("force",true);
+
+
+
+                    if(parser->optarg == "download"){
+
+                        providers->setStrategy(MSCloudProvider::SyncStrategy::PreferRemote);
+                    }
+                    else{
+
+                        providers->setStrategy(MSCloudProvider::SyncStrategy::PreferLocal);
+                    }
+
                 }
                 else{
                     qStdOut()<< "--force option value must be an one of \"upload\" or \"download\""<<endl;
