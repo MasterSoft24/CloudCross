@@ -1538,6 +1538,7 @@ bool MSGoogleDrive::remote_file_generateIDs(int count){
 
         if(!req->replyOK()){
             req->printReplyError();
+            delete(req);
             exit(1);
         }
 
@@ -1829,11 +1830,13 @@ void MSGoogleDrive::remote_file_insert(MSFSObject *object){
 
     if(!req->replyOK()){
         req->printReplyError();
+        delete(req);
         exit(1);
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
         qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+
         exit(0);
     }
 
@@ -1945,11 +1948,13 @@ void MSGoogleDrive::remote_file_update(MSFSObject *object){
 
     if(!req->replyOK()){
         req->printReplyError();
+        delete(req);
         exit(1);
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
         qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+
         exit(0);
     }
 
@@ -1997,11 +2002,13 @@ void MSGoogleDrive::remote_file_makeFolder(MSFSObject *object){
 
     if(!req->replyOK()){
         req->printReplyError();
+        delete(req);
         exit(1);
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
         qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+
         exit(0);
     }
 
@@ -2067,6 +2074,7 @@ void MSGoogleDrive::remote_file_makeFolder(MSFSObject *object, QString parentID)
 
     if(!req->replyOK()){
         req->printReplyError();
+        delete(req);
         exit(1);
     }
 
@@ -2119,6 +2127,7 @@ void MSGoogleDrive::remote_file_trash(MSFSObject *object){
 
     if(!req->replyOK()){
         req->printReplyError();
+        delete(req);
         exit(1);
     }
 

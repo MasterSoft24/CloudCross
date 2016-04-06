@@ -289,11 +289,19 @@ QString MSOptParser::getParamByName(QString paramName){
 
         if((this->input.at(i) == paramName) || (this->input.at(i) == ("--"+paramName))){
 
+            if(this->input.size()<=2){
+                return "";
+            }
+
             if(QString(this->input.at(i+1).at(0))!="-"){
 
                 QString p=this->input.at(i+1);
                 this->input.removeAt(i);
-                this->input.removeAt(i);
+
+                if(this->input.size()>=2){
+                    this->input.removeAt(i);
+                }
+
                 this->iit=this->input.begin();
                 *this->iit++;
                 return p;

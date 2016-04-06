@@ -1,28 +1,28 @@
 
-# CloudCross v1.0.4
+# CloudCross v1.1.0
 
 Kamensky Vladimir
 
-12.02.2016
+22.03.2016
 
 
 http://cloudcross.mastersoft24.ru
 
 
 
-CloudCross it's opensource software for synchronization of local files and folders with Google Drive.
+CloudCross it's opensource software for synchronization of local files and folders with various cloud storages.
+On this moment CloudCross supports working with Google Drive and Dropbox.
 This program was written on pure Qt, without any third-party libraries.
 The program works with Qt version 5 and above. Qt version 4.x are not supported. 
 
 CloudCross allows you to sync only a portion of the local/remote files and folders using black or white lists (.include and .exclude files).
-At the same time you have the opportunity to choose which files have the advantage - local or remote. Thus, you can keep relevance either local files or files on Google Drive.
+At the same time you have the opportunity to choose which files have the advantage - local or remote. Thus, you can keep relevance either local files or files on cloud storage.
 
 In addition, CloudCross supports automatic bidirectional conversion of documents from MS Office or Open Office format to Google Docs.
 Also, you can control the versioning of files synchronized on Google Drive. 
 
-In version 1.1 will be added:
+In next version  will be added:
 
-- DropBox support
 - Support run with predefined (customizable) profiles
 - build on Windows (yet questionable)
 
@@ -66,6 +66,9 @@ For detailed usage instructions see http://cloudcross.mastersoft24.ru/#usage
 	
 Change log:
 
+v1.1.0          Dropbox support added
+                --force​ option behaviour corrected
+		
 v1.0.4          Added an option --force to force a download or upload files and folders.
 
 v1.0.3          Enhance working with .include and .exclude lists
@@ -87,30 +90,30 @@ v1.0.1-rc1 -    first pre-release version of CloudCross
 
 
 
-# CloudCross v1.0.4
+# CloudCross v1.1.0
 
 Каменский Владимир
 
-12.02.2016
+22.03.2016
 
-http://cloudcross.mastersoft24.ru
+http://cloudcross.mastersoft24.ru/ru
 
 
-CloudCross - это свободная программа для синхронизации локальных файлов и папок с Google Drive.
+CloudCross - это свободная программа для синхронизации локальных файлов и папок с различными облачными хранилищами.
+На данный момент, пока, поддерживается работа с Google Drive и Dropbox.
 Программа написана на чистом Qt, без каких либо сторонних библиотек.
 CloudCross работает с Qt версии 5 и выше. Версии Qt 4.x не поддерживаются. 
 
 CloudCross позволяет синхронизировать только часть локальных/удаленных файлов и папок используя черные или белые списки (файлы .include и .exclude).
 При этом у вас есть возможность выбрать какие файлы имеют преимущество - локальные или удаленные. Таким образом, вы сможете поддерживать
-актуальность либо локальных файлов, либо файлов на Google Drive. 
+актуальность либо локальных файлов, либо файлов в облаке. 
 
 Кроме того, CloudCross поддерживает автоматическую двунаправленную конвертацию документов из формата MS Office или Open Office в формат Google Docs.
 Так же, доступно управление версионированием синхронизируемых файлов на Google Drive. 
 
 
-В версии 1.1 будут добавлены:
+В следующей версии  будут добавлены:
 
-- работа с DropBox
 - поддержка запуска с предустановленым (настраиваемым) профилем
 - возможность сборки по Windows (пока под вопросом)
 	
@@ -148,6 +151,9 @@ CloudCross позволяет синхронизировать только ча
 	
 	
 Список изменений:
+
+v1.1.0          Добавлена поддержка "облачного провайдера" Dropbox
+                Скорректирована работа опции --force​
 
 v1.0.4          Добавлена опция --force для принудительного скачивания или выгрузки файлов и папок.
 

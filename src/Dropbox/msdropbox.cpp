@@ -1463,7 +1463,10 @@ void MSDropbox::remote_file_get(MSFSObject* object){
         }
     }
     else{
-        qStdOut() << "Service error. "<< this->getReplyErrorString(req->readReplyText());
+
+        if(! this->getReplyErrorString(req->readReplyText()).contains( "path/not_file/")){
+            qStdOut() << "Service error. "<< this->getReplyErrorString(req->readReplyText());
+        }
     }
 
 
@@ -1563,6 +1566,7 @@ void MSDropbox::remote_file_insert(MSFSObject *object){
 
             if(!req->replyOK()){
                 req->printReplyError();
+                delete(req);
                 exit(1);
             }
 
@@ -1599,6 +1603,7 @@ void MSDropbox::remote_file_insert(MSFSObject *object){
 
             if(!req->replyOK()){
                 req->printReplyError();
+                delete(req);
                 exit(1);
             }
 
@@ -1647,6 +1652,7 @@ void MSDropbox::remote_file_insert(MSFSObject *object){
 
         if(!req->replyOK()){
             req->printReplyError();
+            delete(req);
             exit(1);
         }
 
@@ -1763,6 +1769,7 @@ void MSDropbox::remote_file_update(MSFSObject *object){
 
             if(!req->replyOK()){
                 req->printReplyError();
+                delete(req);
                 exit(1);
             }
 
@@ -1799,6 +1806,7 @@ void MSDropbox::remote_file_update(MSFSObject *object){
 
             if(!req->replyOK()){
                 req->printReplyError();
+                delete(req);
                 exit(1);
             }
 
@@ -1847,6 +1855,7 @@ void MSDropbox::remote_file_update(MSFSObject *object){
 
         if(!req->replyOK()){
             req->printReplyError();
+            delete(req);
             exit(1);
         }
 
@@ -1899,6 +1908,7 @@ void MSDropbox::remote_file_makeFolder(MSFSObject *object){
 
     if(!req->replyOK()){
         req->printReplyError();
+        delete(req);
         exit(1);
     }
 
@@ -1969,6 +1979,7 @@ void MSDropbox::remote_file_trash(MSFSObject *object){
         if(! errt.contains("path_lookup/not_found/")){// ignore previous deleted files
 
             qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+            delete(req);
             exit(0);
         }
         else{

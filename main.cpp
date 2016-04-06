@@ -11,8 +11,8 @@
 #include <QDateTime>
 
 #define APP_MAJOR_VERSION 1
-#define APP_MINOR_VERSION 0
-#define APP_BUILD_NUMBER  4
+#define APP_MINOR_VERSION 1
+#define APP_BUILD_NUMBER  0
 #define APP_SUFFIX ""
 #define APP_NAME "CloudCross"
 
@@ -20,7 +20,7 @@
 
 void printHelp(){
     qStdOut() << APP_NAME << " v"<<APP_MAJOR_VERSION<<"."<<APP_MINOR_VERSION<<"."<<APP_BUILD_NUMBER<<APP_SUFFIX <<endl;
-    qStdOut()<< QObject::tr("is a opensource application for sync local files with a Google drive cloud storage.\n") <<endl;
+    qStdOut()<< QObject::tr("is a opensource program for sync local files with a many cloud storages.\n") <<endl;
     qStdOut()<< QObject::tr("Options:") <<endl;
     qStdOut()<< QObject::tr("   -h [ --help ]         Produce help message") <<endl;
     qStdOut()<< QObject::tr("   -v [ --version ]      Display CloudCross version") <<endl;
@@ -259,20 +259,20 @@ int main(int argc, char *argv[])
                 case 1: // --help
 
                     printHelp();
-                    exit(0);
+                    return 0;
                     //qStdOut()<< "HELP arg="+parser->optarg;
                     break;
 
                 case 2: //-- auth
 
                     authGrive(providers);
-                    exit(0);
+                    return 0;
                     break;
 
                 case 3: // --version
 
                     printVersion();
-                    exit(0);
+                    return 0;
                     break;
 
 
@@ -295,7 +295,7 @@ int main(int argc, char *argv[])
                         }
                         else{
                             qStdOut()<< "--prefer option value must be an one of \"local\" or \"remote\""<<endl;
-                            exit(0);
+                            return 0;
                             break;
                         }
                     }
@@ -306,7 +306,7 @@ int main(int argc, char *argv[])
                 case 7:// --list
 
                     listGrive(providers);
-                    exit(0);
+                    return 0;
                     break;
 
                 case 6: // --no-hidden
@@ -355,7 +355,7 @@ int main(int argc, char *argv[])
                     }
                     else{
                         qStdOut()<< "--force option value must be an one of \"upload\" or \"download\""<<endl;
-                        exit(0);
+                        return 0;
                         break;
                     }
                     break;
@@ -366,7 +366,8 @@ int main(int argc, char *argv[])
                     syncGrive(providers);
 
 
-                    exit(0);
+                    //exit(0);
+                    return 0;
                     break;
                 }
 
@@ -392,20 +393,20 @@ int main(int argc, char *argv[])
             case 1: // --help
 
                 printHelp();
-                exit(0);
+                return 0;
                 //qStdOut()<< "HELP arg="+parser->optarg;
                 break;
 
             case 2: //-- auth
 
                 authDropbox(providers);
-                exit(0);
+                return 0;
                 break;
 
             case 3: // --version
 
                 printVersion();
-                exit(0);
+                return 0;
                 break;
 
 
@@ -428,7 +429,7 @@ int main(int argc, char *argv[])
                     }
                     else{
                         qStdOut()<< "--prefer option value must be an one of \"local\" or \"remote\""<<endl;
-                        exit(0);
+                        return 0;
                         break;
                     }
                 }
@@ -439,7 +440,7 @@ int main(int argc, char *argv[])
             case 7:// --list
 
                 listDropbox(providers);
-                exit(0);
+                return 0;
                 break;
 
             case 6: // --no-hidden
@@ -489,7 +490,7 @@ int main(int argc, char *argv[])
                 }
                 else{
                     qStdOut()<< "--force option value must be an one of \"upload\" or \"download\""<<endl;
-                    exit(0);
+                    return 0;
                     break;
                 }
                 break;
@@ -500,7 +501,7 @@ int main(int argc, char *argv[])
                 syncDropbox(providers);
 //                qStdOut()<< "sync dropbox"<<endl;
 
-                exit(0);
+                return 0;
                 break;
             }
 
@@ -511,7 +512,7 @@ int main(int argc, char *argv[])
 
         if(parser->erorrNum!=0){
             qStdOut()<< parser->errorString<<endl;
-            exit(1);
+            return 1;
         }
     }
 
