@@ -73,6 +73,7 @@ public:
     void post(QByteArray data);
     void put(QByteArray data);
     void methodCharger(QNetworkRequest req);
+    void download(QString url);
 
     bool replyOK();
     void printReplyError();

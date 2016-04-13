@@ -61,7 +61,7 @@ bool MSGoogleDrive::auth(){
 
     if(!req->replyOK()){
         req->printReplyError();
-        exit(1);
+        return false;
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
@@ -105,7 +105,7 @@ bool MSGoogleDrive::auth(){
 
     if(!this->testReplyBodyForError(req->readReplyText())){
         qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-        exit(0);
+        return false;
     }
 
 

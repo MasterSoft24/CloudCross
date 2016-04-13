@@ -11,7 +11,7 @@
 #include <QDateTime>
 
 #define APP_MAJOR_VERSION 1
-#define APP_MINOR_VERSION 1
+#define APP_MINOR_VERSION 2
 #define APP_BUILD_NUMBER  0
 #define APP_SUFFIX ""
 #define APP_NAME "CloudCross"
@@ -40,7 +40,7 @@ void printHelp(){
                             "                         This option overrides --prefer option value.") <<endl;
 
     qStdOut()<< QObject::tr("   --provider arg        Set cloud provider for current sync operation. On this moment this option can be \n"
-                            "                         a \"google\" or \"dropbox\". Provider by default is Google Drive") <<endl;
+                            "                         a \"google\", \"yandex\" or \"dropbox\". Provider by default is Google Drive") <<endl;
 
 }
 
@@ -196,6 +196,80 @@ void syncDropbox(MSProvidersPool* providers){
 }
 
 
+void authYandex(MSProvidersPool* providers){
+
+    MSYandexDisk* ydp=new MSYandexDisk();
+    if(ydp->auth()){
+
+        providers->addProvider(ydp,true);
+        providers->saveTokenFile("YandexDisk");
+    }
+    else{
+       qStdOut() << "Authentication failed"<<endl;
+    }
+}
+
+
+void listYandex(MSProvidersPool* providers){
+
+    MSYandexDisk* ydp=new MSYandexDisk();
+
+    providers->addProvider(ydp,true);
+    providers->loadTokenFile("YandexDisk");
+
+    if(! providers->refreshToken("YandexDisk")){
+
+        qStdOut()<< "Unauthorized client"<<endl;
+        return;
+    }
+
+    ydp->readRemote("/");
+
+
+
+    QMap<QString,bool>sorted;
+    QMap<QString,bool>::iterator si;
+
+    // sort remote file list
+    QHash<QString,MSFSObject>::iterator li=ydp->syncFileList.begin();
+
+    while(li != ydp->syncFileList.end()){
+        sorted.insert(li.key(),true);
+        li++;
+    }
+
+    si=sorted.begin();
+
+    // print remote file list
+    while(si != sorted.end()){
+        qStdOut() << si.key()<< endl;
+        si++;
+    }
+
+}
+
+
+
+void syncYandex(MSProvidersPool* providers){
+
+    MSYandexDisk* ydp=new MSYandexDisk();
+
+    providers->addProvider(ydp);
+    if(! providers->loadTokenFile("YandexDisk")){
+        exit(0);
+    }
+
+    if(!providers->refreshToken("YandexDisk")){
+        qStdOut()<<"Unauthorized access. Aborted."<<endl;
+        exit(0);
+    }
+
+    ydp->createSyncFileList();
+
+}
+
+
+
 
 
 
@@ -225,7 +299,7 @@ int main(int argc, char *argv[])
     parser->insertOption(10,"--dry-run");
     parser->insertOption(11,"--convert-doc");
     parser->insertOption(12,"--force 1");
-    parser->insertOption(13,"--provider 1"); // google or dropbox
+    parser->insertOption(13,"--provider 1"); // google, yandex or dropbox
 
     //...............
 
@@ -243,7 +317,7 @@ int main(int argc, char *argv[])
     }
 
 
-    if((currentProvider != "google")&&(currentProvider != "dropbox")){
+    if((currentProvider != "google")&&(currentProvider != "dropbox")&&(currentProvider != "yandex")){
         qStdOut()<< "Unknown cloud provider. Application terminated."<< endl;
         return 1;
     }
@@ -465,7 +539,7 @@ int main(int argc, char *argv[])
                 break;
 
             case 11: // --convert-doc
-                  qStdOut()<< "--no-new-rev option doesn't matter for Dropbox provider. "<<endl;
+                  qStdOut()<< "--convert-doc option doesn't matter for Dropbox provider. "<<endl;
 //                providers->setFlag("convertDoc",true);
                 break;
 
@@ -515,6 +589,142 @@ int main(int argc, char *argv[])
             return 1;
         }
     }
+
+
+
+    // ===%%%% YANDEXDISK %%%%===
+
+    if(currentProvider == "yandex"){
+
+        while((ret=parser->get())!=-1){
+            switch(ret){
+
+            case 1: // --help
+
+                printHelp();
+                return 0;
+                //qStdOut()<< "HELP arg="+parser->optarg;
+                break;
+
+            case 2: //-- auth
+
+                authYandex(providers);
+                return 0;
+                break;
+
+            case 3: // --version
+
+                printVersion();
+                return 0;
+                break;
+
+
+            case 4: // --path
+
+                providers->setWorkPath(parser->optarg);
+                break;
+
+            case 5: // --prefer
+
+                MSCloudProvider::SyncStrategy s;
+
+                if(parser->optarg=="local"){
+                    s=MSCloudProvider::SyncStrategy::PreferLocal;
+                }
+
+                else{
+                    if(parser->optarg=="remote"){
+                    s=MSCloudProvider::SyncStrategy::PreferRemote;
+                    }
+                    else{
+                        qStdOut()<< "--prefer option value must be an one of \"local\" or \"remote\""<<endl;
+                        return 0;
+                        break;
+                    }
+                }
+
+                providers->setStrategy(s);
+                break;
+
+            case 7:// --list
+
+                listYandex(providers);
+                return 0;
+                break;
+
+            case 6: // --no-hidden
+
+                providers->setFlag("noHidden",true);
+                break;
+
+            case 8: // --use-include
+
+                providers->setFlag("useInclude",true);
+                break;
+
+            case 9: // --no-new-rev
+
+                qStdOut()<< "--no-new-rev option doesn't matter for Yandex provider. "<<endl;
+                //providers->setFlag("noNewRev",true);
+                break;
+
+            case 10: // --dry-run
+
+                providers->setFlag("dryRun",true);
+                break;
+
+            case 11: // --convert-doc
+                  qStdOut()<< "--convert-doc option doesn't matter for Yandex provider. "<<endl;
+//                providers->setFlag("convertDoc",true);
+                break;
+
+            case 12: // --force
+
+
+                if((parser->optarg=="upload")||(parser->optarg=="download")){
+                    providers->setOption("force",parser->optarg);
+                    providers->setFlag("force",true);
+
+
+
+                    if(parser->optarg == "download"){
+
+                        providers->setStrategy(MSCloudProvider::SyncStrategy::PreferRemote);
+                    }
+                    else{
+
+                        providers->setStrategy(MSCloudProvider::SyncStrategy::PreferLocal);
+                    }
+
+                }
+                else{
+                    qStdOut()<< "--force option value must be an one of \"upload\" or \"download\""<<endl;
+                    return 0;
+                    break;
+                }
+                break;
+
+
+            default: // syn execute without any params by default
+
+                syncYandex(providers);
+//                qStdOut()<< "sync dropbox"<<endl;
+
+                return 0;
+                break;
+            }
+
+
+
+        }
+
+
+        if(parser->erorrNum!=0){
+            qStdOut()<< parser->errorString<<endl;
+            return 1;
+        }
+    }
+
 
     //return a.exec();
 }

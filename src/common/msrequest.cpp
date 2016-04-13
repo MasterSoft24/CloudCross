@@ -140,6 +140,34 @@ void MSRequest::post(QByteArray data){
 }
 
 
+void MSRequest::download(QString url){
+
+    this->setUrl(*this->url);
+
+    methodCharger(*this);
+
+    // 301 redirect handling
+    while(true){
+
+        QVariant possible_redirected_url= this->replyAttribute;//this->lastReply->attribute(QNetworkRequest::RedirectionTargetAttribute);
+
+        if(!possible_redirected_url.isNull()) {
+
+            QUrl rdrUrl=possible_redirected_url.value<QUrl>();
+
+           // QString reqStr=rdrUrl.scheme()+"://"+rdrUrl.host()+"/"+rdrUrl.path()+"?"+rdrUrl.query();
+            QString reqStr=rdrUrl.scheme()+"://"+rdrUrl.host()+""+rdrUrl.path()+"?"+rdrUrl.query();
+
+            methodCharger(QNetworkRequest(reqStr));
+
+        }
+        else{
+            break;
+        }
+    }
+}
+
+
 
 void MSRequest::put(QByteArray data){
 
@@ -176,7 +204,8 @@ void MSRequest::exec(){
 
             QUrl rdrUrl=possible_redirected_url.value<QUrl>();
 
-            QString reqStr=rdrUrl.scheme()+"://"+rdrUrl.host()+"/"+rdrUrl.path()+"?"+rdrUrl.query();
+           // QString reqStr=rdrUrl.scheme()+"://"+rdrUrl.host()+"/"+rdrUrl.path()+"?"+rdrUrl.query();
+            QString reqStr=rdrUrl.scheme()+"://"+rdrUrl.host()+""+rdrUrl.path()+"?"+rdrUrl.query();
 
             methodCharger(QNetworkRequest(reqStr));
 

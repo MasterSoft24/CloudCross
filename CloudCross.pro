@@ -20,7 +20,10 @@ SOURCES += main.cpp \
     src/common/msfsobject.cpp \
     src/common/msidslist.cpp \
     src/common/qstdout.cpp \
-    src/Dropbox/msdropbox.cpp
+    src/Dropbox/msdropbox.cpp \
+    src/YandexDisk/msyandexdisk.cpp \
+
+
 
 HEADERS += \
     include/msrequest.h \
@@ -33,7 +36,9 @@ HEADERS += \
     include/msfsobject.h \
     include/msidslist.h \
     include/qstdout.h \
-    src/Dropbox/msdropbox.h
+    src/Dropbox/msdropbox.h \
+    src/YandexDisk/msyandexdisk.h \
+
 
 target.path = /usr/bin
 INSTALLS += target
