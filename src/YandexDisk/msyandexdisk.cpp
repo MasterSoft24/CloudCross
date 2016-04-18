@@ -39,40 +39,7 @@ bool MSYandexDisk::auth(){
     QTextStream s(stdin);
     QString authCode = s.readLine();
 
-//    delete(req);
 
-//    req=new MSRequest();
-
-//    req->setRequestUrl("https://api.dropboxapi.com/1/oauth2/token");
-//    req->setMethod("post");
-
-//    req->addQueryItem("client_id",          "jqw8z760uh31l92");
-//    req->addQueryItem("client_secret",      "eeuwcu3kzqrbl9j");
-//    req->addQueryItem("code",               authCode.trimmed());
-//    req->addQueryItem("grant_type",         "authorization_code");
-//    //req->addQueryItem("redirect_uri",       "urn:ietf:wg:oauth:2.0:oob");
-
-//    req->exec();
-
-
-//    if(!req->replyOK()){
-//        req->printReplyError();
-//        return false;
-//    }
-
-////    if(!this->testReplyBodyForError(req->readReplyText())){
-////        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-////        exit(0);
-////    }
-
-
-//    QString content= req->replyText;//lastReply->readAll();
-
-//    //qStdOut() << content;
-
-
-//    QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
-//    QJsonObject job = json.object();
     QString v=  authCode ;//job["access_token"].toString();
 
     if(v!=""){
@@ -632,16 +599,17 @@ void MSYandexDisk::createSyncFileList(){
 
 
 
-    this->readRemote("/");// top level files and folders
+    //this->readRemote("/");// top level files and folders
 
     qStdOut()<<"Reading local files and folders" <<endl;
 
-    //this->readLocal(this->workPath);
+    this->readLocal(this->workPath);
 
-this->remote_file_get(&(this->syncFileList.values()[0]));
+//this->remote_file_get(&(this->syncFileList.values()[0]));
 //this->remote_file_insert(&(this->syncFileList.values()[0]));
 //this->remote_file_update(&(this->syncFileList.values()[0]));
- //this->remote_file_makeFolder(&(this->syncFileList.values()[0]));
+// this->remote_file_makeFolder(&(this->syncFileList.values()[0]));
+    this->remote_file_trash(&(this->syncFileList.values()[0]));
 // this->remote_createDirectory((this->syncFileList.values()[0].path+this->syncFileList.values()[0].fileName));
 
 
@@ -1459,189 +1427,71 @@ void MSYandexDisk::remote_file_insert(MSFSObject *object){
     }
 
 
-    // start session ===========
+    // get url for uploading ===========
 
     MSRequest *req = new MSRequest();
 
-    req->setRequestUrl("https://content.dropboxapi.com/2/files/upload_session/start");
-   // req->setMethod("post");
+    req->setRequestUrl("https://cloud-api.yandex.net/v1/disk/resources/upload");
+    req->setMethod("get");
 
-    req->addHeader("Authorization",                     "Bearer "+this->access_token);
-    req->addHeader("Content-Type",                      QString("application/octet-stream"));
+    req->addHeader("Authorization",                     "OAuth "+this->access_token);
+    req->addHeader("Content-Type",                      QString("application/json; charset=UTF-8"));
+    req->addQueryItem("path",                           object->path+object->fileName);
+    req->addQueryItem("overwrite",                           "true");
+
+    req->exec();
 
 
-    QByteArray mediaData;
-
-    QString filePath=this->workPath+object->path+object->fileName;
-
-    // read file content and put him into request body
-    QFile file(filePath);
-
-    qint64 fSize=file.size();
-    int passCount=fSize/YADISK_MAX_FILESIZE;// count of 150MB blocks
-
-    if (!file.open(QIODevice::ReadOnly)){
-
-        //error file not found
-        qStdOut()<<"Unable to open of "+filePath <<endl;
+    if(!req->replyOK()){
+        req->printReplyError();
         delete(req);
-        return;
+        exit(1);
     }
 
-    req->post(mediaData);
 
 
     QString content=req->readReplyText();
 
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject job = json.object();
-    QString sessID=job["session_id"].toString();
+    QString href=job["href"].toString();
 
-    if(sessID==""){
-        qStdOut()<< "Error when upload "+filePath+" on remote" <<endl;
-    }
+
 
     delete(req);
 
-    req=new MSRequest();
+    // upload file content
 
-    if(passCount==0){// onepass and finalize uploading
+    QString filePath=  this->workPath+object->path+object->fileName;
 
-            req->setRequestUrl("https://content.dropboxapi.com/2/files/upload_session/finish");
-            req->addHeader("Authorization",                     "Bearer "+this->access_token);
-            req->addHeader("Content-Type",                      QString("application/octet-stream"));
+    QFile file(filePath);
+    qint64 fSize=file.size();
 
-            QJsonObject cursor;
-            cursor.insert("session_id",sessID);
-            cursor.insert("offset",0);
-            QJsonObject commit;
-            commit.insert("path",object->path+object->fileName);
-            commit.insert("mode","add");
-            commit.insert("autorename",false);
-            commit.insert("mute",false);
-            commit.insert("client_modified",QDateTime::fromMSecsSinceEpoch(object->local.modifiedDate,Qt::UTC).toString(Qt::DateFormat::ISODate));
+    req = new MSRequest();
 
-            QJsonObject doc;
-            doc.insert("cursor",cursor);
-            doc.insert("commit",commit);
-
-            req->addHeader("Dropbox-API-Arg",QJsonDocument(doc).toJson(QJsonDocument::Compact) );//QJsonDocument(doc).toJson()
-            QByteArray ba;
-
-            ba.append(file.read(fSize));
-            file.close();
-
-            req->addHeader("Content-Length",QString::number(ba.length()).toLocal8Bit());
-            req->post(ba);
-
-            if(!req->replyOK()){
-                req->printReplyError();
-                delete(req);
-                exit(1);
-            }
-
-                if(!this->testReplyBodyForError(req->readReplyText())){
-                    qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                    exit(0);
-                }
-
-    }
-    else{ // multipass uploading
-
-        int cursorPosition=0;
-
-        for(int i=0;i<passCount;i++){
-
-            req->setRequestUrl("https://content.dropboxapi.com/2/files/upload_session/append");
-            req->addHeader("Authorization",                     "Bearer "+this->access_token);
-            req->addHeader("Content-Type",                      QString("application/octet-stream"));
-
-            QJsonObject* cursor1=new QJsonObject();
-            cursor1->insert("session_id",sessID);
-            cursor1->insert("offset",cursorPosition);
+    req->setRequestUrl(href);
 
 
-            req->addHeader("Dropbox-API-Arg",QJsonDocument(*cursor1).toJson(QJsonDocument::Compact) );//QJsonDocument(doc).toJson()
-            QByteArray* ba1=new QByteArray();
+    if (!file.open(QIODevice::ReadOnly)){
 
-            file.seek(cursorPosition);
-            ba1->append(file.read(YADISK_MAX_FILESIZE));
-
-
-            req->addHeader("Content-Length",QString::number(ba1->length()).toLocal8Bit());
-            req->post(*ba1);
-
-            if(!req->replyOK()){
-                req->printReplyError();
-                delete(req);
-                exit(1);
-            }
-
-                if(!this->testReplyBodyForError(req->readReplyText())){
-                    qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                    exit(0);
-                }
-
-            delete(req);
-            delete(ba1);
-            delete(cursor1);
-            cursorPosition += YADISK_MAX_FILESIZE;
-
-            req=new MSRequest();
-        }
-
-        // finalize upload
-
-        req->setRequestUrl("https://content.dropboxapi.com/2/files/upload_session/finish");
-        req->addHeader("Authorization",                     "Bearer "+this->access_token);
-        req->addHeader("Content-Type",                      QString("application/octet-stream"));
-
-        QJsonObject cursor;
-        cursor.insert("session_id",sessID);
-        cursor.insert("offset",cursorPosition);
-        QJsonObject commit;
-        commit.insert("path",object->path+object->fileName);
-        commit.insert("mode","add");
-        commit.insert("autorename",false);
-        commit.insert("mute",false);
-        commit.insert("client_modified",QDateTime::fromMSecsSinceEpoch(object->local.modifiedDate,Qt::UTC).toString(Qt::DateFormat::ISODate));
-
-        QJsonObject doc;
-        doc.insert("cursor",cursor);
-        doc.insert("commit",commit);
-
-        req->addHeader("Dropbox-API-Arg",QJsonDocument(doc).toJson(QJsonDocument::Compact) );//QJsonDocument(doc).toJson()
-        QByteArray ba;
-
-        file.seek(cursorPosition);
-        ba.append(file.read(fSize-cursorPosition));
-        file.close();
-
-        req->addHeader("Content-Length",QString::number(ba.length()).toLocal8Bit());
-        req->post(ba);
-
-        if(!req->replyOK()){
-            req->printReplyError();
-            delete(req);
-            exit(1);
-        }
-
-            if(!this->testReplyBodyForError(req->readReplyText())){
-                qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                exit(0);
-            }
-
+        //error file not found
+        qStdOut()<<"Unable to open of "+filePath <<endl;
+        delete(req);
+        exit(1);
     }
 
-    QString rcontent=req->readReplyText();
 
-    QJsonDocument rjson = QJsonDocument::fromJson(rcontent.toUtf8());
-    QJsonObject rjob = rjson.object();
-    object->local.newRemoteID=rjob["id"].toString();
+    req->addHeader("Content-Length",QString::number(fSize).toLocal8Bit());
+    req->put(&file);
 
-    if(rjob["id"].toString()==""){
-        qStdOut()<< "Error when upload "+filePath+" on remote" <<endl;
+    if(!req->replyOK()){
+        req->printReplyError();
+        delete(req);
+        exit(1);
     }
+
+
+
 
     delete(req);
 }
@@ -1662,189 +1512,71 @@ void MSYandexDisk::remote_file_update(MSFSObject *object){
     }
 
 
-    // start session ===========
+    // get url for uploading ===========
 
     MSRequest *req = new MSRequest();
 
-    req->setRequestUrl("https://content.dropboxapi.com/2/files/upload_session/start");
-   // req->setMethod("post");
+    req->setRequestUrl("https://cloud-api.yandex.net/v1/disk/resources/upload");
+    req->setMethod("get");
 
-    req->addHeader("Authorization",                     "Bearer "+this->access_token);
-    req->addHeader("Content-Type",                      QString("application/octet-stream"));
+    req->addHeader("Authorization",                     "OAuth "+this->access_token);
+    req->addHeader("Content-Type",                      QString("application/json; charset=UTF-8"));
+    req->addQueryItem("path",                           object->path+object->fileName);
+    req->addQueryItem("overwrite",                           "true");
+
+    req->exec();
 
 
-    QByteArray mediaData;
-
-    QString filePath=this->workPath+object->path+object->fileName;
-
-    // read file content and put him into request body
-    QFile file(filePath);
-
-    qint64 fSize=file.size();
-    int passCount=fSize/YADISK_MAX_FILESIZE;// count of 150MB blocks
-
-    if (!file.open(QIODevice::ReadOnly)){
-
-        //error file not found
-        qStdOut()<<"Unable to open of "+filePath <<endl;
+    if(!req->replyOK()){
+        req->printReplyError();
         delete(req);
-        return;
+        exit(1);
     }
 
-    req->post(mediaData);
 
 
     QString content=req->readReplyText();
 
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject job = json.object();
-    QString sessID=job["session_id"].toString();
+    QString href=job["href"].toString();
 
-    if(sessID==""){
-        qStdOut()<< "Error when upload "+filePath+" on remote" <<endl;
-    }
+
 
     delete(req);
 
-    req=new MSRequest();
+    // upload file content
 
-    if(passCount==0){// onepass and finalize uploading
+    QString filePath=  this->workPath+object->path+object->fileName;
 
-            req->setRequestUrl("https://content.dropboxapi.com/2/files/upload_session/finish");
-            req->addHeader("Authorization",                     "Bearer "+this->access_token);
-            req->addHeader("Content-Type",                      QString("application/octet-stream"));
+    QFile file(filePath);
+    qint64 fSize=file.size();
 
-            QJsonObject cursor;
-            cursor.insert("session_id",sessID);
-            cursor.insert("offset",0);
-            QJsonObject commit;
-            commit.insert("path",object->path+object->fileName);
-            commit.insert("mode","overwrite");
-            commit.insert("autorename",false);
-            commit.insert("mute",false);
-            commit.insert("client_modified",QDateTime::fromMSecsSinceEpoch(object->local.modifiedDate,Qt::UTC).toString(Qt::DateFormat::ISODate));
+    req = new MSRequest();
 
-            QJsonObject doc;
-            doc.insert("cursor",cursor);
-            doc.insert("commit",commit);
-
-            req->addHeader("Dropbox-API-Arg",QJsonDocument(doc).toJson(QJsonDocument::Compact) );//QJsonDocument(doc).toJson()
-            QByteArray ba;
-
-            ba.append(file.read(fSize));
-            file.close();
-
-            req->addHeader("Content-Length",QString::number(ba.length()).toLocal8Bit());
-            req->post(ba);
-
-            if(!req->replyOK()){
-                req->printReplyError();
-                delete(req);
-                exit(1);
-            }
-
-                if(!this->testReplyBodyForError(req->readReplyText())){
-                    qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                    exit(0);
-                }
-
-    }
-    else{ // multipass uploading
-
-        int cursorPosition=0;
-
-        for(int i=0;i<passCount;i++){
-
-            req->setRequestUrl("https://content.dropboxapi.com/2/files/upload_session/append");
-            req->addHeader("Authorization",                     "Bearer "+this->access_token);
-            req->addHeader("Content-Type",                      QString("application/octet-stream"));
-
-            QJsonObject* cursor1=new QJsonObject();
-            cursor1->insert("session_id",sessID);
-            cursor1->insert("offset",cursorPosition);
+    req->setRequestUrl(href);
 
 
-            req->addHeader("Dropbox-API-Arg",QJsonDocument(*cursor1).toJson(QJsonDocument::Compact) );//QJsonDocument(doc).toJson()
-            QByteArray* ba1=new QByteArray();
+    if (!file.open(QIODevice::ReadOnly)){
 
-            file.seek(cursorPosition);
-            ba1->append(file.read(YADISK_MAX_FILESIZE));
-
-
-            req->addHeader("Content-Length",QString::number(ba1->length()).toLocal8Bit());
-            req->post(*ba1);
-
-            if(!req->replyOK()){
-                req->printReplyError();
-                delete(req);
-                exit(1);
-            }
-
-                if(!this->testReplyBodyForError(req->readReplyText())){
-                    qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                    exit(0);
-                }
-
-            delete(req);
-            delete(ba1);
-            delete(cursor1);
-            cursorPosition += YADISK_MAX_FILESIZE;
-
-            req=new MSRequest();
-        }
-
-        // finalize upload
-
-        req->setRequestUrl("https://content.dropboxapi.com/2/files/upload_session/finish");
-        req->addHeader("Authorization",                     "Bearer "+this->access_token);
-        req->addHeader("Content-Type",                      QString("application/octet-stream"));
-
-        QJsonObject cursor;
-        cursor.insert("session_id",sessID);
-        cursor.insert("offset",cursorPosition);
-        QJsonObject commit;
-        commit.insert("path",object->path+object->fileName);
-        commit.insert("mode","overwrite");
-        commit.insert("autorename",false);
-        commit.insert("mute",false);
-        commit.insert("client_modified",QDateTime::fromMSecsSinceEpoch(object->local.modifiedDate,Qt::UTC).toString(Qt::DateFormat::ISODate));
-
-        QJsonObject doc;
-        doc.insert("cursor",cursor);
-        doc.insert("commit",commit);
-
-        req->addHeader("Dropbox-API-Arg",QJsonDocument(doc).toJson(QJsonDocument::Compact) );//QJsonDocument(doc).toJson()
-        QByteArray ba;
-
-        file.seek(cursorPosition);
-        ba.append(file.read(fSize-cursorPosition));
-        file.close();
-
-        req->addHeader("Content-Length",QString::number(ba.length()).toLocal8Bit());
-        req->post(ba);
-
-        if(!req->replyOK()){
-            req->printReplyError();
-            delete(req);
-            exit(1);
-        }
-
-            if(!this->testReplyBodyForError(req->readReplyText())){
-                qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                exit(0);
-            }
-
+        //error file not found
+        qStdOut()<<"Unable to open of "+filePath <<endl;
+        delete(req);
+        exit(1);
     }
 
-    QString rcontent=req->readReplyText();
 
-    QJsonDocument rjson = QJsonDocument::fromJson(rcontent.toUtf8());
-    QJsonObject rjob = rjson.object();
-    object->local.newRemoteID=rjob["id"].toString();
+    req->addHeader("Content-Length",QString::number(fSize).toLocal8Bit());
+    req->put(&file);
 
-    if(rjob["id"].toString()==""){
-        qStdOut()<< "Error when upload "+filePath+" on remote" <<endl;
+    if(!req->replyOK()){
+        req->printReplyError();
+        delete(req);
+        exit(1);
     }
+
+
+
 
     delete(req);
 }
@@ -1859,21 +1591,15 @@ void MSYandexDisk::remote_file_makeFolder(MSFSObject *object){
 
     MSRequest *req = new MSRequest();
 
-    req->setRequestUrl("https://api.dropboxapi.com/2/files/create_folder");
+    req->setRequestUrl("https://cloud-api.yandex.net/v1/disk/resources");
 
-    req->addHeader("Authorization",                     "Bearer "+this->access_token);
-    req->addHeader("Content-Type",                      QString("application/json; charset=UTF-8"));
+    req->addHeader("Authorization",                     "OAuth "+this->access_token);
+    req->addQueryItem("path",                           object->path+object->fileName);
 
     QByteArray metaData;
 
-    //make file metadata in json representation
-    QJsonObject metaJson;
-    metaJson.insert("path",object->path+object->fileName);
 
-
-    metaData.append(QString(QJsonDocument(metaJson).toJson()).toLocal8Bit());
-
-    req->post(metaData);
+    req->put(metaData);
 
 
     if(!req->replyOK()){
@@ -1889,17 +1615,40 @@ void MSYandexDisk::remote_file_makeFolder(MSFSObject *object){
 
 
 
+    // getting meta info of created folder
+
+
     QString filePath=this->workPath+object->path+object->fileName;
 
     QString content=req->readReplyText();
 
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject job = json.object();
-    object->local.newRemoteID=job["id"].toString();
+
+
+    QString href=job["href"].toString();
+
+    delete(req);
+
+    req = new MSRequest();
+
+    req->setRequestUrl(href);
+    req->addHeader("Authorization",                     "OAuth "+this->access_token);
+    req->addQueryItem("path",                           object->path+object->fileName);
+    req->setMethod("get");
+
+    req->exec();
+
+    content=req->readReplyText();
+
+    json = QJsonDocument::fromJson(content.toUtf8());
+    job = json.object();
+
+   // object->local.newRemoteID=job["id"].toString();
     object->remote.data=job;
     object->remote.exist=true;
 
-    if(job["id"].toString()==""){
+    if(job["path"].toString()==""){
         qStdOut()<< "Error when folder create "+filePath+" on remote" <<endl;
     }
 
@@ -1927,26 +1676,19 @@ void MSYandexDisk::remote_file_trash(MSFSObject *object){
 
     MSRequest *req = new MSRequest();
 
-    req->setRequestUrl("https://api.dropboxapi.com/2/files/delete");
+    req->setRequestUrl("https://cloud-api.yandex.net/v1/disk/resources");
 
 
-    req->addHeader("Authorization",                     "Bearer "+this->access_token);
-    req->addHeader("Content-Type",                      QString("application/json; charset=UTF-8"));
+    req->addHeader("Authorization",                     "OAuth "+this->access_token);
+    //req->addHeader("Content-Type",                      QString("application/json; charset=UTF-8"));
+    req->addQueryItem("path",                           object->path+object->fileName);
 
-    QByteArray metaData;
-
-    QJsonObject metaJson;
-    metaJson.insert("path",object->path+object->fileName);
-
-
-    metaData.append(QString(QJsonDocument(metaJson).toJson()).toLocal8Bit());
-
-    req->post(metaData);
+    req->deleteResource();
 
     if(!this->testReplyBodyForError(req->readReplyText())){
         QString errt=this->getReplyErrorString(req->readReplyText());
 
-        if(! errt.contains("path_lookup/not_found/")){// ignore previous deleted files
+        if(! errt.contains("Resource not found/")){// ignore previous deleted files
 
             qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
             delete(req);
@@ -1963,15 +1705,15 @@ void MSYandexDisk::remote_file_trash(MSFSObject *object){
 
 
 
-    QString content=req->readReplyText();
+//    QString content=req->readReplyText();
 
-    QString filePath=this->workPath+object->path+object->fileName;
+//    QString filePath=this->workPath+object->path+object->fileName;
 
-    QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
-    QJsonObject job = json.object();
-    if(job["id"].toString()==""){
-        qStdOut()<< "Error when move to trash "+filePath+" on remote" <<endl;
-    }
+//    QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+//    QJsonObject job = json.object();
+//    if(job["id"].toString()==""){
+//        qStdOut()<< "Error when move to trash "+filePath+" on remote" <<endl;
+//    }
 
     delete(req);
 

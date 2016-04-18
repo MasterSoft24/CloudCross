@@ -72,8 +72,10 @@ public:
     void exec();
     void post(QByteArray data);
     void put(QByteArray data);
+    void put(QIODevice* data);
     void methodCharger(QNetworkRequest req);
     void download(QString url);
+    void deleteResource();
 
     bool replyOK();
     void printReplyError();

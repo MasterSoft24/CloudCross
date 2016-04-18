@@ -188,6 +188,47 @@ void MSRequest::put(QByteArray data){
 }
 
 
+void MSRequest::put(QIODevice *data){
+
+    QNetworkReply* replySync;
+
+    this->url->setQuery(*this->query);
+    this->setUrl(*this->url);
+
+    replySync=this->manager->put(*this,data);
+
+    //QEventLoop loop;
+    connect(replySync, SIGNAL(finished()),this->loop, SLOT(quit()));
+    this->loop->exec();
+
+    delete(replySync);
+    //this->loop->exit(0);
+    //loop.deleteLater();
+}
+
+
+
+void MSRequest::deleteResource(){
+
+    QNetworkReply* replySync;
+
+    this->url->setQuery(*this->query);
+    this->setUrl(*this->url);
+
+    replySync=this->manager->deleteResource(*this);
+
+    //QEventLoop loop;
+    connect(replySync, SIGNAL(finished()),this->loop, SLOT(quit()));
+    this->loop->exec();
+
+    delete(replySync);
+    //this->loop->exit(0);
+    //loop.deleteLater();
+}
+
+
+
+
 void MSRequest::exec(){
 
     this->url->setQuery(*this->query);
