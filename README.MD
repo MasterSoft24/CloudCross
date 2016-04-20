@@ -1,9 +1,9 @@
 
-# CloudCross v1.1.0
+# CloudCross v1.2.0
 
 Kamensky Vladimir
 
-22.03.2016
+20.04.2016
 
 
 http://cloudcross.mastersoft24.ru
@@ -11,7 +11,7 @@ http://cloudcross.mastersoft24.ru
 
 
 CloudCross it's opensource software for synchronization of local files and folders with various cloud storages.
-On this moment CloudCross supports working with Google Drive and Dropbox.
+On this moment CloudCross supports working with Yandex Disk, Google Drive and Dropbox.
 This program was written on pure Qt, without any third-party libraries.
 The program works with Qt version 5 and above. Qt version 4.x are not supported. 
 
@@ -66,6 +66,8 @@ For detailed usage instructions see http://cloudcross.mastersoft24.ru/#usage
 	
 Change log:
 
+v1.2.0		Yandex Disk support added
+
 v1.1.0          Dropbox support added
                 --force​ option behaviour corrected
 		
@@ -94,13 +96,13 @@ v1.0.1-rc1 -    first pre-release version of CloudCross
 
 Каменский Владимир
 
-22.03.2016
+20.04.2016
 
 http://cloudcross.mastersoft24.ru/ru
 
 
 CloudCross - это свободная программа для синхронизации локальных файлов и папок с различными облачными хранилищами.
-На данный момент, пока, поддерживается работа с Google Drive и Dropbox.
+На данный момент, пока, поддерживается работа с Яндекс.Диск, Google Drive и Dropbox.
 Программа написана на чистом Qt, без каких либо сторонних библиотек.
 CloudCross работает с Qt версии 5 и выше. Версии Qt 4.x не поддерживаются. 
 
@@ -151,6 +153,8 @@ CloudCross позволяет синхронизировать только ча
 	
 	
 Список изменений:
+
+v1.2.0		Добавлена поддержка Яндекс Диск
 
 v1.1.0          Добавлена поддержка "облачного провайдера" Dropbox
                 Скорректирована работа опции --force​
