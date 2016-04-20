@@ -28,7 +28,7 @@ void printHelp(){
     qStdOut()<< QObject::tr("   -p [ --path ] arg     Path to sync directory") <<endl;
     qStdOut()<< QObject::tr("   --dry-run             Only detect which files need to be uploaded/downloaded,\n"
                             "                         without actually performing them.") <<endl;
-    qStdOut()<< QObject::tr("   -s [ --list ]         Print Google drive remote file list") <<endl;
+    qStdOut()<< QObject::tr("   -s [ --list ]         Print remote cloud file list") <<endl;
     qStdOut()<< QObject::tr("   --use-include         Use .include file. Without this option by default use .exclude file.\n"
                             "                         If these files does'nt exists, they  are ignore") <<endl;
     qStdOut()<< QObject::tr("   --prefer arg          Define sync strategy. It can be a one of \"remote\" or \"local\". By default it's \"local\"") <<endl;
@@ -40,7 +40,7 @@ void printHelp(){
                             "                         This option overrides --prefer option value.") <<endl;
 
     qStdOut()<< QObject::tr("   --provider arg        Set cloud provider for current sync operation. On this moment this option can be \n"
-                            "                         a \"google\", \"yandex\" or \"dropbox\". Provider by default is Google Drive") <<endl;
+                            "                         a \"google\", \"yandex\" or \"dropbox\". Default provider is Google Drive") <<endl;
 
 }
 

@@ -599,7 +599,7 @@ void MSYandexDisk::createSyncFileList(){
 
 
 
-    //this->readRemote("/");// top level files and folders
+    this->readRemote("/");// top level files and folders
 
     qStdOut()<<"Reading local files and folders" <<endl;
 
@@ -609,7 +609,7 @@ void MSYandexDisk::createSyncFileList(){
 //this->remote_file_insert(&(this->syncFileList.values()[0]));
 //this->remote_file_update(&(this->syncFileList.values()[0]));
 // this->remote_file_makeFolder(&(this->syncFileList.values()[0]));
-    this->remote_file_trash(&(this->syncFileList.values()[0]));
+//    this->remote_file_trash(&(this->syncFileList.values()[0]));
 // this->remote_createDirectory((this->syncFileList.values()[0].path+this->syncFileList.values()[0].fileName));
 
 
@@ -1688,7 +1688,7 @@ void MSYandexDisk::remote_file_trash(MSFSObject *object){
     if(!this->testReplyBodyForError(req->readReplyText())){
         QString errt=this->getReplyErrorString(req->readReplyText());
 
-        if(! errt.contains("Resource not found/")){// ignore previous deleted files
+        if(! errt.contains("Resource not found")){// ignore previous deleted files
 
             qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
             delete(req);
