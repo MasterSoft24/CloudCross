@@ -142,7 +142,9 @@ void MSRequest::post(QByteArray data){
 
 void MSRequest::download(QString url){
 
-    this->setUrl(*this->url);
+    //this->setUrl(*this->url);
+    this->setUrl(QUrl(url));
+
 
     methodCharger(*this);
 
@@ -261,6 +263,7 @@ void MSRequest::exec(){
 
 void MSRequest::requestFinished(QNetworkReply *reply){
     this->lastReply=reply;
+    this->replyHeaders=reply->rawHeaderPairs();
     this->replyText=reply->readAll();
     this->replyError=reply->error();
     this->replyErrorText=reply->errorString();

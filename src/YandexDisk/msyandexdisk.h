@@ -86,6 +86,8 @@ public:
      QHash<QString,MSFSObject> syncFileList;
 
 
+     void directUpload(QString url);
+
 };
 
 #endif // MSYANDEXDISK_H

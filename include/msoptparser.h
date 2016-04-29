@@ -76,7 +76,7 @@ public:
     explicit MSOptParser(QObject *parent = 0);
 
     QList<optItem> opts;
-    QString optarg;
+    QStringList optarg;
     int erorrNum=0;
     QString errorString;
 
@@ -86,7 +86,8 @@ public:
 
     bool getArg();
 
-    QString getParamByName(QString paramName);// get named parameters value (if this parameter is exists) from input parameters list
+    QStringList getParamByName(QString paramName);// get named parameters value (if this parameter is exists) from input parameters list
+    bool isParamExist(QString paramName);// test exist named param or not
 
 signals:
 

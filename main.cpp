@@ -12,7 +12,7 @@
 
 #define APP_MAJOR_VERSION 1
 #define APP_MINOR_VERSION 2
-#define APP_BUILD_NUMBER  0
+#define APP_BUILD_NUMBER  1
 #define APP_SUFFIX ""
 #define APP_NAME "CloudCross"
 
@@ -41,6 +41,9 @@ void printHelp(){
 
     qStdOut()<< QObject::tr("   --provider arg        Set cloud provider for current sync operation. On this moment this option can be \n"
                             "                         a \"google\", \"yandex\" or \"dropbox\". Default provider is Google Drive") <<endl;
+
+    qStdOut()<< QObject::tr("   --use-url arg\tAllow upload file directly to cloud from URL.\n\t\t\tAll options, except --provider, are ignored.\n"
+                            "\t\t\tUploaded file will be stored on remote starage to root.") <<endl;
 
 }
 
@@ -300,7 +303,8 @@ int main(int argc, char *argv[])
     parser->insertOption(11,"--convert-doc");
     parser->insertOption(12,"--force 1");
     parser->insertOption(13,"--provider 1"); // google, yandex or dropbox
-
+    parser->insertOption(14,"--use-url 2"); // upload file directly to cloud
+    parser->insertOption(15,"--filename 1"); // filename of directly uploaded file on remote
     //...............
 
     parser->parse(a.arguments());
@@ -310,10 +314,12 @@ int main(int argc, char *argv[])
 
     QString currentProvider="google";
 
-    QString prov=parser->getParamByName("provider");
+    QStringList prov=parser->getParamByName("provider");
 
-    if(prov != ""){
-        currentProvider=prov;
+
+
+    if(prov.size() != 0){
+        currentProvider=prov[0];
     }
 
 
@@ -321,6 +327,68 @@ int main(int argc, char *argv[])
         qStdOut()<< "Unknown cloud provider. Application terminated."<< endl;
         return 1;
     }
+
+
+    if(parser->isParamExist("use-urls")){
+
+        if(currentProvider=="google"){//------------------------------------------
+
+            MSGoogleDrive* cp=new MSGoogleDrive();
+            providers->addProvider(cp);
+
+            if(! providers->loadTokenFile("GoogleDrive")){
+                return 1;
+            }
+
+            if(!providers->refreshToken("GoogleDrive")){
+                qStdOut()<<"Unauthorized access. Aborted."<<endl;
+                return 1;
+            }
+
+            //cp->directUpload(parser->getParamByName("use-url"));
+
+        }
+
+        if(currentProvider=="dropbox"){//----------------------------------------
+
+            MSDropbox* cp=new MSDropbox();
+            providers->addProvider(cp);
+
+            if(! providers->loadTokenFile("Dropbox")){
+                return 1;
+            }
+
+            if(!providers->refreshToken("Dropbox")){
+                qStdOut()<<"Unauthorized access. Aborted."<<endl;
+                return 1;
+            }
+
+            //cp->directUpload(parser->getParamByName("use-url"));
+        }
+
+        if(currentProvider=="yandex"){//---------------------------------------
+
+            MSYandexDisk* cp=new MSYandexDisk();
+            providers->addProvider(cp);
+
+            if(! providers->loadTokenFile("YandexDisk")){
+                return 1;
+            }
+
+            if(!providers->refreshToken("YandexDisk")){
+                qStdOut()<<"Unauthorized access. Aborted."<<endl;
+                return 1;
+            }
+
+            //cp->directUpload(parser->getParamByName("use-url"));
+
+        }
+
+
+        return 0;
+    }
+
+
 
 
     // ===%%%% GOOGLE DRIVE %%%%===
@@ -352,19 +420,19 @@ int main(int argc, char *argv[])
 
                 case 4: // --path
 
-                    providers->setWorkPath(parser->optarg);
+                    providers->setWorkPath(parser->optarg[0]);
                     break;
 
                 case 5: // --prefer
 
                     MSCloudProvider::SyncStrategy s;
 
-                    if(parser->optarg=="local"){
+                    if(parser->optarg[0]=="local"){
                         s=MSCloudProvider::SyncStrategy::PreferLocal;
                     }
 
                     else{
-                        if(parser->optarg=="remote"){
+                        if(parser->optarg[0]=="remote"){
                         s=MSCloudProvider::SyncStrategy::PreferRemote;
                         }
                         else{
@@ -411,13 +479,13 @@ int main(int argc, char *argv[])
                 case 12: // --force
 
 
-                    if((parser->optarg=="upload")||(parser->optarg=="download")){
-                        providers->setOption("force",parser->optarg);
+                    if((parser->optarg[0]=="upload")||(parser->optarg[0]=="download")){
+                        providers->setOption("force",parser->optarg[0]);
                         providers->setFlag("force",true);
 
 
 
-                        if(parser->optarg == "download"){
+                        if(parser->optarg[0] == "download"){
 
                             providers->setStrategy(MSCloudProvider::SyncStrategy::PreferRemote);
                         }
@@ -486,19 +554,19 @@ int main(int argc, char *argv[])
 
             case 4: // --path
 
-                providers->setWorkPath(parser->optarg);
+                providers->setWorkPath(parser->optarg[0]);
                 break;
 
             case 5: // --prefer
 
                 MSCloudProvider::SyncStrategy s;
 
-                if(parser->optarg=="local"){
+                if(parser->optarg[0]=="local"){
                     s=MSCloudProvider::SyncStrategy::PreferLocal;
                 }
 
                 else{
-                    if(parser->optarg=="remote"){
+                    if(parser->optarg[0]=="remote"){
                     s=MSCloudProvider::SyncStrategy::PreferRemote;
                     }
                     else{
@@ -546,13 +614,13 @@ int main(int argc, char *argv[])
             case 12: // --force
 
 
-                if((parser->optarg=="upload")||(parser->optarg=="download")){
-                    providers->setOption("force",parser->optarg);
+                if((parser->optarg[0]=="upload")||(parser->optarg[0]=="download")){
+                    providers->setOption("force",parser->optarg[0]);
                     providers->setFlag("force",true);
 
 
 
-                    if(parser->optarg == "download"){
+                    if(parser->optarg[0] == "download"){
 
                         providers->setStrategy(MSCloudProvider::SyncStrategy::PreferRemote);
                     }
@@ -599,6 +667,11 @@ int main(int argc, char *argv[])
         while((ret=parser->get())!=-1){
             switch(ret){
 
+            case 14:
+
+                return 0;
+                break;
+
             case 1: // --help
 
                 printHelp();
@@ -621,19 +694,19 @@ int main(int argc, char *argv[])
 
             case 4: // --path
 
-                providers->setWorkPath(parser->optarg);
+                providers->setWorkPath(parser->optarg[0]);
                 break;
 
             case 5: // --prefer
 
                 MSCloudProvider::SyncStrategy s;
 
-                if(parser->optarg=="local"){
+                if(parser->optarg[0]=="local"){
                     s=MSCloudProvider::SyncStrategy::PreferLocal;
                 }
 
                 else{
-                    if(parser->optarg=="remote"){
+                    if(parser->optarg[0]=="remote"){
                     s=MSCloudProvider::SyncStrategy::PreferRemote;
                     }
                     else{
@@ -681,13 +754,13 @@ int main(int argc, char *argv[])
             case 12: // --force
 
 
-                if((parser->optarg=="upload")||(parser->optarg=="download")){
-                    providers->setOption("force",parser->optarg);
+                if((parser->optarg[0]=="upload")||(parser->optarg[0]=="download")){
+                    providers->setOption("force",parser->optarg[0]);
                     providers->setFlag("force",true);
 
 
 
-                    if(parser->optarg == "download"){
+                    if(parser->optarg[0] == "download"){
 
                         providers->setStrategy(MSCloudProvider::SyncStrategy::PreferRemote);
                     }

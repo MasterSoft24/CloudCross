@@ -1884,5 +1884,25 @@ bool MSYandexDisk::local_writeFileContent(QString filePath, QString  hrefToDownl
 
 
 
+void MSYandexDisk::directUpload(QString url){
 
+    MSRequest *req = new MSRequest();
+
+    req->setMethod("get");
+    req->download(url);
+
+
+    if(!req->replyOK()){
+        req->printReplyError();
+        delete(req);
+        exit(1);
+    }
+
+    //QNetworkReply* qr=req->lastReply;
+
+    //QList<QPair<QByteArray,QByteArray>> hp=qr->rawHeaderPairs();
+
+    int d=76;
+
+}
 

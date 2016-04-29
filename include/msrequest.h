@@ -59,6 +59,8 @@ public:
     QNetworkReply::NetworkError replyError;
     QString replyErrorText;
 
+    QList<QPair<QByteArray,QByteArray>> replyHeaders;
+
     QByteArray readReplyText();
 
 

@@ -1828,6 +1828,7 @@ void MSGoogleDrive::remote_file_insert(MSFSObject *object){
     req->post(metaData+mediaData);
 
 
+
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
@@ -2316,3 +2317,9 @@ QString MSGoogleDrive::getReplyErrorString(QString body){
 }
 
 
+
+
+void MSGoogleDrive::directUpload(QString url){
+
+
+}

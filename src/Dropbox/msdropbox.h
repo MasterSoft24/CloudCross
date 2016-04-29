@@ -84,6 +84,8 @@ public:
      // sync local and remote filesystems hash table
      QHash<QString,MSFSObject> syncFileList;
 
+     void directUpload(QString url);
+
 
 };
 

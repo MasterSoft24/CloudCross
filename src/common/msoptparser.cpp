@@ -234,25 +234,29 @@ int MSOptParser::get(){
 
               if(this->opts[i].paramCount!=0){
 
-                  if(this->iit==this->input.end()){
-                      this->erorrNum=1;
-                      this->errorString="Option "+currOpt+" Missing required argument";
-                      return -1;
-                  }
+                  for(int p=0;p<this->opts[i].paramCount;p++){
 
-                  if(this->getArg()){
-                    this->optarg=*this->iit;
+                      if(this->iit==this->input.end()){
+                          this->erorrNum=1;
+                          this->errorString="Option "+currOpt+" Missing required argument";
+                          return -1;
+                      }
+
+                      if(this->getArg()){
+                        this->optarg.append(*this->iit);
+
+                      }
+                      else{
+                          this->erorrNum=1;
+                          this->errorString="Option "+currOpt+" Missing required argument";
+                          return -1;
+                      }
+                      //*this->iit++;
                   }
-                  else{
-                      this->erorrNum=1;
-                      this->errorString="Option "+currOpt+" Missing required argument";
-                      return -1;
-                  }
-                  //*this->iit++;
 
               }
               else{
-                    this->optarg="";
+                    this->optarg.clear();
               }
               *this->iit++;
               return this->opts[i].num;
@@ -283,31 +287,49 @@ bool MSOptParser::getArg(){
 }
 
 
-QString MSOptParser::getParamByName(QString paramName){
+QStringList MSOptParser::getParamByName(QString paramName){
+
+    QStringList p;
 
     for(int i=0;i<this->input.size();i++){
 
         if((this->input.at(i) == paramName) || (this->input.at(i) == ("--"+paramName))){
 
             if(this->input.size()<=2){
-                return "";
+                p.clear();
+                return p;
             }
 
             if(QString(this->input.at(i+1).at(0))!="-"){
 
-                QString p=this->input.at(i+1);
-                this->input.removeAt(i);
-
-                if(this->input.size()>=2){
+                for(int z=1;z>0;z++){
+                    p.append(this->input.at(i+1));
                     this->input.removeAt(i);
+
+                    if(this->input.size()>=2){
+                        this->input.removeAt(i);
+                    }
+
+                    if((i < this->input.size())){
+                        if(QString(this->input.at(i).at(0))=="-"){
+                            break;
+                        }
+                    }
+                    else{
+                        break;
+                    }
+                    i--;
                 }
+
+
 
                 this->iit=this->input.begin();
                 *this->iit++;
                 return p;
             }
             else{
-                return "";
+                p.clear();
+                return p;
             }
 
         }
@@ -315,11 +337,22 @@ QString MSOptParser::getParamByName(QString paramName){
 
     }
 
-    return "";
+    p.clear();
+    return p;
 }
 
 
+bool MSOptParser::isParamExist(QString paramName){
 
+    for(int i=0;i<this->input.size();i++){
+
+        if((this->input.at(i) == paramName) || (this->input.at(i) == ("--"+paramName))){
+            return true;
+        }
+
+    }
+    return false;
+}
 
 
 
