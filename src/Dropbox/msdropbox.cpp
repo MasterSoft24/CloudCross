@@ -2137,7 +2137,7 @@ void MSDropbox::local_removeFolder(QString path){
 
 
 
-void MSDropbox::directUpload(QString url){
+void MSDropbox::directUpload(QString url, QString remotePath){
 
 
 }

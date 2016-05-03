@@ -2319,7 +2319,7 @@ QString MSGoogleDrive::getReplyErrorString(QString body){
 
 
 
-void MSGoogleDrive::directUpload(QString url){
+void MSGoogleDrive::directUpload(QString url, QString remotePath){
 
 
 }

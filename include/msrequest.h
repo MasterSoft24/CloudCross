@@ -30,6 +30,8 @@
 #include <QObject>
 #include <QEventLoop>
 #include "qstdout.h"
+#include <QFile>
+#include <QDataStream>
 
 class MSRequest : public QObject , QNetworkRequest
 {
@@ -48,10 +50,13 @@ private:
     QString requestMethod; // get, post, put, post-multipart etc
     QEventLoop* loop;
 
+    QFile* outFile;
+    QDataStream* outFileStream;
 
 public:
 
     QNetworkReply* lastReply;// deprecated
+    QNetworkReply* currentReply;// deprecated
 
     QByteArray replyText;
     QVariant replyAttribute;
@@ -76,7 +81,10 @@ public:
     void put(QByteArray data);
     void put(QIODevice* data);
     void methodCharger(QNetworkRequest req);
+    void methodCharger(QNetworkRequest req,QString path);
+
     void download(QString url);
+    void download(QString url,QString path);
     void deleteResource();
 
     bool replyOK();
@@ -85,6 +93,10 @@ public:
 private slots:
 
     void requestFinished(QNetworkReply *reply);
+
+    void doDownloadProgress(qint64 avail,qint64 total);
+
+    void doReadyRead();
 
 };
 

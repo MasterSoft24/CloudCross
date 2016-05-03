@@ -303,8 +303,8 @@ int main(int argc, char *argv[])
     parser->insertOption(11,"--convert-doc");
     parser->insertOption(12,"--force 1");
     parser->insertOption(13,"--provider 1"); // google, yandex or dropbox
-    parser->insertOption(14,"--use-url 2"); // upload file directly to cloud
-    parser->insertOption(15,"--filename 1"); // filename of directly uploaded file on remote
+    parser->insertOption(14,"--direct-upload 2"); // upload file directly to cloud
+
     //...............
 
     parser->parse(a.arguments());
@@ -329,7 +329,7 @@ int main(int argc, char *argv[])
     }
 
 
-    if(parser->isParamExist("use-urls")){
+    if(parser->isParamExist("direct-upload")){
 
         if(currentProvider=="google"){//------------------------------------------
 
@@ -380,7 +380,22 @@ int main(int argc, char *argv[])
                 return 1;
             }
 
-            //cp->directUpload(parser->getParamByName("use-url"));
+            QStringList wp=parser->getParamByName("path");
+            if(wp.size()==0){
+                wp=parser->getParamByName("p");
+            }
+
+            if(wp.size()!=0){
+
+                providers->setWorkPath(wp[0]);
+            }
+
+            QStringList p=parser->getParamByName("direct-upload");
+            if(p.size()<2){
+                qStdOut()<<"Option --direct-upload. Missing required argument"<<endl;
+                return 1;
+            }
+            cp->directUpload(p[0],p[1]);
 
         }
 
@@ -667,10 +682,26 @@ int main(int argc, char *argv[])
         while((ret=parser->get())!=-1){
             switch(ret){
 
-            case 14:
+//            case 14:{
 
-                return 0;
-                break;
+//                MSYandexDisk* cp=new MSYandexDisk();
+//                providers->addProvider(cp);
+
+//                if(! providers->loadTokenFile("YandexDisk")){
+//                    return 1;
+//                }
+
+//                if(!providers->refreshToken("YandexDisk")){
+//                    qStdOut()<<"Unauthorized access. Aborted."<<endl;
+//                    return 1;
+//                }
+
+
+//                cp->directUpload(parser->optarg[0],parser->optarg[1]);
+
+//                return 0;
+//                break;
+//            }
 
             case 1: // --help
 

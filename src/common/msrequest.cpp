@@ -34,6 +34,7 @@ MSRequest::MSRequest()
     this->query=new QUrlQuery();
 
     this->lastReply=0;
+    this->outFile=0;
 
     this->replyError= QNetworkReply::NetworkError::NoError;
 
@@ -121,6 +122,39 @@ void MSRequest::methodCharger(QNetworkRequest req){
 }
 
 
+void MSRequest::methodCharger(QNetworkRequest req,QString path){
+
+    QNetworkReply* replySync=0;
+
+    if(this->requestMethod=="get"){
+        replySync=this->manager->get(req);
+    }
+
+
+    if(this->requestMethod=="post"){
+        req.setHeader(QNetworkRequest::ContentTypeHeader,"application/x-www-form-urlencoded");
+
+        QByteArray ba;
+        ba+=this->query->toString();
+        replySync=this->manager->post(req,ba);
+    }
+
+    this->currentReply=replySync;
+
+    connect(replySync,SIGNAL(downloadProgress(qint64,qint64)),this,SLOT(doDownloadProgress(qint64,qint64)));
+    connect(replySync,SIGNAL(readyRead()),this,SLOT(doReadyRead()));
+
+//    QEventLoop loop;
+    connect(replySync, SIGNAL(finished()),this->loop, SLOT(quit()));
+    this->loop->exec();
+
+    delete(replySync);
+    //this->loop->exit(0);
+    //loop.deleteLater();
+}
+
+
+
 void MSRequest::post(QByteArray data){
 
     QNetworkReply* replySync;
@@ -169,6 +203,41 @@ void MSRequest::download(QString url){
     }
 }
 
+
+
+void MSRequest::download(QString url,QString path){
+
+    this->setUrl(QUrl(url));
+
+    this->outFile= new QFile(path);
+    this->outFile->open(QIODevice::WriteOnly );
+
+
+
+
+    methodCharger(*this,path);
+
+    // 301 redirect handling
+    while(true){
+
+        QVariant possible_redirected_url= this->replyAttribute;//this->lastReply->attribute(QNetworkRequest::RedirectionTargetAttribute);
+
+        if(!possible_redirected_url.isNull()) {
+
+            QUrl rdrUrl=possible_redirected_url.value<QUrl>();
+
+           // QString reqStr=rdrUrl.scheme()+"://"+rdrUrl.host()+"/"+rdrUrl.path()+"?"+rdrUrl.query();
+            QString reqStr=rdrUrl.scheme()+"://"+rdrUrl.host()+""+rdrUrl.path()+"?"+rdrUrl.query();
+
+            methodCharger(QNetworkRequest(reqStr),path);
+
+        }
+        else{
+            break;
+        }
+    }
+
+}
 
 
 void MSRequest::put(QByteArray data){
@@ -262,6 +331,15 @@ void MSRequest::exec(){
 
 
 void MSRequest::requestFinished(QNetworkReply *reply){
+
+    if(this->outFile!=0){
+
+        this->outFile->write(this->currentReply->readAll());
+        this->outFile->close();
+        delete(this->outFile);
+        this->outFile=0;
+    }
+
     this->lastReply=reply;
     this->replyHeaders=reply->rawHeaderPairs();
     this->replyText=reply->readAll();
@@ -271,6 +349,20 @@ void MSRequest::requestFinished(QNetworkReply *reply){
     this->replyURL=reply->url().toString();
 //    delete(reply);
 
+}
+
+
+
+void MSRequest::doDownloadProgress(qint64 avail, qint64 total){
+
+    int w=7;
+
+}
+
+
+void MSRequest::doReadyRead(){
+
+    this->outFile->write(this->currentReply->readAll());
 }
 
 

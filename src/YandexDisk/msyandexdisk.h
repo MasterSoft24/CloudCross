@@ -86,7 +86,7 @@ public:
      QHash<QString,MSFSObject> syncFileList;
 
 
-     void directUpload(QString url);
+     void directUpload(QString url,QString remotePath);
 
 };
 

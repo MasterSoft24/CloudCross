@@ -293,52 +293,53 @@ QStringList MSOptParser::getParamByName(QString paramName){
 
     for(int i=0;i<this->input.size();i++){
 
-        if((this->input.at(i) == paramName) || (this->input.at(i) == ("--"+paramName))){
+        if((this->input.at(i) == paramName) || (this->input.at(i) == ("--"+paramName)) || (this->input.at(i) == ("-"+paramName))){
 
-            if(this->input.size()<=2){
-                p.clear();
-                return p;
-            }
 
-            if(QString(this->input.at(i+1).at(0))!="-"){
+            optItem opi;
 
-                for(int z=1;z>0;z++){
-                    p.append(this->input.at(i+1));
-                    this->input.removeAt(i);
+            // find corresponding option at list
+            for(int opt=0;opt<this->opts.size();opt++){
 
-                    if(this->input.size()>=2){
-                        this->input.removeAt(i);
-                    }
-
-                    if((i < this->input.size())){
-                        if(QString(this->input.at(i).at(0))=="-"){
-                            break;
-                        }
-                    }
-                    else{
-                        break;
-                    }
-                    i--;
+                opi=this->opts.at(opt);
+                if((opi.longOpt == this->input.at(i)) || (opi.shortOpt == this->input.at(i))  ){
+                    break;
                 }
 
-
-
-                this->iit=this->input.begin();
-                *this->iit++;
-                return p;
             }
-            else{
+
+
+            if(i+opi.paramCount > this->input.size() -1){
                 p.clear();
                 return p;
             }
+
+
+            //collect option parameters
+            for(int pc=0;pc<opi.paramCount;pc++){
+
+                if(QString(this->input.at(i+pc+1).at(0))!="-"){
+                    p.append(this->input.at(i+pc+1));
+                }
+                else{
+                    p.clear();
+                    return p;
+                }
+            }
+
+            // remove given option with all their parameters
+            for(int pc=0;pc<opi.paramCount+1;pc++){
+                this->input.removeAt(i);
+            }
+
 
         }
 
 
     }
 
-    p.clear();
     return p;
+
 }
 
 

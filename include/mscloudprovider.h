@@ -133,7 +133,7 @@ public:
     virtual bool testReplyBodyForError(QString body) = 0;
     virtual QString getReplyErrorString(QString body) = 0;
 
-    virtual void directUpload(QString url) =0;
+    virtual void directUpload(QString url,QString remotePath) =0;
 
 };
 

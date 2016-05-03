@@ -60,7 +60,9 @@ QString MSYandexDisk::generateRandom(int count){
 
     int Low=0x41;
     int High=0x5a;
-    qsrand(qrand());
+    QDateTime d;
+
+    qsrand(d.currentDateTime().toMSecsSinceEpoch());
 
     QString token="";
 
@@ -1603,9 +1605,18 @@ void MSYandexDisk::remote_file_makeFolder(MSFSObject *object){
 
 
     if(!req->replyOK()){
-        req->printReplyError();
-        delete(req);
-        exit(1);
+
+        if(!req->replyErrorText.contains("CONFLICT")){ // skip error on re-create existing folder
+
+            req->printReplyError();
+            delete(req);
+            //exit(1);
+            return;
+        }
+        else{
+            return;
+        }
+
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
@@ -1884,12 +1895,16 @@ bool MSYandexDisk::local_writeFileContent(QString filePath, QString  hrefToDownl
 
 
 
-void MSYandexDisk::directUpload(QString url){
+void MSYandexDisk::directUpload(QString url, QString remotePath){
+
+    // download file into temp file ---------------------------------------------------------------
 
     MSRequest *req = new MSRequest();
 
+    QString filePath=this->workPath+"/"+this->generateRandom(10);
+
     req->setMethod("get");
-    req->download(url);
+    req->download(url,filePath);
 
 
     if(!req->replyOK()){
@@ -1898,11 +1913,112 @@ void MSYandexDisk::directUpload(QString url){
         exit(1);
     }
 
-    //QNetworkReply* qr=req->lastReply;
+    QFileInfo fileRemote(remotePath);
+    QString path=fileRemote.absoluteFilePath();
 
-    //QList<QPair<QByteArray,QByteArray>> hp=qr->rawHeaderPairs();
+    path=QString(path).left(path.lastIndexOf("/"));
 
-    int d=76;
+    MSFSObject object;
+    object.path=path+"/";
+    object.fileName=fileRemote.fileName();
+
+    this->syncFileList.insert(object.path+object.fileName,object);
+
+    if(path!="/"){
+
+        QStringList dirs=path.split("/");
+
+        MSFSObject* obj=0;
+
+        for(int i=1;i<dirs.size();i++){
+
+            obj=new MSFSObject();
+            obj->path="/"+dirs[i];
+            obj->fileName="";
+            obj->remote.exist=false;
+            this->remote_file_makeFolder(obj);
+            delete(obj);
+
+        }
+
+
+    }
+
+
+
+    delete(req);
+
+    // upload file to remote ------------------------------------------------------------------------
+
+
+    // get url for uploading ===========
+
+    req = new MSRequest();
+
+    req->setRequestUrl("https://cloud-api.yandex.net/v1/disk/resources/upload");
+    req->setMethod("get");
+
+    req->addHeader("Authorization",                     "OAuth "+this->access_token);
+    req->addHeader("Content-Type",                      QString("application/json; charset=UTF-8"));
+    req->addQueryItem("path",                           object.path+object.fileName);
+    req->addQueryItem("overwrite",                           "true");
+
+    req->exec();
+
+
+    if(!req->replyOK()){
+        req->printReplyError();
+        delete(req);
+        exit(1);
+    }
+
+
+
+    QString content=req->readReplyText();
+
+    QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+    QJsonObject job = json.object();
+    QString href=job["href"].toString();
+
+
+
+    delete(req);
+
+    // upload file content
+
+   // filePath=  this->workPath+object.path+object.fileName;
+
+    QFile file(filePath);
+    qint64 fSize=file.size();
+
+    req = new MSRequest();
+
+    req->setRequestUrl(href);
+
+
+    if (!file.open(QIODevice::ReadOnly)){
+
+        //error file not found
+        qStdOut()<<"Unable to open of "+filePath <<endl;
+        delete(req);
+        exit(1);
+    }
+
+
+    req->addHeader("Content-Length",QString::number(fSize).toLocal8Bit());
+    req->put(&file);
+
+    if(!req->replyOK()){
+        req->printReplyError();
+        delete(req);
+        exit(1);
+    }
+
+
+    file.remove();
+
+    delete(req);
+
 
 }
 
