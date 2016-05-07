@@ -345,7 +345,22 @@ int main(int argc, char *argv[])
                 return 1;
             }
 
-            //cp->directUpload(parser->getParamByName("use-url"));
+            QStringList wp=parser->getParamByName("path");
+            if(wp.size()==0){
+                wp=parser->getParamByName("p");
+            }
+
+            if(wp.size()!=0){
+
+                providers->setWorkPath(wp[0]);
+            }
+
+            QStringList p=parser->getParamByName("direct-upload");
+            if(p.size()<2){
+                qStdOut()<<"Option --direct-upload. Missing required argument"<<endl;
+                return 1;
+            }
+            cp->directUpload(p[0],p[1]);
 
         }
 
@@ -363,7 +378,22 @@ int main(int argc, char *argv[])
                 return 1;
             }
 
-            //cp->directUpload(parser->getParamByName("use-url"));
+            QStringList wp=parser->getParamByName("path");
+            if(wp.size()==0){
+                wp=parser->getParamByName("p");
+            }
+
+            if(wp.size()!=0){
+
+                providers->setWorkPath(wp[0]);
+            }
+
+            QStringList p=parser->getParamByName("direct-upload");
+            if(p.size()<2){
+                qStdOut()<<"Option --direct-upload. Missing required argument"<<endl;
+                return 1;
+            }
+            cp->directUpload(p[0],p[1]);
         }
 
         if(currentProvider=="yandex"){//---------------------------------------

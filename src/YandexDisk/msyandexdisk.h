@@ -14,7 +14,7 @@ class MSYandexDisk : public MSCloudProvider
 public:
     MSYandexDisk();
 
-     QString generateRandom(int count);
+
 
 
      //=== REMOTE FUNCTIONS BLOCK ===
@@ -87,6 +87,8 @@ public:
 
 
      void directUpload(QString url,QString remotePath);
+
+
 
 };
 

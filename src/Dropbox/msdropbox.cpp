@@ -110,29 +110,7 @@ bool MSDropbox::auth(){
 
 //=======================================================================================
 
-QString MSDropbox::generateRandom(int count){
 
-    int Low=0x41;
-    int High=0x5a;
-    qsrand(qrand());
-
-    QString token="";
-
-
-    for(int i=0; i<count;i++){
-        qint8 d=qrand() % ((High + 1) - Low) + Low;
-
-        if(d == 92){
-           token+="\\"; // экранируем символ
-        }
-        else{
-            token+=QChar(d);
-        }
-    }
-
-    return token;
-
-}
 
 //=======================================================================================
 
@@ -1907,9 +1885,16 @@ void MSDropbox::remote_file_makeFolder(MSFSObject *object){
 
 
     if(!req->replyOK()){
-        req->printReplyError();
-        delete(req);
-        exit(1);
+        if(!req->replyErrorText.contains("Conflict")){ // skip error on re-create existing folder
+
+            req->printReplyError();
+            delete(req);
+            //exit(1);
+            return;
+        }
+        else{
+            return;
+        }
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
@@ -2138,6 +2123,263 @@ void MSDropbox::local_removeFolder(QString path){
 
 
 void MSDropbox::directUpload(QString url, QString remotePath){
+
+    // download file into temp file ---------------------------------------------------------------
+
+    MSRequest *req = new MSRequest();
+
+    QString tempFileName=this->generateRandom(10);
+    QString filePath=this->workPath+"/"+tempFileName;
+
+    req->setMethod("get");
+    req->download(url,filePath);
+
+
+    if(!req->replyOK()){
+        req->printReplyError();
+        delete(req);
+        exit(1);
+    }
+
+    QFileInfo fileRemote(remotePath);
+    QString path=fileRemote.absoluteFilePath();
+
+    path=QString(path).left(path.lastIndexOf("/"));
+
+    MSFSObject object;
+    object.path=path+"/";
+    object.fileName=fileRemote.fileName();
+    object.getLocalMimeType(filePath);
+    object.local.modifiedDate=   this->toMilliseconds(QFileInfo(filePath).lastModified(),true);
+
+    //this->syncFileList.insert(object.path+object.fileName,object);
+
+    if(path!="/"){
+
+        QStringList dirs=path.split("/");
+
+        MSFSObject* obj=0;
+        QString cPath="/";
+
+        for(int i=1;i<dirs.size();i++){
+
+            obj=new MSFSObject();
+            obj->path=cPath+dirs[i];
+            obj->fileName="";
+            obj->remote.exist=false;
+            this->remote_file_makeFolder(obj);
+            cPath+=dirs[i]+"/";
+            delete(obj);
+
+        }
+
+
+    }
+
+
+
+    delete(req);
+
+
+
+
+    // upload file to remote ------------------------------------------------------------------------
+
+
+
+    // start session ===========
+
+    req = new MSRequest();
+
+    req->setRequestUrl("https://content.dropboxapi.com/2/files/upload_session/start");
+   // req->setMethod("post");
+
+    req->addHeader("Authorization",                     "Bearer "+this->access_token);
+    req->addHeader("Content-Type",                      QString("application/octet-stream"));
+
+
+    QByteArray mediaData;
+
+
+    // read file content and put him into request body
+    QFile file(filePath);
+
+    qint64 fSize=file.size();
+    int passCount=fSize/DROPBOX_MAX_FILESIZE;// count of 150MB blocks
+
+    if (!file.open(QIODevice::ReadOnly)){
+
+        //error file not found
+        qStdOut()<<"Unable to open of "+filePath <<endl;
+        delete(req);
+        return;
+    }
+
+    req->post(mediaData);
+
+
+    QString content=req->readReplyText();
+
+    QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+    QJsonObject job = json.object();
+    QString sessID=job["session_id"].toString();
+
+    if(sessID==""){
+        qStdOut()<< "Error when upload "+filePath+" on remote" <<endl;
+    }
+
+    delete(req);
+
+    req=new MSRequest();
+
+    if(passCount==0){// onepass and finalize uploading
+
+            req->setRequestUrl("https://content.dropboxapi.com/2/files/upload_session/finish");
+            req->addHeader("Authorization",                     "Bearer "+this->access_token);
+            req->addHeader("Content-Type",                      QString("application/octet-stream"));
+
+            QJsonObject cursor;
+            cursor.insert("session_id",sessID);
+            cursor.insert("offset",0);
+            QJsonObject commit;
+            commit.insert("path",remotePath);
+            commit.insert("mode","overwrite");
+            commit.insert("autorename",false);
+            commit.insert("mute",false);
+            commit.insert("client_modified",QDateTime::fromMSecsSinceEpoch(object.local.modifiedDate,Qt::UTC).toString(Qt::DateFormat::ISODate));
+
+            QJsonObject doc;
+            doc.insert("cursor",cursor);
+            doc.insert("commit",commit);
+
+            req->addHeader("Dropbox-API-Arg",QJsonDocument(doc).toJson(QJsonDocument::Compact) );//QJsonDocument(doc).toJson()
+            QByteArray ba;
+
+            ba.append(file.read(fSize));
+            file.close();
+
+            req->addHeader("Content-Length",QString::number(ba.length()).toLocal8Bit());
+            req->post(ba);
+
+            if(!req->replyOK()){
+                req->printReplyError();
+                delete(req);
+                QFile rfile(filePath);
+                rfile.remove();
+                exit(1);
+            }
+
+                if(!this->testReplyBodyForError(req->readReplyText())){
+                    qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+                    exit(0);
+                }
+
+    }
+    else{ // multipass uploading
+
+        int cursorPosition=0;
+
+        for(int i=0;i<passCount;i++){
+
+            req->setRequestUrl("https://content.dropboxapi.com/2/files/upload_session/append");
+            req->addHeader("Authorization",                     "Bearer "+this->access_token);
+            req->addHeader("Content-Type",                      QString("application/octet-stream"));
+
+            QJsonObject* cursor1=new QJsonObject();
+            cursor1->insert("session_id",sessID);
+            cursor1->insert("offset",cursorPosition);
+
+
+            req->addHeader("Dropbox-API-Arg",QJsonDocument(*cursor1).toJson(QJsonDocument::Compact) );//QJsonDocument(doc).toJson()
+            QByteArray* ba1=new QByteArray();
+
+            file.seek(cursorPosition);
+            ba1->append(file.read(DROPBOX_MAX_FILESIZE));
+
+
+            req->addHeader("Content-Length",QString::number(ba1->length()).toLocal8Bit());
+            req->post(*ba1);
+
+            if(!req->replyOK()){
+                req->printReplyError();
+                delete(req);
+                QFile rfile(filePath);
+                rfile.remove();
+                exit(1);
+            }
+
+                if(!this->testReplyBodyForError(req->readReplyText())){
+                    qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+                    exit(0);
+                }
+
+            delete(req);
+            delete(ba1);
+            delete(cursor1);
+            cursorPosition += DROPBOX_MAX_FILESIZE;
+
+            req=new MSRequest();
+        }
+
+        // finalize upload
+
+        req->setRequestUrl("https://content.dropboxapi.com/2/files/upload_session/finish");
+        req->addHeader("Authorization",                     "Bearer "+this->access_token);
+        req->addHeader("Content-Type",                      QString("application/octet-stream"));
+
+        QJsonObject cursor;
+        cursor.insert("session_id",sessID);
+        cursor.insert("offset",cursorPosition);
+        QJsonObject commit;
+        commit.insert("path",remotePath);
+        commit.insert("mode","overwrite");
+        commit.insert("autorename",false);
+        commit.insert("mute",false);
+        commit.insert("client_modified",QDateTime::fromMSecsSinceEpoch(object.local.modifiedDate,Qt::UTC).toString(Qt::DateFormat::ISODate));
+
+        QJsonObject doc;
+        doc.insert("cursor",cursor);
+        doc.insert("commit",commit);
+
+        req->addHeader("Dropbox-API-Arg",QJsonDocument(doc).toJson(QJsonDocument::Compact) );//QJsonDocument(doc).toJson()
+        QByteArray ba;
+
+        file.seek(cursorPosition);
+        ba.append(file.read(fSize-cursorPosition));
+        file.close();
+
+        req->addHeader("Content-Length",QString::number(ba.length()).toLocal8Bit());
+        req->post(ba);
+
+        if(!req->replyOK()){
+            req->printReplyError();
+            delete(req);
+            QFile rfile(filePath);
+            rfile.remove();
+            exit(1);
+        }
+
+            if(!this->testReplyBodyForError(req->readReplyText())){
+                qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+                exit(0);
+            }
+
+    }
+
+    QString rcontent=req->readReplyText();
+
+    QJsonDocument rjson = QJsonDocument::fromJson(rcontent.toUtf8());
+    QJsonObject rjob = rjson.object();
+
+
+    if(rjob["id"].toString()==""){
+        qStdOut()<< "Error when upload "+filePath+" on remote" <<endl;
+    }
+
+    QFile rfile(filePath);
+    rfile.remove();
+
+    delete(req);
 
 
 }

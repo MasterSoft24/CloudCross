@@ -54,33 +54,6 @@ bool MSYandexDisk::auth(){
 
 }
 
-//=======================================================================================
-
-QString MSYandexDisk::generateRandom(int count){
-
-    int Low=0x41;
-    int High=0x5a;
-    QDateTime d;
-
-    qsrand(d.currentDateTime().toMSecsSinceEpoch());
-
-    QString token="";
-
-
-    for(int i=0; i<count;i++){
-        qint8 d=qrand() % ((High + 1) - Low) + Low;
-
-        if(d == 92){
-           token+="\\"; // экранируем символ
-        }
-        else{
-            token+=QChar(d);
-        }
-    }
-
-    return token;
-
-}
 
 //=======================================================================================
 
@@ -1929,14 +1902,16 @@ void MSYandexDisk::directUpload(QString url, QString remotePath){
         QStringList dirs=path.split("/");
 
         MSFSObject* obj=0;
+        QString cPath="/";
 
         for(int i=1;i<dirs.size();i++){
 
             obj=new MSFSObject();
-            obj->path="/"+dirs[i];
+            obj->path=cPath+dirs[i];
             obj->fileName="";
             obj->remote.exist=false;
             this->remote_file_makeFolder(obj);
+            cPath+=dirs[i]+"/";
             delete(obj);
 
         }

@@ -107,6 +107,8 @@ public:
 
     QString fileChecksum(QString &fileName, QCryptographicHash::Algorithm hashAlgorithm);
 
+    QString generateRandom(int count);
+
     // converts to milliseconds in UTC timezone
     qint64 toMilliseconds(QDateTime dateTime, bool isUTC=false);
     qint64 toMilliseconds(QString dateTimeString, bool isUTC=false);

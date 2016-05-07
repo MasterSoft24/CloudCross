@@ -14,7 +14,7 @@ class MSDropbox : public MSCloudProvider
 public:
     MSDropbox();
 
-     QString generateRandom(int count);
+
 
 
      //=== REMOTE FUNCTIONS BLOCK ===

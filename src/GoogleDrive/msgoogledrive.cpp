@@ -2321,5 +2321,226 @@ QString MSGoogleDrive::getReplyErrorString(QString body){
 
 void MSGoogleDrive::directUpload(QString url, QString remotePath){
 
+    // get remote filelist
 
+
+    this->createHashFromRemote();
+
+    this->readRemote(this->getRoot(),"/");// top level files and folders
+
+
+
+    // download file into temp file ---------------------------------------------------------------
+
+    MSRequest *req = new MSRequest();
+
+    QString tempFileName=this->generateRandom(10);
+    QString filePath=this->workPath+"/"+tempFileName;
+
+    req->setMethod("get");
+    req->download(url,filePath);
+
+
+    if(!req->replyOK()){
+        req->printReplyError();
+        delete(req);
+        exit(1);
+    }
+
+    QFileInfo fileRemote(remotePath);
+    QString path=fileRemote.absoluteFilePath();
+
+    path=QString(path).left(path.lastIndexOf("/"));
+
+    QString targetFileName=remotePath.replace(path,"").replace("/","");
+
+    QString cPath="/";
+
+    if(path!=""){
+
+        QStringList dirs=path.split("/");
+
+        MSFSObject* obj=0;
+
+        QHash<QString,MSFSObject>::iterator ii;
+
+        for(int i=0;i<dirs.size();i++){
+
+
+            ii=this->syncFileList.find(cPath+dirs[i]);
+
+
+
+            if(ii==this->syncFileList.end()){// if object exists in Google Drive
+
+                obj=new MSFSObject();
+                obj->path=cPath;
+                obj->fileName=dirs[i];
+                obj->state=MSFSObject::ObjectState::NewLocal;
+                obj->local.objectType=  MSLocalFSObject::Type::folder;
+                obj->remote.exist=false;
+
+                this->syncFileList.insert(obj->path+obj->fileName,*obj);
+
+                delete(obj);
+
+                i--;
+                continue;
+            }
+
+
+//            obj=new MSFSObject();
+//            obj->path="/"+dirs[i];
+//            obj->fileName="";
+//            obj->remote.exist=false;
+//            this->remote_file_makeFolder(obj);
+//            delete(obj);
+
+            if(dirs[i] != ""){
+                cPath+=dirs[i]+"/";
+            }
+
+        }
+
+
+    }
+
+
+    qStdOut()<<"Checking folder structure on remote" <<endl;
+
+    QHash<QString,MSFSObject>::iterator lf;
+
+    QHash<QString,MSFSObject> localFolders=this->filelist_getFSObjectsByTypeLocal(MSLocalFSObject::Type::folder);
+    localFolders=this->filelist_getFSObjectsByState(localFolders,MSFSObject::ObjectState::NewLocal);
+
+    lf=localFolders.begin();
+
+    while(lf != localFolders.end()){
+
+	if(lf.value().path == "/"){
+	    lf++;
+	    continue;
+	}
+
+	this->remote_createDirectory(lf.key());
+
+	lf++;
+    }
+
+
+    delete(req);
+
+
+    // upload file to remote ------------------------------------------------------------------------
+
+
+        MSFSObject *object=0;
+	object=new MSFSObject();
+        object->path=path+"/";
+        object->fileName=tempFileName;
+	object->getLocalMimeType(this->workPath+"/"+tempFileName);
+
+    cPath=cPath.left(cPath.lastIndexOf("/"));
+
+    QString bound="ccross-data";
+    MSFSObject po;
+    QString parentID="";
+    if(cPath !=""){
+	po=this->syncFileList.find(cPath).value();
+    }
+
+    if(po.path != ""){
+        parentID= po.remote.data["id"].toString();
+    }
+
+    req = new MSRequest();
+
+    req->setRequestUrl("https://www.googleapis.com/upload/drive/v2/files");
+    req->setMethod("post");
+
+    req->addHeader("Authorization",                     "Bearer "+this->access_token);
+    req->addHeader("Content-Type",                      "multipart/related; boundary="+QString(bound).toLocal8Bit());
+    req->addQueryItem("uploadType",                     "multipart");
+
+    // collect request data body
+
+    QByteArray metaData;
+    metaData.append(QString("--"+bound+"\r\n").toLocal8Bit());
+    metaData.append(QString("Content-Type: application/json; charset=UTF-8\r\n\r\n").toLocal8Bit());
+
+    //make file metadata in json representation
+    QJsonObject metaJson;
+
+
+        metaJson.insert("title",targetFileName);
+
+
+    if(parentID != ""){
+        // create parents section
+        QJsonArray parents;
+        QJsonObject par;
+        par.insert("id",parentID);
+        parents.append(par);
+
+        metaJson.insert("parents",parents);
+    }
+
+    metaData.append(QString(QJsonDocument(metaJson).toJson()).toLocal8Bit());
+    metaData.append(QString("\r\n--"+bound+"\r\n").toLocal8Bit());
+
+    QByteArray mediaData;
+
+    mediaData.append(QString("Content-Type: "+object->local.mimeType+"\r\n\r\n").toLocal8Bit());
+
+    filePath=this->workPath+"/"+tempFileName;
+
+    // read file content and put him into request body
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)){
+
+        //error file not found
+        qStdOut()<<"Unable to open of "+filePath <<endl;
+        delete(req);
+        return;
+    }
+    mediaData.append(file.readAll());
+    file.close();
+
+    file.remove();
+
+
+    mediaData.append(QString("\r\n--"+bound+"--").toLocal8Bit());
+
+    req->addHeader("Content-Length",QString::number(metaData.length()+mediaData.length()).toLocal8Bit());
+
+    req->post(metaData+mediaData);
+
+
+
+    if(!req->replyOK()){
+        req->printReplyError();
+        delete(req);
+        exit(1);
+    }
+
+    if(!this->testReplyBodyForError(req->readReplyText())){
+        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+
+        exit(0);
+    }
+
+
+
+    QString content=req->readReplyText();
+
+    QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+    QJsonObject job = json.object();
+    object->local.newRemoteID=job["id"].toString();
+
+    if(job["id"].toString()==""){
+        qStdOut()<< "Error when upload "+filePath+" on remote" <<endl;
+    }
+
+    delete(req);
+    delete(object);
 }

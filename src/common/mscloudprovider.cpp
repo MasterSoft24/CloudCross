@@ -179,6 +179,34 @@ bool MSCloudProvider::local_writeFileContent(QString filePath, MSRequest* req){
 }
 
 
+//=======================================================================================
+
+QString MSCloudProvider::generateRandom(int count){
+
+    int Low=0x41;
+    int High=0x5a;
+    QDateTime d;
+
+    qsrand(d.currentDateTime().toMSecsSinceEpoch());
+
+    QString token="";
+
+
+    for(int i=0; i<count;i++){
+        qint8 d=qrand() % ((High + 1) - Low) + Low;
+
+        if(d == 92){
+           token+="\\"; // экранируем символ
+        }
+        else{
+            token+=QChar(d);
+        }
+    }
+
+    return token;
+
+}
+
 
 
 
