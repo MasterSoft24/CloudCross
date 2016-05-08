@@ -2319,7 +2319,7 @@ QString MSGoogleDrive::getReplyErrorString(QString body){
 
 
 
-void MSGoogleDrive::directUpload(QString url, QString remotePath){
+bool MSGoogleDrive::directUpload(QString url, QString remotePath){
 
     // get remote filelist
 
@@ -2500,7 +2500,7 @@ void MSGoogleDrive::directUpload(QString url, QString remotePath){
         //error file not found
         qStdOut()<<"Unable to open of "+filePath <<endl;
         delete(req);
-        return;
+        return false;
     }
     mediaData.append(file.readAll());
     file.close();

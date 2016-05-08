@@ -20,20 +20,20 @@ public:
      //=== REMOTE FUNCTIONS BLOCK ===
 
      // download file from cloud
-     void remote_file_get(MSFSObject* object);
+     bool remote_file_get(MSFSObject* object);
      // upload new file to cloud
-     void remote_file_insert(MSFSObject* object);
+     bool remote_file_insert(MSFSObject* object);
      // update existing file on cloud
-     void remote_file_update(MSFSObject* object);
+     bool remote_file_update(MSFSObject* object);
      // Generates a set of file IDs which can be provided in insert requests
      bool remote_file_generateIDs(int count);
      // create folder on remote
-     void remote_file_makeFolder(MSFSObject* object);
+     bool remote_file_makeFolder(MSFSObject* object);
      void remote_file_makeFolder(MSFSObject* object,QString parentID);
      // trash file or folder on remote
-     void remote_file_trash(MSFSObject* object);
+     bool remote_file_trash(MSFSObject* object);
      // create directory on remote, recursively if nesessary
-     void remote_createDirectory(QString path);
+     bool remote_createDirectory(QString path);
 
 
 
@@ -69,9 +69,9 @@ public:
      QString getReplyErrorString(QString body) ;
 
 
-     void createHashFromRemote();
-     void readRemote();//QString parentId,QString currentPath
-     void readLocal(QString path);
+     bool createHashFromRemote();
+     bool readRemote();//QString parentId,QString currentPath
+     bool readLocal(QString path);
 
      bool isFolder(QJsonValue remoteObject);
      bool isFile(QJsonValue remoteObject);
@@ -79,12 +79,12 @@ public:
      bool filterIncludeFileNames(QString path);
      bool filterExcludeFileNames(QString path);
 
-     void createSyncFileList();
+     bool createSyncFileList();
 
      // sync local and remote filesystems hash table
      QHash<QString,MSFSObject> syncFileList;
 
-     void directUpload(QString url,QString remotePath);
+     bool directUpload(QString url,QString remotePath);
 
 
 };

@@ -1868,7 +1868,7 @@ bool MSYandexDisk::local_writeFileContent(QString filePath, QString  hrefToDownl
 
 
 
-void MSYandexDisk::directUpload(QString url, QString remotePath){
+bool MSYandexDisk::directUpload(QString url, QString remotePath){
 
     // download file into temp file ---------------------------------------------------------------
 

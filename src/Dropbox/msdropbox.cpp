@@ -39,13 +39,10 @@ bool MSDropbox::auth(){
 
     if(!req->replyOK()){
         req->printReplyError();
+        delete(req);
         return false;
     }
 
-//    if(!this->testReplyBodyForError(req->readReplyText())){
-//        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-//        exit(0);
-//    }
 
 
     qStdOut()<<"-------------------------------------"<<endl;
@@ -77,6 +74,7 @@ bool MSDropbox::auth(){
 
 
     if(!req->replyOK()){
+        delete(req);
         req->printReplyError();
         return false;
     }
@@ -193,9 +191,13 @@ bool MSDropbox::refreshToken(){
 
 //=======================================================================================
 
-void MSDropbox::createHashFromRemote(){
+bool MSDropbox::createHashFromRemote(){
 
-    this->readRemote();
+    if(!this->readRemote()){
+
+        return false;
+
+    }
 
     MSRequest* req=new MSRequest();
 
@@ -212,79 +214,23 @@ void MSDropbox::createHashFromRemote(){
 
 
     if(!req->replyOK()){
+        delete(req);
         req->printReplyError();
-        exit(1);
+        return false;
     }
 
-//    if(!this->testReplyBodyForError(req->readReplyText())){
-//        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-//        exit(0);
-//    }
 
 
     QString list=req->readReplyText();
 
-
-//    // collect all files in GoogleDrive to array driveJSONFileList
-//    QJsonDocument jsonList = QJsonDocument::fromJson(list.toUtf8());
-//    QJsonObject job = jsonList.object();
-
-//    do{
-
-//        delete(req);
-
-//        req=new MSRequest();
-
-
-//        req->setRequestUrl("https://www.googleapis.com/drive/v2/files");
-//        req->setMethod("get");
-
-//        req->addQueryItem("access_token",           this->access_token);
-//        req->addQueryItem("maxResults",           "1000");
-
-//        QString nextPageToken=job["nextPageToken"].toString();
-
-//        QJsonArray items=job["items"].toArray();
-
-//        for(int i=0;i<items.size();i++){
-
-//            driveJSONFileList.insert(items[i].toObject()["id"].toString(),items[i]);
-
-//        }
-
-//        req->addQueryItem("pageToken",           nextPageToken);
-
-//        req->exec();
-
-
-//        if(!req->replyOK()){
-//            req->printReplyError();
-//            exit(1);
-//        }
-
-//        if(!this->testReplyBodyForError(req->readReplyText())){
-//            qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-//            exit(0);
-//        }
-
-
-//        list=req->readReplyText();
-
-//        jsonList = QJsonDocument::fromJson(list.toUtf8());
-
-
-
-//        job = jsonList.object();
-
-//    }while(job["nextPageToken"].toString()!=""); //while(false);
-
     delete(req);
+    return true;
 }
 
 
 //=======================================================================================
 
-void MSDropbox::readRemote(){ //QString parentId,QString currentPath
+bool MSDropbox::readRemote(){ //QString parentId,QString currentPath
 
 
     MSRequest* req=new MSRequest();
@@ -315,7 +261,7 @@ void MSDropbox::readRemote(){ //QString parentId,QString currentPath
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
-        exit(1);
+        return false;
     }
 
 
@@ -421,7 +367,7 @@ void MSDropbox::readRemote(){ //QString parentId,QString currentPath
             if(!req->replyOK()){
                 req->printReplyError();
                 delete(req);
-                exit(1);
+                return false;
             }
 
 
@@ -443,6 +389,7 @@ void MSDropbox::readRemote(){ //QString parentId,QString currentPath
     }while(hasMore==true);
 
 
+    return true;
 }
 
 
@@ -572,7 +519,7 @@ bool MSDropbox::filterExcludeFileNames(QString path){// return false if input pa
 //=======================================================================================
 
 
-void MSDropbox::createSyncFileList(){
+bool MSDropbox::createSyncFileList(){
 
     if(this->getFlag("useInclude")){
         QFile key(this->workPath+"/.include");
@@ -596,7 +543,7 @@ void MSDropbox::createSyncFileList(){
 
             if(regex2.patternErrorOffset()!=-1){
                 qStdOut()<<"Include filelist contains errors. Program will be terminated.";
-                exit(0);
+                return false;
             }
 
         }
@@ -622,7 +569,7 @@ void MSDropbox::createSyncFileList(){
 
             if(regex2.patternErrorOffset()!=-1){
                 qStdOut()<<"Exclude filelist contains errors. Program will be terminated.";
-                exit(0);
+                return false;
             }
         }
     }
@@ -637,11 +584,19 @@ void MSDropbox::createSyncFileList(){
 
 
 
-    this->readRemote();// top level files and folders
+    if(!this->readRemote()){// top level files and folders
+
+        qStdOut()<<"Error occured on reading remote files" <<endl;
+        return false;
+    }
 
     qStdOut()<<"Reading local files and folders" <<endl;
 
-    this->readLocal(this->workPath);
+    if(!this->readLocal(this->workPath)){
+
+        qStdOut()<<"Error occured on local files and folders" <<endl;
+        return false;
+    }
 
 //this->remote_file_get(&(this->syncFileList.values()[0]));
 //this->remote_file_insert(&(this->syncFileList.values()[0]));
@@ -657,7 +612,7 @@ void MSDropbox::createSyncFileList(){
 //=======================================================================================
 
 
-void MSDropbox::readLocal(QString path){
+bool MSDropbox::readLocal(QString path){
 
 
 
@@ -774,6 +729,7 @@ void MSDropbox::readLocal(QString path){
 
         }
 
+        return true;
 }
 
 
@@ -1361,23 +1317,7 @@ void MSDropbox::filelist_populateChanges(MSFSObject changedFSObject){
 bool MSDropbox::testReplyBodyForError(QString body) {
 
     if(body.contains("\"error\": {")){
-//        QJsonDocument json = QJsonDocument::fromJson(body.toUtf8());
-//        QJsonObject job = json.object();
 
-//        QJsonValue e=(job["error"].toObject())[".tag"];
-//        if(e.isNull()){
-//            return true;
-//        }
-//        else{
-
-//            int code=e.toInt(0);
-//            if(code != 0){
-//                return false;
-//            }
-//            else{
-//                return true;
-//            }
-//        }
         return false;
 
     }
@@ -1404,10 +1344,10 @@ QString MSDropbox::getReplyErrorString(QString body) {
 //=======================================================================================
 
 // download file from cloud
-void MSDropbox::remote_file_get(MSFSObject* object){
+bool MSDropbox::remote_file_get(MSFSObject* object){
 
     if(this->getFlag("dryRun")){
-        return;
+        return true;
     }
 
     QString id=object->remote.data["id"].toString();
@@ -1444,26 +1384,29 @@ void MSDropbox::remote_file_get(MSFSObject* object){
 
         if(! this->getReplyErrorString(req->readReplyText()).contains( "path/not_file/")){
             qStdOut() << "Service error. "<< this->getReplyErrorString(req->readReplyText());
+            delete(req);
+            return false;
         }
     }
 
 
     delete(req);
+    return true;
 
 }
 
 //=======================================================================================
 
-void MSDropbox::remote_file_insert(MSFSObject *object){
+bool MSDropbox::remote_file_insert(MSFSObject *object){
 
     if(object->local.objectType==MSLocalFSObject::Type::folder){
 
         qStdOut()<< object->fileName << " is a folder. Skipped." <<endl;
-        return;
+        return true;
     }
 
     if(this->getFlag("dryRun")){
-        return;
+        return true;
     }
 
 
@@ -1493,7 +1436,7 @@ void MSDropbox::remote_file_insert(MSFSObject *object){
         //error file not found
         qStdOut()<<"Unable to open of "+filePath <<endl;
         delete(req);
-        return;
+        return false;
     }
 
     req->post(mediaData);
@@ -1545,12 +1488,12 @@ void MSDropbox::remote_file_insert(MSFSObject *object){
             if(!req->replyOK()){
                 req->printReplyError();
                 delete(req);
-                exit(1);
+                return false;
             }
 
                 if(!this->testReplyBodyForError(req->readReplyText())){
                     qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                    exit(0);
+                    return false;
                 }
 
     }
@@ -1582,12 +1525,12 @@ void MSDropbox::remote_file_insert(MSFSObject *object){
             if(!req->replyOK()){
                 req->printReplyError();
                 delete(req);
-                exit(1);
+                return false;
             }
 
                 if(!this->testReplyBodyForError(req->readReplyText())){
                     qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                    exit(0);
+                    return false;
                 }
 
             delete(req);
@@ -1631,12 +1574,12 @@ void MSDropbox::remote_file_insert(MSFSObject *object){
         if(!req->replyOK()){
             req->printReplyError();
             delete(req);
-            exit(1);
+            return false;
         }
 
             if(!this->testReplyBodyForError(req->readReplyText())){
                 qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                exit(0);
+                return false;
             }
 
     }
@@ -1649,24 +1592,26 @@ void MSDropbox::remote_file_insert(MSFSObject *object){
 
     if(rjob["id"].toString()==""){
         qStdOut()<< "Error when upload "+filePath+" on remote" <<endl;
+        return false;
     }
 
     delete(req);
+    return true;
 }
 
 
 //=======================================================================================
 
-void MSDropbox::remote_file_update(MSFSObject *object){
+bool MSDropbox::remote_file_update(MSFSObject *object){
 
     if(object->local.objectType==MSLocalFSObject::Type::folder){
 
         qStdOut()<< object->fileName << " is a folder. Skipped." <<endl;
-        return;
+        return true;
     }
 
     if(this->getFlag("dryRun")){
-        return;
+        return true;
     }
 
 
@@ -1696,7 +1641,7 @@ void MSDropbox::remote_file_update(MSFSObject *object){
         //error file not found
         qStdOut()<<"Unable to open of "+filePath <<endl;
         delete(req);
-        return;
+        return false;
     }
 
     req->post(mediaData);
@@ -1748,12 +1693,12 @@ void MSDropbox::remote_file_update(MSFSObject *object){
             if(!req->replyOK()){
                 req->printReplyError();
                 delete(req);
-                exit(1);
+                return false;
             }
 
                 if(!this->testReplyBodyForError(req->readReplyText())){
                     qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                    exit(0);
+                    return false;
                 }
 
     }
@@ -1785,12 +1730,12 @@ void MSDropbox::remote_file_update(MSFSObject *object){
             if(!req->replyOK()){
                 req->printReplyError();
                 delete(req);
-                exit(1);
+                return false;
             }
 
                 if(!this->testReplyBodyForError(req->readReplyText())){
                     qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                    exit(0);
+                    return false;
                 }
 
             delete(req);
@@ -1834,12 +1779,12 @@ void MSDropbox::remote_file_update(MSFSObject *object){
         if(!req->replyOK()){
             req->printReplyError();
             delete(req);
-            exit(1);
+            return false;
         }
 
             if(!this->testReplyBodyForError(req->readReplyText())){
                 qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                exit(0);
+                return false;
             }
 
     }
@@ -1852,17 +1797,19 @@ void MSDropbox::remote_file_update(MSFSObject *object){
 
     if(rjob["id"].toString()==""){
         qStdOut()<< "Error when upload "+filePath+" on remote" <<endl;
+        return false;
     }
 
     delete(req);
+    return true;
 }
 
 //=======================================================================================
 
-void MSDropbox::remote_file_makeFolder(MSFSObject *object){
+bool MSDropbox::remote_file_makeFolder(MSFSObject *object){
 
     if(this->getFlag("dryRun")){
-        return;
+        return true;
     }
 
     MSRequest *req = new MSRequest();
@@ -1890,16 +1837,17 @@ void MSDropbox::remote_file_makeFolder(MSFSObject *object){
             req->printReplyError();
             delete(req);
             //exit(1);
-            return;
+            return false;
         }
         else{
-            return;
+            return true;
         }
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
         qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-        exit(0);
+        delete(req);
+        return false;
     }
 
 
@@ -1914,14 +1862,18 @@ void MSDropbox::remote_file_makeFolder(MSFSObject *object){
     object->remote.data=job;
     object->remote.exist=true;
 
-    if(job["id"].toString()==""){
-        qStdOut()<< "Error when folder create "+filePath+" on remote" <<endl;
-    }
 
     delete(req);
 
+    if(job["id"].toString()==""){
+        qStdOut()<< "Error when folder create "+filePath+" on remote" <<endl;
+        return false;
+    }
+
+
     this->filelist_populateChanges(*object);
 
+    return true;
 }
 
 //=======================================================================================
@@ -1933,10 +1885,10 @@ void MSDropbox::remote_file_makeFolder(MSFSObject *object, QString parentID){
 
 //=======================================================================================
 
-void MSDropbox::remote_file_trash(MSFSObject *object){
+bool MSDropbox::remote_file_trash(MSFSObject *object){
 
     if(this->getFlag("dryRun")){
-        return;
+        return true;
     }
 
 
@@ -1965,11 +1917,11 @@ void MSDropbox::remote_file_trash(MSFSObject *object){
 
             qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
             delete(req);
-            exit(0);
+            return false;
         }
         else{
             delete(req);
-            return;
+            return true;
         }
 
 
@@ -1990,14 +1942,15 @@ void MSDropbox::remote_file_trash(MSFSObject *object){
 
     delete(req);
 
+    return true;
 }
 
 //=======================================================================================
 
-void MSDropbox::remote_createDirectory(QString path){
+bool MSDropbox::remote_createDirectory(QString path){
 
     if(this->getFlag("dryRun")){
-        return;
+        return true;
     }
 
 
@@ -2018,8 +1971,7 @@ void MSDropbox::remote_createDirectory(QString path){
 
             if(this->filelist_FSObjectHasParent(f.value())){
 
-//                MSFSObject parObj=this->filelist_getParentFSObject(f.value());
-//                this->remote_file_makeFolder(&f.value(),parObj.remote.data["id"].toString());
+
                 this->remote_file_makeFolder(&f.value());
 
             }
@@ -2028,19 +1980,10 @@ void MSDropbox::remote_createDirectory(QString path){
                 this->remote_file_makeFolder(&f.value());
             }
         }
-//        else{// if this path not exists on remote and not listed as local because include/exclude filter working
 
-//            currPath=currPath+"/"+dirs[i];
-
-//            if(this->filelist_FSObjectHasParent(currPath)){
-
-//            }
-//            else{
-//                this->remote_file_makeFolder();
-//            }
-
-//        }
     }
+
+    return true;
 }
 
 
@@ -2122,7 +2065,7 @@ void MSDropbox::local_removeFolder(QString path){
 
 
 
-void MSDropbox::directUpload(QString url, QString remotePath){
+bool MSDropbox::directUpload(QString url, QString remotePath){
 
     // download file into temp file ---------------------------------------------------------------
 
@@ -2138,7 +2081,7 @@ void MSDropbox::directUpload(QString url, QString remotePath){
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
-        exit(1);
+        return false;
     }
 
     QFileInfo fileRemote(remotePath);
@@ -2212,7 +2155,7 @@ void MSDropbox::directUpload(QString url, QString remotePath){
         //error file not found
         qStdOut()<<"Unable to open of "+filePath <<endl;
         delete(req);
-        return;
+        return false;
     }
 
     req->post(mediaData);
@@ -2266,12 +2209,12 @@ void MSDropbox::directUpload(QString url, QString remotePath){
                 delete(req);
                 QFile rfile(filePath);
                 rfile.remove();
-                exit(1);
+                return false;
             }
 
                 if(!this->testReplyBodyForError(req->readReplyText())){
                     qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                    exit(0);
+                    return false;
                 }
 
     }
@@ -2305,12 +2248,12 @@ void MSDropbox::directUpload(QString url, QString remotePath){
                 delete(req);
                 QFile rfile(filePath);
                 rfile.remove();
-                exit(1);
+                return false;
             }
 
                 if(!this->testReplyBodyForError(req->readReplyText())){
                     qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                    exit(0);
+                    return false;
                 }
 
             delete(req);
@@ -2356,12 +2299,13 @@ void MSDropbox::directUpload(QString url, QString remotePath){
             delete(req);
             QFile rfile(filePath);
             rfile.remove();
-            exit(1);
+            return false;
         }
 
             if(!this->testReplyBodyForError(req->readReplyText())){
                 qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                exit(0);
+                delete(req);
+                return false;
             }
 
     }
@@ -2381,6 +2325,7 @@ void MSDropbox::directUpload(QString url, QString remotePath){
 
     delete(req);
 
+    return true;
 
 }
 
