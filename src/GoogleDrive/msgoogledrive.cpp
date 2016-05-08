@@ -2406,7 +2406,6 @@ void MSGoogleDrive::directUpload(QString url, QString remotePath){
     }
 
 
-    qStdOut()<<"Checking folder structure on remote" <<endl;
 
     QHash<QString,MSFSObject>::iterator lf;
 

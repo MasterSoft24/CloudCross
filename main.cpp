@@ -22,28 +22,30 @@ void printHelp(){
     qStdOut() << APP_NAME << " v"<<APP_MAJOR_VERSION<<"."<<APP_MINOR_VERSION<<"."<<APP_BUILD_NUMBER<<APP_SUFFIX <<endl;
     qStdOut()<< QObject::tr("is a opensource program for sync local files with a many cloud storages.\n") <<endl;
     qStdOut()<< QObject::tr("Options:") <<endl;
-    qStdOut()<< QObject::tr("   -h [ --help ]         Produce help message") <<endl;
-    qStdOut()<< QObject::tr("   -v [ --version ]      Display CloudCross version") <<endl;
-    qStdOut()<< QObject::tr("   -a [ --auth ]         Request authorization token") <<endl;
-    qStdOut()<< QObject::tr("   -p [ --path ] arg     Path to sync directory") <<endl;
-    qStdOut()<< QObject::tr("   --dry-run             Only detect which files need to be uploaded/downloaded,\n"
-                            "                         without actually performing them.") <<endl;
-    qStdOut()<< QObject::tr("   -s [ --list ]         Print remote cloud file list") <<endl;
-    qStdOut()<< QObject::tr("   --use-include         Use .include file. Without this option by default use .exclude file.\n"
-                            "                         If these files does'nt exists, they  are ignore") <<endl;
-    qStdOut()<< QObject::tr("   --prefer arg          Define sync strategy. It can be a one of \"remote\" or \"local\". By default it's \"local\"") <<endl;
-    qStdOut()<< QObject::tr("   --no-hidden           Not sync hidden files and folders") <<endl;
-    qStdOut()<< QObject::tr("   --no-new-rev          Do not create new revisions of files, overwrite their instead") <<endl;
-    qStdOut()<< QObject::tr("   --convert-doc         Convert office document to Google Doc format when upload\n"
-                            "                         and convert him back when download") <<endl;
-    qStdOut()<< QObject::tr("   --force arg           Forcing upload or download files. It can be a one of \"upload\" or \"download\".\n"
-                            "                         This option overrides --prefer option value.") <<endl;
+    qStdOut()<< QObject::tr("   -h [ --help ]              Produce help message") <<endl;
+    qStdOut()<< QObject::tr("   -v [ --version ]           Display CloudCross version") <<endl;
+    qStdOut()<< QObject::tr("   -a [ --auth ]              Request authorization token") <<endl;
+    qStdOut()<< QObject::tr("   -p [ --path ] arg          Path to sync directory") <<endl;
+    qStdOut()<< QObject::tr("   --dry-run                  Only detect which files need to be uploaded/downloaded,\n"
+                            "                              without actually performing them.") <<endl;
+    qStdOut()<< QObject::tr("   -s [ --list ]              Print remote cloud file list") <<endl;
+    qStdOut()<< QObject::tr("   --use-include              Use .include file. Without this option by default use .exclude file.\n"
+                            "                              If these files does'nt exists, they  are ignore") <<endl;
+    qStdOut()<< QObject::tr("   --prefer arg               Define sync strategy. It can be a one of \"remote\" or \"local\". By default it's \"local\"") <<endl;
+    qStdOut()<< QObject::tr("   --no-hidden                Not sync hidden files and folders") <<endl;
+    qStdOut()<< QObject::tr("   --no-new-rev               Do not create new revisions of files, overwrite their instead") <<endl;
+    qStdOut()<< QObject::tr("   --convert-doc              Convert office document to Google Doc format when upload\n"
+                            "                              and convert him back when download") <<endl;
+    qStdOut()<< QObject::tr("   --force arg                Forcing upload or download files. It can be a one of \"upload\" or \"download\".\n"
+                            "                              This option overrides --prefer option value.") <<endl;
 
-    qStdOut()<< QObject::tr("   --provider arg        Set cloud provider for current sync operation. On this moment this option can be \n"
-                            "                         a \"google\", \"yandex\" or \"dropbox\". Default provider is Google Drive") <<endl;
+    qStdOut()<< QObject::tr("   --provider arg             Set cloud provider for current sync operation. On this moment this option can be \n"
+                            "                              a \"google\", \"yandex\" or \"dropbox\". Default provider is Google Drive") <<endl;
 
-    qStdOut()<< QObject::tr("   --use-url arg\tAllow upload file directly to cloud from URL.\n\t\t\tAll options, except --provider, are ignored.\n"
-                            "\t\t\tUploaded file will be stored on remote starage to root.") <<endl;
+    qStdOut()<< QObject::tr("   --direct-upload url path   Allow upload file directly to cloud from URL.\n"
+                            "                              All options, except --provider and --path, are ignored.\n"
+                            "                              Uploaded file will be stored on remote storage into location which was defined by path.") <<endl;
+
 
 }
 
@@ -331,6 +333,8 @@ int main(int argc, char *argv[])
 
     if(parser->isParamExist("direct-upload")){
 
+        qStdOut() << "Start direct uploading..."<<endl;
+
         if(currentProvider=="google"){//------------------------------------------
 
             MSGoogleDrive* cp=new MSGoogleDrive();
@@ -361,6 +365,8 @@ int main(int argc, char *argv[])
                 return 1;
             }
             cp->directUpload(p[0],p[1]);
+
+            qStdOut() << "Uploaded file was be stored in google:/"<< p[1]<<endl;
 
         }
 
@@ -394,6 +400,8 @@ int main(int argc, char *argv[])
                 return 1;
             }
             cp->directUpload(p[0],p[1]);
+
+            qStdOut() << "Uploaded file was be stored in dropbox:/"<< p[1]<<endl;
         }
 
         if(currentProvider=="yandex"){//---------------------------------------
@@ -427,8 +435,10 @@ int main(int argc, char *argv[])
             }
             cp->directUpload(p[0],p[1]);
 
+            qStdOut() << "Uploaded file was be stored in yandex:/"<< p[1]<<endl;
         }
 
+        qStdOut() << "Direct uploading completed"<<endl;
 
         return 0;
     }
