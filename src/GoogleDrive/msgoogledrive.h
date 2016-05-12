@@ -32,7 +32,7 @@ class MSGoogleDrive : public MSCloudProvider
 private:
 
     // create hash table from remote json file records
-    void createHashFromRemote();
+    bool createHashFromRemote();
     // get slice from remote files hash table by parent and some other conditions
     QHash<QString,QJsonValue> get(QString parentId, int target);
     bool isFile(QJsonValue remoteObject);
@@ -45,20 +45,20 @@ private:
     //=== REMOTE FUNCTIONS BLOCK ===
 
     // download file from cloud
-    void remote_file_get(MSFSObject* object);
+    bool remote_file_get(MSFSObject* object);
     // upload new file to cloud
-    void remote_file_insert(MSFSObject* object);
+    bool remote_file_insert(MSFSObject* object);
     // update existing file on cloud
-    void remote_file_update(MSFSObject* object);
+    bool remote_file_update(MSFSObject* object);
     // Generates a set of file IDs which can be provided in insert requests
     bool remote_file_generateIDs(int count);
     // create folder on remote
-    void remote_file_makeFolder(MSFSObject* object);
-    void remote_file_makeFolder(MSFSObject* object,QString parentID);
+    bool remote_file_makeFolder(MSFSObject* object);
+    bool remote_file_makeFolder(MSFSObject* object,QString parentID);
     // trash file or folder on remote
-    void remote_file_trash(MSFSObject* object);
+    bool remote_file_trash(MSFSObject* object);
     // create directory on remote, recursively if nesessary
-    void remote_createDirectory(QString path);
+    bool remote_createDirectory(QString path);
 
 
     //=== LOCAL FUNCTION BLOCK ===
@@ -70,8 +70,8 @@ private:
 
 
 
-    void readRemote(QString parentId, QString currentPath);
-    void readLocal(QString path);
+    bool readRemote(QString parentId, QString currentPath);
+    bool readLocal(QString path);
 
 public:
     MSGoogleDrive();
@@ -86,7 +86,7 @@ public:
      QString getReplyErrorString(QString body);   // reimplemented from MSCloudProvider
 
 
-     void createSyncFileList();
+     bool createSyncFileList();
 
      QHash<QString,MSFSObject> getRemoteFileList();
 

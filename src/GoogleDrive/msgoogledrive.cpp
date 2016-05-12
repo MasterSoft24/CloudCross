@@ -61,13 +61,14 @@ bool MSGoogleDrive::auth(){
 
     if(!req->replyOK()){
         req->printReplyError();
+        delete(req);
         return false;
     }
 
-    if(!this->testReplyBodyForError(req->readReplyText())){
-        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-        exit(0);
-    }
+//    if(!this->testReplyBodyForError(req->readReplyText())){
+//        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+//        exit(0);
+//    }
 
 
     qStdOut()<<"-------------------------------------"<<endl;
@@ -100,13 +101,14 @@ bool MSGoogleDrive::auth(){
 
     if(!req->replyOK()){
         req->printReplyError();
-        exit(1);
-    }
-
-    if(!this->testReplyBodyForError(req->readReplyText())){
-        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+        delete(req);
         return false;
     }
+
+//    if(!this->testReplyBodyForError(req->readReplyText())){
+//        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+//        return false;
+//    }
 
 
     QString content= req->replyText;//lastReply->readAll();
@@ -218,12 +220,13 @@ bool MSGoogleDrive::refreshToken(){
 
     if(!req->replyOK()){
         req->printReplyError();
-        exit(1);
+        delete(req);
+        return false;
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
         qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-        exit(0);
+        return false;
     }
 
 
@@ -247,7 +250,7 @@ bool MSGoogleDrive::refreshToken(){
 
 //=======================================================================================
 
-void MSGoogleDrive::createHashFromRemote(){
+bool MSGoogleDrive::createHashFromRemote(){
 
     MSRequest* req=new MSRequest();
 
@@ -261,12 +264,14 @@ void MSGoogleDrive::createHashFromRemote(){
 
     if(!req->replyOK()){
         req->printReplyError();
-        exit(1);
+        delete(req);
+        return false;
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
         qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-        exit(0);
+        delete(req);
+        return false;
     }
 
 
@@ -307,12 +312,14 @@ void MSGoogleDrive::createHashFromRemote(){
 
         if(!req->replyOK()){
             req->printReplyError();
-            exit(1);
+            delete(req);
+            return false;
         }
 
         if(!this->testReplyBodyForError(req->readReplyText())){
             qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-            exit(0);
+            delete(req);
+            return false;
         }
 
 
@@ -327,6 +334,7 @@ void MSGoogleDrive::createHashFromRemote(){
     }while(job["nextPageToken"].toString()!=""); //while(false);
 
     delete(req);
+    return true;
 }
 
 
@@ -464,7 +472,7 @@ bool MSGoogleDrive::isFolder(QJsonValue remoteObject){
 
 //=======================================================================================
 
-void MSGoogleDrive::readRemote(QString parentId,QString currentPath){
+bool MSGoogleDrive::readRemote(QString parentId,QString currentPath){
 
 
 
@@ -562,13 +570,14 @@ void MSGoogleDrive::readRemote(QString parentId,QString currentPath){
 
         i++;
     }
+    return true;
 }
 
 
 
 //=======================================================================================
 
-void MSGoogleDrive::readLocal(QString path){
+bool MSGoogleDrive::readLocal(QString path){
 
 
 
@@ -694,6 +703,8 @@ void MSGoogleDrive::readLocal(QString path){
 
 
         }
+
+        return true;
 
 }
 
@@ -850,7 +861,7 @@ QHash<QString,MSFSObject> MSGoogleDrive::getRemoteFileList(){
 
 //=======================================================================================
 
-void MSGoogleDrive::createSyncFileList(){
+bool MSGoogleDrive::createSyncFileList(){
 
     if(this->getFlag("useInclude")){
         QFile key(this->workPath+"/.include");
@@ -874,7 +885,7 @@ void MSGoogleDrive::createSyncFileList(){
 
             if(regex2.patternErrorOffset()!=-1){
                 qStdOut()<<"Include filelist contains errors. Program will be terminated.";
-                exit(0);
+                return false;
             }
 
         }
@@ -900,7 +911,7 @@ void MSGoogleDrive::createSyncFileList(){
 
             if(regex2.patternErrorOffset()!=-1){
                 qStdOut()<<"Exclude filelist contains errors. Program will be terminated.";
-                exit(0);
+                return false;
             }
         }
     }
@@ -909,17 +920,27 @@ void MSGoogleDrive::createSyncFileList(){
     qStdOut()<< "Reading remote files"<<endl;
 
 
-    this->createHashFromRemote();
+    if(!this->createHashFromRemote()){
+
+        qStdOut()<<"Error occured on reading remote files" <<endl;
+        return false;
+    }
 
     // begin create
 
 
 
-    this->readRemote(this->getRoot(),"/");// top level files and folders
+    if(!this->readRemote(this->getRoot(),"/")){ // top level files and folders
+        qStdOut()<<"Error occured on reading remote files" <<endl;
+        return false;
+    }
 
     qStdOut()<<"Reading local files and folders" <<endl;
 
-    this->readLocal(this->workPath);
+    if(!this->readLocal(this->workPath)){
+        qStdOut()<<"Error occured on reading local files and folders" <<endl;
+        return false;
+    }
 
 
     this->doSync();
@@ -1575,10 +1596,10 @@ bool MSGoogleDrive::remote_file_generateIDs(int count){
 
 //=======================================================================================
 // download file from cloud
-void MSGoogleDrive::remote_file_get(MSFSObject* object){
+bool MSGoogleDrive::remote_file_get(MSFSObject* object){
 
     if(this->getFlag("dryRun")){
-        return;
+        return true;
     }
 
     QString id=object->remote.data["id"].toString();
@@ -1691,21 +1712,22 @@ void MSGoogleDrive::remote_file_get(MSFSObject* object){
 //    file.close();
 
     delete(req);
+    return true;
 
 }
 
 //=======================================================================================
 
-void MSGoogleDrive::remote_file_insert(MSFSObject *object){
+bool MSGoogleDrive::remote_file_insert(MSFSObject *object){
 
     if(object->local.objectType==MSLocalFSObject::Type::folder){
 
         qStdOut()<< object->fileName << " is a folder. Skipped." <<endl;
-        return;
+        return true;
     }
 
     if(this->getFlag("dryRun")){
-        return;
+        return true;
     }
 
     QString bound="ccross-data";
@@ -1815,7 +1837,7 @@ void MSGoogleDrive::remote_file_insert(MSFSObject *object){
         //error file not found
         qStdOut()<<"Unable to open of "+filePath <<endl;
         delete(req);
-        return;
+        return false;
     }
     mediaData.append(file.readAll());
     file.close();
@@ -1832,13 +1854,13 @@ void MSGoogleDrive::remote_file_insert(MSFSObject *object){
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
-        exit(1);
+        return false;
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
         qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-
-        exit(0);
+        delete(req);
+        return false;
     }
 
 
@@ -1851,25 +1873,28 @@ void MSGoogleDrive::remote_file_insert(MSFSObject *object){
 
     if(job["id"].toString()==""){
         qStdOut()<< "Error when upload "+filePath+" on remote" <<endl;
+        delete(req);
+        return false;
     }
 
     delete(req);
+    return true;
 
 }
 
 
 //=======================================================================================
 
-void MSGoogleDrive::remote_file_update(MSFSObject *object){
+bool MSGoogleDrive::remote_file_update(MSFSObject *object){
 
     if(object->local.objectType==MSLocalFSObject::Type::folder){
 
         qStdOut()<< object->fileName << " is a folder. Skipped." <<endl;
-        return;
+        return true;
     }
 
     if(this->getFlag("dryRun")){
-        return;
+        return true;
     }
 
     QString bound="ccross-data";
@@ -1934,7 +1959,7 @@ void MSGoogleDrive::remote_file_update(MSFSObject *object){
         //error file not found
         qStdOut()<<"Unable to open of "+filePath <<endl;
         delete(req);
-        return;
+        return false;
     }
     mediaData.append(file.readAll());
     file.close();
@@ -1950,13 +1975,13 @@ void MSGoogleDrive::remote_file_update(MSFSObject *object){
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
-        exit(1);
+        return false;
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
         qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-
-        exit(0);
+        delete(req);
+        return false;
     }
 
 
@@ -1967,18 +1992,21 @@ void MSGoogleDrive::remote_file_update(MSFSObject *object){
     QJsonObject job = json.object();
     if(job["id"].toString()==""){
         qStdOut()<< "Error when update "+filePath+" on remote" <<endl;
+        delete(req);
+        return false;
     }
 
     delete(req);
+    return true;
 
 }
 
 //=======================================================================================
 
-void MSGoogleDrive::remote_file_makeFolder(MSFSObject *object){
+bool MSGoogleDrive::remote_file_makeFolder(MSFSObject *object){
 
     if(this->getFlag("dryRun")){
-        return;
+        return true;
     }
 
     MSRequest *req = new MSRequest();
@@ -2004,13 +2032,13 @@ void MSGoogleDrive::remote_file_makeFolder(MSFSObject *object){
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
-        exit(1);
+        return false;
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
         qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-
-        exit(0);
+        delete(req);
+        return false;
     }
 
 
@@ -2027,20 +2055,23 @@ void MSGoogleDrive::remote_file_makeFolder(MSFSObject *object){
 
     if(job["id"].toString()==""){
         qStdOut()<< "Error when folder create "+filePath+" on remote" <<endl;
+        delete(req);
+        return false;
     }
 
     delete(req);
 
     this->filelist_populateChanges(*object);
+    return true;
 
 }
 
 //=======================================================================================
 
-void MSGoogleDrive::remote_file_makeFolder(MSFSObject *object, QString parentID){
+bool MSGoogleDrive::remote_file_makeFolder(MSFSObject *object, QString parentID){
 
     if(this->getFlag("dryRun")){
-        return;
+        return true;
     }
 
     MSRequest *req = new MSRequest();
@@ -2076,12 +2107,13 @@ void MSGoogleDrive::remote_file_makeFolder(MSFSObject *object, QString parentID)
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
-        exit(1);
+        return false;
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
         qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-        exit(0);
+        delete(req);
+        return false;
     }
 
 
@@ -2098,20 +2130,23 @@ void MSGoogleDrive::remote_file_makeFolder(MSFSObject *object, QString parentID)
 
     if(job["id"].toString()==""){
         qStdOut()<< "Error when folder create "+filePath+" on remote" <<endl;
+        delete(req);
+        return false;
     }
 
     delete(req);
 
     this->filelist_populateChanges(*object);
+    return true;
 
 }
 
 //=======================================================================================
 
-void MSGoogleDrive::remote_file_trash(MSFSObject *object){
+bool MSGoogleDrive::remote_file_trash(MSFSObject *object){
 
     if(this->getFlag("dryRun")){
-        return;
+        return true;
     }
 
     QString id=object->remote.data["id"].toString();
@@ -2129,12 +2164,13 @@ void MSGoogleDrive::remote_file_trash(MSFSObject *object){
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
-        exit(1);
+        return false;
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
         qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-        exit(0);
+        delete(req);
+        return false;
     }
 
 
@@ -2149,15 +2185,16 @@ void MSGoogleDrive::remote_file_trash(MSFSObject *object){
     }
 
     delete(req);
+    return true;
 
 }
 
 //=======================================================================================
 
-void MSGoogleDrive::remote_createDirectory(QString path){
+bool MSGoogleDrive::remote_createDirectory(QString path){
 
     if(this->getFlag("dryRun")){
-        return;
+        return true;
     }
 
 
@@ -2200,6 +2237,7 @@ void MSGoogleDrive::remote_createDirectory(QString path){
 
 //        }
     }
+    return true;
 }
 
 
