@@ -107,7 +107,7 @@ void MSYandexDisk::loadStateFile(){
     if(!key.open(QIODevice::ReadOnly))
     {
         qStdOut() << "Previous state file not found. Start in stateless mode."<<endl ;
-        return;
+        return ;
     }
 
     QTextStream instream(&key);
@@ -123,7 +123,7 @@ void MSYandexDisk::loadStateFile(){
     this->lastSyncTime=QJsonValue(job["last_sync"].toObject()["sec"]).toVariant().toULongLong();
 
     key.close();
-    return;
+    return ;
 }
 
 //=======================================================================================
@@ -136,7 +136,7 @@ bool MSYandexDisk::refreshToken(){
 
 //=======================================================================================
 
-void MSYandexDisk::createHashFromRemote(){
+bool MSYandexDisk::createHashFromRemote(){
 
   //<<<<<<<<  this->readRemote();
 
@@ -156,78 +156,26 @@ void MSYandexDisk::createHashFromRemote(){
 
     if(!req->replyOK()){
         req->printReplyError();
-        exit(1);
+        delete(req);
+        return false;
     }
 
-//    if(!this->testReplyBodyForError(req->readReplyText())){
-//        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-//        exit(0);
-//    }
+
 
 
     QString list=req->readReplyText();
 
 
-//    // collect all files in GoogleDrive to array driveJSONFileList
-//    QJsonDocument jsonList = QJsonDocument::fromJson(list.toUtf8());
-//    QJsonObject job = jsonList.object();
 
-//    do{
-
-//        delete(req);
-
-//        req=new MSRequest();
-
-
-//        req->setRequestUrl("https://www.googleapis.com/drive/v2/files");
-//        req->setMethod("get");
-
-//        req->addQueryItem("access_token",           this->access_token);
-//        req->addQueryItem("maxResults",           "1000");
-
-//        QString nextPageToken=job["nextPageToken"].toString();
-
-//        QJsonArray items=job["items"].toArray();
-
-//        for(int i=0;i<items.size();i++){
-
-//            driveJSONFileList.insert(items[i].toObject()["id"].toString(),items[i]);
-
-//        }
-
-//        req->addQueryItem("pageToken",           nextPageToken);
-
-//        req->exec();
-
-
-//        if(!req->replyOK()){
-//            req->printReplyError();
-//            exit(1);
-//        }
-
-//        if(!this->testReplyBodyForError(req->readReplyText())){
-//            qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-//            exit(0);
-//        }
-
-
-//        list=req->readReplyText();
-
-//        jsonList = QJsonDocument::fromJson(list.toUtf8());
-
-
-
-//        job = jsonList.object();
-
-//    }while(job["nextPageToken"].toString()!=""); //while(false);
 
     delete(req);
+    return true;
 }
 
 
 //=======================================================================================
 
-void MSYandexDisk::readRemote(QString currentPath){ //QString parentId,QString currentPath
+bool MSYandexDisk::readRemote(QString currentPath){ //QString parentId,QString currentPath
 
 
     MSRequest* req=new MSRequest();
@@ -248,7 +196,7 @@ void MSYandexDisk::readRemote(QString currentPath){ //QString parentId,QString c
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
-        exit(1);
+        return false;
     }
 
 
@@ -359,7 +307,7 @@ void MSYandexDisk::readRemote(QString currentPath){ //QString parentId,QString c
             if(!req->replyOK()){
                 req->printReplyError();
                 delete(req);
-                exit(1);
+                return false;
             }
 
 
@@ -379,6 +327,7 @@ void MSYandexDisk::readRemote(QString currentPath){ //QString parentId,QString c
 
     }while(hasMore > 0);
 
+    return true;
 
 }
 
@@ -509,7 +458,7 @@ bool MSYandexDisk::filterExcludeFileNames(QString path){// return false if input
 //=======================================================================================
 
 
-void MSYandexDisk::createSyncFileList(){
+bool MSYandexDisk::createSyncFileList(){
 
     if(this->getFlag("useInclude")){
         QFile key(this->workPath+"/.include");
@@ -533,7 +482,7 @@ void MSYandexDisk::createSyncFileList(){
 
             if(regex2.patternErrorOffset()!=-1){
                 qStdOut()<<"Include filelist contains errors. Program will be terminated.";
-                exit(0);
+                return false;
             }
 
         }
@@ -559,7 +508,7 @@ void MSYandexDisk::createSyncFileList(){
 
             if(regex2.patternErrorOffset()!=-1){
                 qStdOut()<<"Exclude filelist contains errors. Program will be terminated.";
-                exit(0);
+                return false;
             }
         }
     }
@@ -574,11 +523,19 @@ void MSYandexDisk::createSyncFileList(){
 
 
 
-    this->readRemote("/");// top level files and folders
+    if(!this->readRemote("/")){// top level files and folders
+        qStdOut()<<"Error occured on reading remote files" <<endl;
+        return false;
+
+    }
 
     qStdOut()<<"Reading local files and folders" <<endl;
 
-    this->readLocal(this->workPath);
+    if(!this->readLocal(this->workPath)){
+        qStdOut()<<"Error occured on local files and folders" <<endl;
+        return false;
+
+    }
 
 //this->remote_file_get(&(this->syncFileList.values()[0]));
 //this->remote_file_insert(&(this->syncFileList.values()[0]));
@@ -595,7 +552,7 @@ void MSYandexDisk::createSyncFileList(){
 //=======================================================================================
 
 
-void MSYandexDisk::readLocal(QString path){
+bool MSYandexDisk::readLocal(QString path){
 
 
 
@@ -712,6 +669,7 @@ void MSYandexDisk::readLocal(QString path){
 
         }
 
+        return true;
 }
 
 
@@ -1328,10 +1286,10 @@ QString MSYandexDisk::getReplyErrorString(QString body) {
 //=======================================================================================
 
 // download file from cloud
-void MSYandexDisk::remote_file_get(MSFSObject* object){
+bool MSYandexDisk::remote_file_get(MSFSObject* object){
 
     if(this->getFlag("dryRun")){
-        return;
+        return true;
     }
 
     MSRequest *req = new MSRequest();
@@ -1348,7 +1306,7 @@ void MSYandexDisk::remote_file_get(MSFSObject* object){
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
-        exit(1);
+        return false;
     }
 
     QString filePath=this->workPath+object->path+object->fileName;
@@ -1379,26 +1337,29 @@ void MSYandexDisk::remote_file_get(MSFSObject* object){
 
         if(! this->getReplyErrorString(req->readReplyText()).contains( "path/not_file/")){
             qStdOut() << "Service error. "<< this->getReplyErrorString(req->readReplyText());
+            delete(req);
+            return false;
         }
     }
 
 
     delete(req);
+    return true;
 
 }
 
 //=======================================================================================
 
-void MSYandexDisk::remote_file_insert(MSFSObject *object){
+bool MSYandexDisk::remote_file_insert(MSFSObject *object){
 
     if(object->local.objectType==MSLocalFSObject::Type::folder){
 
         qStdOut()<< object->fileName << " is a folder. Skipped." <<endl;
-        return;
+        return true;
     }
 
     if(this->getFlag("dryRun")){
-        return;
+        return true;
     }
 
 
@@ -1420,7 +1381,7 @@ void MSYandexDisk::remote_file_insert(MSFSObject *object){
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
-        exit(1);
+        return false;
     }
 
 
@@ -1452,7 +1413,7 @@ void MSYandexDisk::remote_file_insert(MSFSObject *object){
         //error file not found
         qStdOut()<<"Unable to open of "+filePath <<endl;
         delete(req);
-        exit(1);
+        return false;
     }
 
 
@@ -1462,28 +1423,29 @@ void MSYandexDisk::remote_file_insert(MSFSObject *object){
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
-        exit(1);
+        return false;
     }
 
 
 
 
     delete(req);
+    return true;
 }
 
 
 //=======================================================================================
 
-void MSYandexDisk::remote_file_update(MSFSObject *object){
+bool MSYandexDisk::remote_file_update(MSFSObject *object){
 
     if(object->local.objectType==MSLocalFSObject::Type::folder){
 
         qStdOut()<< object->fileName << " is a folder. Skipped." <<endl;
-        return;
+        return true;
     }
 
     if(this->getFlag("dryRun")){
-        return;
+        return true;
     }
 
 
@@ -1505,7 +1467,7 @@ void MSYandexDisk::remote_file_update(MSFSObject *object){
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
-        exit(1);
+        return false;
     }
 
 
@@ -1537,7 +1499,7 @@ void MSYandexDisk::remote_file_update(MSFSObject *object){
         //error file not found
         qStdOut()<<"Unable to open of "+filePath <<endl;
         delete(req);
-        exit(1);
+        return false;
     }
 
 
@@ -1547,21 +1509,22 @@ void MSYandexDisk::remote_file_update(MSFSObject *object){
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
-        exit(1);
+        return false;
     }
 
 
 
 
     delete(req);
+    return true;
 }
 
 //=======================================================================================
 
-void MSYandexDisk::remote_file_makeFolder(MSFSObject *object){
+bool MSYandexDisk::remote_file_makeFolder(MSFSObject *object){
 
     if(this->getFlag("dryRun")){
-        return;
+        return true;
     }
 
     MSRequest *req = new MSRequest();
@@ -1584,17 +1547,19 @@ void MSYandexDisk::remote_file_makeFolder(MSFSObject *object){
             req->printReplyError();
             delete(req);
             //exit(1);
-            return;
+            return false;
         }
         else{
-            return;
+            delete(req);
+            return true;
         }
 
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
         qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-        exit(0);
+        delete(req);
+        return false;
     }
 
 
@@ -1640,6 +1605,8 @@ void MSYandexDisk::remote_file_makeFolder(MSFSObject *object){
 
     this->filelist_populateChanges(*object);
 
+    return true;
+
 }
 
 //=======================================================================================
@@ -1651,10 +1618,10 @@ void MSYandexDisk::remote_file_makeFolder(MSFSObject *object, QString parentID){
 
 //=======================================================================================
 
-void MSYandexDisk::remote_file_trash(MSFSObject *object){
+bool MSYandexDisk::remote_file_trash(MSFSObject *object){
 
     if(this->getFlag("dryRun")){
-        return;
+        return true;
     }
 
 
@@ -1676,11 +1643,11 @@ void MSYandexDisk::remote_file_trash(MSFSObject *object){
 
             qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
             delete(req);
-            exit(0);
+            return false;
         }
         else{
             delete(req);
-            return;
+            return true;
         }
 
 
@@ -1689,26 +1656,16 @@ void MSYandexDisk::remote_file_trash(MSFSObject *object){
 
 
 
-//    QString content=req->readReplyText();
-
-//    QString filePath=this->workPath+object->path+object->fileName;
-
-//    QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
-//    QJsonObject job = json.object();
-//    if(job["id"].toString()==""){
-//        qStdOut()<< "Error when move to trash "+filePath+" on remote" <<endl;
-//    }
-
     delete(req);
-
+    return true;
 }
 
 //=======================================================================================
 
-void MSYandexDisk::remote_createDirectory(QString path){
+bool MSYandexDisk::remote_createDirectory(QString path){
 
     if(this->getFlag("dryRun")){
-        return;
+        return true;
     }
 
 
@@ -1739,18 +1696,7 @@ void MSYandexDisk::remote_createDirectory(QString path){
                 this->remote_file_makeFolder(&f.value());
             }
         }
-//        else{// if this path not exists on remote and not listed as local because include/exclude filter working
 
-//            currPath=currPath+"/"+dirs[i];
-
-//            if(this->filelist_FSObjectHasParent(currPath)){
-
-//            }
-//            else{
-//                this->remote_file_makeFolder();
-//            }
-
-//        }
     }
 }
 
