@@ -3,7 +3,7 @@
 
 Kamensky Vladimir
 
-10.05.2016
+14.05.2016
 
 
 http://cloudcross.mastersoft24.ru
@@ -66,7 +66,7 @@ For detailed usage instructions see http://cloudcross.mastersoft24.ru/#usage
 	
 Change log:
 
-v1.2.1		--direct-upload option added. This option allows you upload files from url's directly to cloud
+v1.2.1		--direct-upload option added. This option allows you upload files from url's directly to cloud.
 
 v1.2.0		Yandex Disk support added
 
@@ -98,7 +98,7 @@ v1.0.1-rc1 -    first pre-release version of CloudCross
 
 Каменский Владимир
 
-10.05.2016
+14.05.2016
 
 http://cloudcross.mastersoft24.ru/ru
 

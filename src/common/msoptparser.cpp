@@ -209,6 +209,8 @@ int MSOptParser::get(){
       int i=0;
       QString currOpt;
 
+      this->optarg.clear();
+
       for(;i<this->opts.size();i++){
 
           if(this->iit==this->input.end()){
@@ -311,6 +313,8 @@ QStringList MSOptParser::getParamByName(QString paramName){
 
             if(i+opi.paramCount > this->input.size() -1){
                 p.clear();
+                this->iit=this->input.begin();
+                *this->iit++;
                 return p;
             }
 
@@ -323,6 +327,8 @@ QStringList MSOptParser::getParamByName(QString paramName){
                 }
                 else{
                     p.clear();
+                    this->iit=this->input.begin();
+                    *this->iit++;
                     return p;
                 }
             }
@@ -338,6 +344,8 @@ QStringList MSOptParser::getParamByName(QString paramName){
 
     }
 
+    this->iit=this->input.begin();
+    *this->iit++;
     return p;
 
 }

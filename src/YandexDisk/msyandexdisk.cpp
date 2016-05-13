@@ -824,9 +824,12 @@ void MSYandexDisk::doSync(){
                    (obj.state == MSFSObject::ObjectState::ChangedLocal)||
                    (obj.state == MSFSObject::ObjectState::ChangedRemote) ){
 
-                    qStdOut()<< obj.path<<obj.fileName <<" Forced downloading." <<endl;
+                    if(obj.remote.objectType == MSRemoteFSObject::Type::file){
 
-                    this->remote_file_get(&obj);
+                        qStdOut()<< obj.path<<obj.fileName <<" Forced downloading." <<endl;
+
+                        this->remote_file_get(&obj);
+                    }
                 }
 
             }
@@ -849,15 +852,23 @@ void MSYandexDisk::doSync(){
                        (obj.state == MSFSObject::ObjectState::ChangedLocal)||
                        (obj.state == MSFSObject::ObjectState::ChangedRemote) ){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Forced uploading." <<endl;
-
                         if(obj.remote.exist){
 
-                            this->remote_file_update(&obj);
+                            if(obj.local.objectType == MSLocalFSObject::Type::file){
+
+                                qStdOut()<< obj.path<<obj.fileName <<" Forced uploading." <<endl;
+
+                                this->remote_file_update(&obj);
+                            }
                         }
                         else{
 
-                            this->remote_file_insert(&obj);
+                            if(obj.local.objectType == MSLocalFSObject::Type::file){
+
+                                qStdOut()<< obj.path<<obj.fileName <<" Forced uploading." <<endl;
+
+                                this->remote_file_insert(&obj);
+                            }
                         }
 
 

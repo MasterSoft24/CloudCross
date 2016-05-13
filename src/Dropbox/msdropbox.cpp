@@ -765,6 +765,10 @@ MSFSObject::ObjectState MSDropbox::filelist_defineObjectState(MSLocalFSObject lo
             }
             else{
 
+                if(local.objectType == MSLocalFSObject::Type::folder){
+                    return MSFSObject::ObjectState::Sync;
+                }
+
                 if(local.modifiedDate > remote.modifiedDate){
                     return MSFSObject::ObjectState::ChangedLocal;
                 }
@@ -884,9 +888,13 @@ void MSDropbox::doSync(){
                    (obj.state == MSFSObject::ObjectState::ChangedLocal)||
                    (obj.state == MSFSObject::ObjectState::ChangedRemote) ){
 
-                    qStdOut()<< obj.path<<obj.fileName <<" Forced downloading." <<endl;
 
-                    this->remote_file_get(&obj);
+                    if(obj.remote.objectType == MSRemoteFSObject::Type::file){
+
+                        qStdOut()<< obj.path<<obj.fileName <<" Forced downloading." <<endl;
+
+                        this->remote_file_get(&obj);
+                    }
                 }
 
             }
@@ -909,15 +917,23 @@ void MSDropbox::doSync(){
                        (obj.state == MSFSObject::ObjectState::ChangedLocal)||
                        (obj.state == MSFSObject::ObjectState::ChangedRemote) ){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Forced uploading." <<endl;
-
                         if(obj.remote.exist){
 
-                            this->remote_file_update(&obj);
+                            if(obj.local.objectType == MSLocalFSObject::Type::file){
+
+                                qStdOut()<< obj.path<<obj.fileName <<" Forced uploading." <<endl;
+
+                                this->remote_file_update(&obj);
+                            }
                         }
                         else{
 
-                            this->remote_file_insert(&obj);
+                            if(obj.local.objectType == MSLocalFSObject::Type::file){
+
+                                qStdOut()<< obj.path<<obj.fileName <<" Forced uploading." <<endl;
+
+                                this->remote_file_insert(&obj);
+                            }
                         }
 
 
