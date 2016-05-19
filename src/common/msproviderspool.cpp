@@ -94,6 +94,10 @@ void MSProvidersPool::getCurrentPath(){
 
 
 void MSProvidersPool::setWorkPath(QString path){
+
+#ifdef Q_OS_WIN
+   path=path.replace("\\","/") ;
+#endif
     this->workPath=path;
 
 }

@@ -26,7 +26,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
-
+#include "iostream"
 
 
 MSGoogleDrive::MSGoogleDrive() :
@@ -391,9 +391,16 @@ QHash<QString,QJsonValue> MSGoogleDrive::get(QString parentId, int target){
 
         v= i.value();
 
+        if(v.toObject()["parents"].toArray().size()==0){
+            if(i != driveJSONFileList.end()){
+                i++;
+                continue;
+            }
+        }
         QString oParentId=  v.toObject()["parents"].toArray()[0].toObject()["id"].toString();
         QString oMimeType=  v.toObject()["mimeType"].toString();
-        bool    oTrashed=   v.toObject()["labels"].toArray()[0].toObject()["trashed"].toBool();
+        //bool    oTrashed=   v.toObject()["labels"].toArray()[0].toObject()["trashed"].toBool();
+        bool    oTrashed=   v.toObject()["labels"].toObject()["trashed"].toBool();
 
         if(oParentId==parentId){
 
@@ -1834,7 +1841,8 @@ bool MSGoogleDrive::remote_file_insert(MSFSObject *object){
         metaJson.insert("parents",parents);
     }
 
-    metaData.append(QString(QJsonDocument(metaJson).toJson()).toLocal8Bit());
+    //metaData.append(QString(QJsonDocument(metaJson).toJson()).toLocal8Bit());
+    metaData.append((QJsonDocument(metaJson).toJson()));
     metaData.append(QString("\r\n--"+bound+"\r\n").toLocal8Bit());
 
     QByteArray mediaData;
@@ -2037,7 +2045,8 @@ bool MSGoogleDrive::remote_file_makeFolder(MSFSObject *object){
     metaJson.insert("title",object->fileName);
     metaJson.insert("mimeType",QString("application/vnd.google-apps.folder"));
 
-    metaData.append(QString(QJsonDocument(metaJson).toJson()).toLocal8Bit());
+    //metaData.append(QString(QJsonDocument(metaJson).toJson()).toLocal8Bit());
+    metaData.append((QJsonDocument(metaJson).toJson()));
 
     req->post(metaData);
 
@@ -2112,7 +2121,8 @@ bool MSGoogleDrive::remote_file_makeFolder(MSFSObject *object, QString parentID)
         metaJson.insert("parents",parents);
     }
 
-    metaData.append(QString(QJsonDocument(metaJson).toJson()).toLocal8Bit());
+    //metaData.append(QString(QJsonDocument(metaJson).toJson()).toLocal8Bit());
+    metaData.append((QJsonDocument(metaJson).toJson()));
 
     req->post(metaData);
 
@@ -2535,7 +2545,9 @@ bool MSGoogleDrive::directUpload(QString url, QString remotePath){
         metaJson.insert("parents",parents);
     }
 
-    metaData.append(QString(QJsonDocument(metaJson).toJson()).toLocal8Bit());
+    //metaData.append(QString(QJsonDocument(metaJson).toJson()).toLocal8Bit());
+    metaData.append((QJsonDocument(metaJson).toJson()));
+
     metaData.append(QString("\r\n--"+bound+"\r\n").toLocal8Bit());
 
     QByteArray mediaData;

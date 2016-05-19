@@ -24,7 +24,9 @@
 
 #include <QTextStream>
 
+
 QTextStream& qStdOut();
+
 
 
 

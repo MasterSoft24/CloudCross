@@ -9,6 +9,9 @@
 #include <QJsonObject>
 #include <QDir>
 #include <QDateTime>
+#include <QTextCodec>
+
+
 
 #define APP_MAJOR_VERSION 1
 #define APP_MINOR_VERSION 2
@@ -46,7 +49,7 @@ void printHelp(){
                             "                              All options, except --provider and --path, are ignored.\n"
                             "                              Uploaded file will be stored on remote storage into location which was defined by path.") <<endl;
 
-
+qStdOut()<< QString("Привет Мир")<<endl;
 }
 
 void printVersion(){
@@ -74,7 +77,9 @@ void listGrive(MSProvidersPool* providers){
     MSGoogleDrive* gdp=new MSGoogleDrive();
 
     providers->addProvider(gdp,true);
-    providers->loadTokenFile("GoogleDrive");
+    if(!providers->loadTokenFile("GoogleDrive")){
+        return ;
+    }
 
     if(! providers->refreshToken("GoogleDrive")){
 
@@ -148,7 +153,9 @@ void listDropbox(MSProvidersPool* providers){
     MSDropbox* dbp=new MSDropbox();
 
     providers->addProvider(dbp,true);
-    providers->loadTokenFile("Dropbox");
+    if(!providers->loadTokenFile("Dropbox")){
+        return ;
+    }
 
     if(! providers->refreshToken("Dropbox")){
 
@@ -220,7 +227,9 @@ void listYandex(MSProvidersPool* providers){
     MSYandexDisk* ydp=new MSYandexDisk();
 
     providers->addProvider(ydp,true);
-    providers->loadTokenFile("YandexDisk");
+    if(!providers->loadTokenFile("YandexDisk")){
+        return ;
+    }
 
     if(! providers->refreshToken("YandexDisk")){
 
@@ -282,6 +291,12 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
+
+
+//    QTextCodec *russian =QTextCodec::codecForName("unicode");
+//     QTextCodec::setCodecForLocale(russian);
+
+
     // create main objects
 
     MSProvidersPool* providers=new MSProvidersPool();
@@ -331,6 +346,18 @@ int main(int argc, char *argv[])
     }
 
 
+
+    QStringList wp=parser->getParamByName("path");
+    if(wp.size()==0){
+        wp=parser->getParamByName("p");
+    }
+
+    if(wp.size()!=0){
+
+        providers->setWorkPath(wp[0]);
+    }
+
+
     if(parser->isParamExist("direct-upload")){
 
         qStdOut() << "Start direct uploading..."<<endl;
@@ -347,16 +374,6 @@ int main(int argc, char *argv[])
             if(!providers->refreshToken("GoogleDrive")){
                 qStdOut()<<"Unauthorized access. Aborted."<<endl;
                 return 1;
-            }
-
-            QStringList wp=parser->getParamByName("path");
-            if(wp.size()==0){
-                wp=parser->getParamByName("p");
-            }
-
-            if(wp.size()!=0){
-
-                providers->setWorkPath(wp[0]);
             }
 
             QStringList p=parser->getParamByName("direct-upload");
@@ -384,15 +401,6 @@ int main(int argc, char *argv[])
                 return 1;
             }
 
-            QStringList wp=parser->getParamByName("path");
-            if(wp.size()==0){
-                wp=parser->getParamByName("p");
-            }
-
-            if(wp.size()!=0){
-
-                providers->setWorkPath(wp[0]);
-            }
 
             QStringList p=parser->getParamByName("direct-upload");
             if(p.size()<2){
@@ -416,16 +424,6 @@ int main(int argc, char *argv[])
             if(!providers->refreshToken("YandexDisk")){
                 qStdOut()<<"Unauthorized access. Aborted."<<endl;
                 return 1;
-            }
-
-            QStringList wp=parser->getParamByName("path");
-            if(wp.size()==0){
-                wp=parser->getParamByName("p");
-            }
-
-            if(wp.size()!=0){
-
-                providers->setWorkPath(wp[0]);
             }
 
             QStringList p=parser->getParamByName("direct-upload");

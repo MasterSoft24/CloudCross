@@ -21,10 +21,13 @@
 
 
 #include "include/qstdout.h"
+#include <QFile>
 
 QTextStream& qStdOut()
 {
-    static QTextStream ts( stdout );
+
+
+    static QTextStream ts( stdout );//stdout
     return ts ;
 }
 
