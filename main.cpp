@@ -15,8 +15,15 @@
 
 #define APP_MAJOR_VERSION 1
 #define APP_MINOR_VERSION 2
-#define APP_BUILD_NUMBER  1
-#define APP_SUFFIX ""
+#define APP_BUILD_NUMBER  2
+
+#ifdef Q_OS_WIN
+    #define APP_SUFFIX " for Windows"
+#else
+
+    #define APP_SUFFIX " for Linux"
+#endif
+
 #define APP_NAME "CloudCross"
 
 
@@ -49,7 +56,6 @@ void printHelp(){
                             "                              All options, except --provider and --path, are ignored.\n"
                             "                              Uploaded file will be stored on remote storage into location which was defined by path.") <<endl;
 
-qStdOut()<< QString("Привет Мир")<<endl;
 }
 
 void printVersion(){

@@ -252,7 +252,7 @@ bool MSDropbox::readRemote(){ //QString parentId,QString currentPath
 
     QByteArray metaData;
 
-    metaData.append(QString(QJsonDocument(d).toJson()).toLocal8Bit());
+    metaData.append((QJsonDocument(d).toJson()));
 
     req->addHeader("Content-Length",QString::number(metaData.length()).toLocal8Bit());
 
@@ -1842,7 +1842,7 @@ bool MSDropbox::remote_file_makeFolder(MSFSObject *object){
     metaJson.insert("path",object->path+object->fileName);
 
 
-    metaData.append(QString(QJsonDocument(metaJson).toJson()).toLocal8Bit());
+    metaData.append((QJsonDocument(metaJson).toJson()));
 
     req->post(metaData);
 
@@ -1922,7 +1922,7 @@ bool MSDropbox::remote_file_trash(MSFSObject *object){
     metaJson.insert("path",object->path+object->fileName);
 
 
-    metaData.append(QString(QJsonDocument(metaJson).toJson()).toLocal8Bit());
+    metaData.append((QJsonDocument(metaJson).toJson()));
 
     req->post(metaData);
 
