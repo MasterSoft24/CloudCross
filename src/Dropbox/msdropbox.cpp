@@ -244,7 +244,7 @@ bool MSDropbox::readRemote(){ //QString parentId,QString currentPath
 
     QJsonObject d;
 
-    d.insert("path","");
+    d.insert("path",QString(""));
     d.insert("recursive",true);
     d.insert("include_media_info",false);
     d.insert("include_deleted",false);
@@ -1483,7 +1483,7 @@ bool MSDropbox::remote_file_insert(MSFSObject *object){
             cursor.insert("offset",0);
             QJsonObject commit;
             commit.insert("path",object->path+object->fileName);
-            commit.insert("mode","add");
+            commit.insert("mode",QString("add"));
             commit.insert("autorename",false);
             commit.insert("mute",false);
             commit.insert("client_modified",QDateTime::fromMSecsSinceEpoch(object->local.modifiedDate,Qt::UTC).toString(Qt::DateFormat::ISODate));
@@ -1568,7 +1568,7 @@ bool MSDropbox::remote_file_insert(MSFSObject *object){
         cursor.insert("offset",cursorPosition);
         QJsonObject commit;
         commit.insert("path",object->path+object->fileName);
-        commit.insert("mode","add");
+        commit.insert("mode",QString("add"));
         commit.insert("autorename",false);
         commit.insert("mute",false);
         commit.insert("client_modified",QDateTime::fromMSecsSinceEpoch(object->local.modifiedDate,Qt::UTC).toString(Qt::DateFormat::ISODate));
@@ -1688,7 +1688,7 @@ bool MSDropbox::remote_file_update(MSFSObject *object){
             cursor.insert("offset",0);
             QJsonObject commit;
             commit.insert("path",object->path+object->fileName);
-            commit.insert("mode","overwrite");
+            commit.insert("mode",QString("overwrite"));
             commit.insert("autorename",false);
             commit.insert("mute",false);
             commit.insert("client_modified",QDateTime::fromMSecsSinceEpoch(object->local.modifiedDate,Qt::UTC).toString(Qt::DateFormat::ISODate));
@@ -1773,7 +1773,7 @@ bool MSDropbox::remote_file_update(MSFSObject *object){
         cursor.insert("offset",cursorPosition);
         QJsonObject commit;
         commit.insert("path",object->path+object->fileName);
-        commit.insert("mode","overwrite");
+        commit.insert("mode",QString("overwrite"));
         commit.insert("autorename",false);
         commit.insert("mute",false);
         commit.insert("client_modified",QDateTime::fromMSecsSinceEpoch(object->local.modifiedDate,Qt::UTC).toString(Qt::DateFormat::ISODate));
@@ -2202,7 +2202,7 @@ bool MSDropbox::directUpload(QString url, QString remotePath){
             cursor.insert("offset",0);
             QJsonObject commit;
             commit.insert("path",remotePath);
-            commit.insert("mode","overwrite");
+            commit.insert("mode",QString("overwrite"));
             commit.insert("autorename",false);
             commit.insert("mute",false);
             commit.insert("client_modified",QDateTime::fromMSecsSinceEpoch(object.local.modifiedDate,Qt::UTC).toString(Qt::DateFormat::ISODate));
@@ -2291,7 +2291,7 @@ bool MSDropbox::directUpload(QString url, QString remotePath){
         cursor.insert("offset",cursorPosition);
         QJsonObject commit;
         commit.insert("path",remotePath);
-        commit.insert("mode","overwrite");
+        commit.insert("mode",QString("overwrite"));
         commit.insert("autorename",false);
         commit.insert("mute",false);
         commit.insert("client_modified",QDateTime::fromMSecsSinceEpoch(object.local.modifiedDate,Qt::UTC).toString(Qt::DateFormat::ISODate));
