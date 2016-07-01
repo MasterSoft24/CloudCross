@@ -607,6 +607,7 @@ bool MSDropbox::createSyncFileList(){
 
     this->doSync();
 
+    return true;
 }
 
 //=======================================================================================
@@ -805,6 +806,7 @@ MSFSObject::ObjectState MSDropbox::filelist_defineObjectState(MSLocalFSObject lo
     }
 
 
+    return  MSFSObject::ObjectState::ErrorState;
 }
 
 //=======================================================================================
@@ -993,7 +995,7 @@ void MSDropbox::doSync(){
             continue;
         }
 
-        switch(obj.state){
+        switch((int)(obj.state)){
 
             case MSFSObject::ObjectState::ChangedLocal:
 
@@ -1189,6 +1191,10 @@ void MSDropbox::doSync(){
 
 bool MSDropbox::remote_file_generateIDs(int count) {
 // absolete
+
+    // fix warning message
+    count++;
+    return false;
 }
 
 QHash<QString,MSFSObject>   MSDropbox::filelist_getFSObjectsByState(MSFSObject::ObjectState state) {
@@ -1384,7 +1390,7 @@ bool MSDropbox::remote_file_get(MSFSObject* object){
 
     if(this->testReplyBodyForError(req->readReplyText())){
 
-        if(object->remote.objectType==MSLocalFSObject::Type::file){
+        if(object->remote.objectType==MSRemoteFSObject::Type::file){
 
             this->local_writeFileContent(filePath,req);
             // set remote "change time" for local file
@@ -1896,7 +1902,9 @@ bool MSDropbox::remote_file_makeFolder(MSFSObject *object){
 
 void MSDropbox::remote_file_makeFolder(MSFSObject *object, QString parentID){
 // obsolete
-
+    // fixed warning message
+    object=object;
+    parentID+="";
 }
 
 //=======================================================================================

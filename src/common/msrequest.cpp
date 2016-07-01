@@ -124,6 +124,10 @@ void MSRequest::methodCharger(QNetworkRequest req){
 
 void MSRequest::methodCharger(QNetworkRequest req,QString path){
 
+    // fix warning message
+
+    path=path+"";
+
     QNetworkReply* replySync=0;
 
     if(this->requestMethod=="get"){
@@ -355,7 +359,10 @@ void MSRequest::requestFinished(QNetworkReply *reply){
 
 void MSRequest::doDownloadProgress(qint64 avail, qint64 total){
 
-    int w=7;
+   // fix warning message
+    if(avail==total){
+        return;
+    }
 
 }
 

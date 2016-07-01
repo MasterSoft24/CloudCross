@@ -958,6 +958,7 @@ bool MSGoogleDrive::createSyncFileList(){
 
     this->doSync();
 
+    return true;
 }
 
 //=======================================================================================
@@ -1026,7 +1027,7 @@ MSFSObject::ObjectState MSGoogleDrive::filelist_defineObjectState(MSLocalFSObjec
 
 
 
-
+    return  MSFSObject::ObjectState::ErrorState;
 
 }
 
@@ -1359,7 +1360,7 @@ void MSGoogleDrive::doSync(){
             continue;
         }
 
-        switch(obj.state){
+        switch((int)(obj.state)){
 
             case MSFSObject::ObjectState::ChangedLocal:
 
@@ -1714,7 +1715,7 @@ bool MSGoogleDrive::remote_file_get(MSFSObject* object){
 
     if(this->testReplyBodyForError(req->readReplyText())){
 
-        if(object->remote.objectType==MSLocalFSObject::Type::file){
+        if(object->remote.objectType==MSRemoteFSObject::Type::file){
 
             this->local_writeFileContent(filePath,req);
         }
@@ -2611,4 +2612,6 @@ bool MSGoogleDrive::directUpload(QString url, QString remotePath){
 
     delete(req);
     delete(object);
+
+    return true;
 }

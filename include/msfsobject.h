@@ -38,7 +38,8 @@ public:
                 NewLocal=4,
                 DeleteRemote=5,
                 DeleteLocal=6,
-                Sync=0
+                Sync=0,
+                ErrorState=100
     };
 
 

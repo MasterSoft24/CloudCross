@@ -90,7 +90,7 @@ void listGrive(MSProvidersPool* providers){
     if(! providers->refreshToken("GoogleDrive")){
 
         qStdOut()<< "Unauthorized client"<<endl;
-        exit(0);
+       return;
     }
 
 

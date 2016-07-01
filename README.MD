@@ -1,9 +1,9 @@
 
-# CloudCross v1.2.1
+# CloudCross v1.2.2
 
 Kamensky Vladimir
 
-14.05.2016
+01.07.2016
 
 
 http://cloudcross.mastersoft24.ru
@@ -20,11 +20,6 @@ At the same time you have the opportunity to choose which files have the advanta
 
 In addition, CloudCross supports automatic bidirectional conversion of documents from MS Office or Open Office format to Google Docs.
 Also, you can control the versioning of files synchronized on Google Drive. 
-
-In next version  will be added:
-
-- Support run with predefined (customizable) profiles
-- build on Windows (yet questionable)
 
 	
 	
@@ -66,6 +61,12 @@ For detailed usage instructions see http://cloudcross.mastersoft24.ru/#usage
 	
 Change log:
 
+v1.2.2		Possibility building and working on Windows.
+		Fix build error on certain systems on wrong implicit conversion from char* to QString in
+		QJsonValue::insert() method.
+		Fix build warning messages.
+		Fix working with Google Drive access token without lifetime limit.
+
 v1.2.1		--direct-upload option added. This option allows you upload files from url's directly to cloud.
 
 v1.2.0		Yandex Disk support added
@@ -94,11 +95,11 @@ v1.0.1-rc1 -    first pre-release version of CloudCross
 
 
 
-# CloudCross v1.2.1
+# CloudCross v1.2.2
 
 Каменский Владимир
 
-14.05.2016
+01.07.2016
 
 http://cloudcross.mastersoft24.ru/ru
 
@@ -115,11 +116,6 @@ CloudCross позволяет синхронизировать только ча
 Кроме того, CloudCross поддерживает автоматическую двунаправленную конвертацию документов из формата MS Office или Open Office в формат Google Docs.
 Так же, доступно управление версионированием синхронизируемых файлов на Google Drive. 
 
-
-В следующей версии  будут добавлены:
-
-- поддержка запуска с предустановленым (настраиваемым) профилем
-- возможность сборки по Windows (пока под вопросом)
 	
 	
 Для установки на deb-based дистрибутивы (Debian,Ubuntu,Linux Mint):
@@ -155,6 +151,12 @@ CloudCross позволяет синхронизировать только ча
 	
 	
 Список изменений:
+
+v1.2.2		Реализована возможность сборки и работы под Windows.
+		Исправлена ошибка сборки на некоторый системах, связаная с неявным преобразованием из char* в QString в методе
+		QJsonValue::insert().
+		Исправлен код генерирующий предупреждения  при сборке.
+		Исправлена работа с токеном Google Drive без ограничения по времени жизни.
 
 v1.2.1		Добавлена опция --direct-upload для прямой загрузке файла в облако по ссылке
 

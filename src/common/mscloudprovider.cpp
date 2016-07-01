@@ -40,10 +40,14 @@ MSCloudProvider::MSCloudProvider()
 }
 
 void MSCloudProvider::saveTokenFile(QString path){
+    // fix warning message
+    path=path;
     return;
 }
 
 bool MSCloudProvider::loadTokenFile(QString path){
+    // fix warning message
+    path=path;
     return false;
 }
 
@@ -172,7 +176,7 @@ bool MSCloudProvider::local_writeFileContent(QString filePath, MSRequest* req){
     int sz=ba.size();
 
 
-    outk.writeRawData(ba.data(),ba.size()) ;
+    outk.writeRawData(ba.data(),sz) ;
 
     file.close();
     return true;

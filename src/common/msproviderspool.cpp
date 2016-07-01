@@ -129,7 +129,7 @@ bool MSProvidersPool::loadTokenFile(QString providerName){
         return cp->loadTokenFile(this->workPath);
 
     }
-
+    return false;
 }
 
 
@@ -140,7 +140,7 @@ bool MSProvidersPool::refreshToken(QString providerName){
         return cp->refreshToken();
 
     }
-
+    return false;
 }
 
 

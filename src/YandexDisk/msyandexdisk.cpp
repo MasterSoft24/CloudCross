@@ -547,6 +547,7 @@ bool MSYandexDisk::createSyncFileList(){
 
     this->doSync();
 
+    return true;
 }
 
 //=======================================================================================
@@ -740,7 +741,7 @@ MSFSObject::ObjectState MSYandexDisk::filelist_defineObjectState(MSLocalFSObject
         }
     }
 
-
+    return  MSFSObject::ObjectState::ErrorState;
 }
 
 //=======================================================================================
@@ -928,7 +929,7 @@ void MSYandexDisk::doSync(){
             continue;
         }
 
-        switch(obj.state){
+        switch((int)(obj.state)){
 
             case MSFSObject::ObjectState::ChangedLocal:
 
@@ -1124,6 +1125,9 @@ void MSYandexDisk::doSync(){
 
 bool MSYandexDisk::remote_file_generateIDs(int count) {
 // absolete
+    // fix warning message
+    count++;
+    return false;
 }
 
 QHash<QString,MSFSObject>   MSYandexDisk::filelist_getFSObjectsByState(MSFSObject::ObjectState state) {
@@ -1327,7 +1331,7 @@ bool MSYandexDisk::remote_file_get(MSFSObject* object){
 
     if(this->testReplyBodyForError(req->readReplyText())){
 
-        if(object->remote.objectType==MSLocalFSObject::Type::file){
+        if(object->remote.objectType==MSRemoteFSObject::Type::file){
 
             QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
             QJsonObject job = json.object();
@@ -1624,6 +1628,9 @@ bool MSYandexDisk::remote_file_makeFolder(MSFSObject *object){
 
 void MSYandexDisk::remote_file_makeFolder(MSFSObject *object, QString parentID){
 // obsolete
+    //fix warning message
+    object=object;
+    parentID+="";
 
 }
 
@@ -1709,6 +1716,7 @@ bool MSYandexDisk::remote_createDirectory(QString path){
         }
 
     }
+    return true;
 }
 
 
@@ -1817,7 +1825,7 @@ bool MSYandexDisk::local_writeFileContent(QString filePath, QString  hrefToDownl
     int sz=ba.size();
 
 
-    outk.writeRawData(ba.data(),ba.size()) ;
+    outk.writeRawData(ba.data(),sz) ;
 
     file.close();
     return true;
@@ -1951,6 +1959,6 @@ bool MSYandexDisk::directUpload(QString url, QString remotePath){
 
     delete(req);
 
-
+    return true;
 }
 
