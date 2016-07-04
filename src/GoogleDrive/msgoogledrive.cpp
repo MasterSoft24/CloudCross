@@ -239,9 +239,9 @@ bool MSGoogleDrive::refreshToken(){
     if(v!=""){
        this->access_token=v;
 
-        this->token=v;
+//        this->token=v;
 
-        this->saveTokenFile(this->workPath);
+//        this->saveTokenFile(this->workPath);
 
 
         delete(req);
