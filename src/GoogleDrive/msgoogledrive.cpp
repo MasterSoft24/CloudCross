@@ -87,7 +87,8 @@ bool MSGoogleDrive::auth(){
 
     req=new MSRequest();
 
-    req->setRequestUrl("https://accounts.google.com/o/oauth2/token");
+    //req->setRequestUrl("https://accounts.google.com/o/oauth2/token"); // old path
+    req->setRequestUrl("https://www.googleapis.com/oauth2/v4/token");
     req->setMethod("post");
 
     req->addQueryItem("client_id",          "834415955748-oq0p2m5dro2bvh3bu0o5bp19ok3qrs3f.apps.googleusercontent.com");
@@ -200,6 +201,31 @@ void MSGoogleDrive::loadStateFile(){
     return;
 
 }
+
+//=======================================================================================
+
+void MSGoogleDrive::saveStateFile(){
+
+
+    QJsonDocument state;
+    QJsonObject jso;
+    jso.insert("change_stamp",QString("0"));
+
+    QJsonObject jts;
+    jts.insert("nsec",QString("0"));
+    jts.insert("sec",QString::number(QDateTime( QDateTime::currentDateTime()).toMSecsSinceEpoch()));
+
+    jso.insert("last_sync",jts);
+    state.setObject(jso);
+
+    QFile key(this->workPath+"/"+this->stateFileName);
+    key.open(QIODevice::WriteOnly | QIODevice::Text);
+    QTextStream outk(&key);
+    outk << state.toJson();
+    key.close();
+
+}
+
 
 //=======================================================================================
 
@@ -1320,22 +1346,24 @@ void MSGoogleDrive::doSync(){
 
         // save state file
 
-        QJsonDocument state;
-        QJsonObject jso;
-        jso.insert("change_stamp",QString("0"));
+        this->saveStateFile();
 
-        QJsonObject jts;
-        jts.insert("nsec",QString("0"));
-        jts.insert("sec",QString::number(QDateTime( QDateTime::currentDateTime()).toMSecsSinceEpoch()));
+//        QJsonDocument state;
+//        QJsonObject jso;
+//        jso.insert("change_stamp",QString("0"));
 
-        jso.insert("last_sync",jts);
-        state.setObject(jso);
+//        QJsonObject jts;
+//        jts.insert("nsec",QString("0"));
+//        jts.insert("sec",QString::number(QDateTime( QDateTime::currentDateTime()).toMSecsSinceEpoch()));
 
-        QFile key(this->workPath+"/"+this->stateFileName);
-        key.open(QIODevice::WriteOnly | QIODevice::Text);
-        QTextStream outk(&key);
-        outk << state.toJson();
-        key.close();
+//        jso.insert("last_sync",jts);
+//        state.setObject(jso);
+
+//        QFile key(this->workPath+"/"+this->stateFileName);
+//        key.open(QIODevice::WriteOnly | QIODevice::Text);
+//        QTextStream outk(&key);
+//        outk << state.toJson();
+//        key.close();
 
 
             qStdOut()<<"Syncronization end" <<endl;
@@ -1531,22 +1559,24 @@ void MSGoogleDrive::doSync(){
 
     // save state file
 
-    QJsonDocument state;
-    QJsonObject jso;
-    jso.insert("change_stamp",QString("0"));
+    this->saveStateFile();
 
-    QJsonObject jts;
-    jts.insert("nsec",QString("0"));
-    jts.insert("sec",QString::number(QDateTime( QDateTime::currentDateTime()).toMSecsSinceEpoch()));
+//    QJsonDocument state;
+//    QJsonObject jso;
+//    jso.insert("change_stamp",QString("0"));
 
-    jso.insert("last_sync",jts);
-    state.setObject(jso);
+//    QJsonObject jts;
+//    jts.insert("nsec",QString("0"));
+//    jts.insert("sec",QString::number(QDateTime( QDateTime::currentDateTime()).toMSecsSinceEpoch()));
 
-    QFile key(this->workPath+"/"+this->stateFileName);
-    key.open(QIODevice::WriteOnly | QIODevice::Text);
-    QTextStream outk(&key);
-    outk << state.toJson();
-    key.close();
+//    jso.insert("last_sync",jts);
+//    state.setObject(jso);
+
+//    QFile key(this->workPath+"/"+this->stateFileName);
+//    key.open(QIODevice::WriteOnly | QIODevice::Text);
+//    QTextStream outk(&key);
+//    outk << state.toJson();
+//    key.close();
 
 
         qStdOut()<<"Syncronization end" <<endl;

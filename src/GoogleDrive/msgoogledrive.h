@@ -26,10 +26,11 @@
 #include <include/mscloudprovider.h>
 
 
+
 class MSGoogleDrive : public MSCloudProvider
 {
+public:
 
-private:
 
     // create hash table from remote json file records
     bool createHashFromRemote();
@@ -81,6 +82,7 @@ public:
      bool loadTokenFile(QString path);  // reimplemented from MSCloudProvider
      bool refreshToken();               // reimplemented from MSCloudProvider
      void loadStateFile();              // reimplemented from MSCloudProvider
+     void saveStateFile();              // reimplemented from MSCloudProvider
 
      bool testReplyBodyForError(QString body); // reimplemented from MSCloudProvider
      QString getReplyErrorString(QString body);   // reimplemented from MSCloudProvider

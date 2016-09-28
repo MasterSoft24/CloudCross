@@ -128,6 +128,32 @@ void MSYandexDisk::loadStateFile(){
 
 //=======================================================================================
 
+void MSYandexDisk::saveStateFile(){
+
+
+    QJsonDocument state;
+    QJsonObject jso;
+    jso.insert("change_stamp",QString("0"));
+
+    QJsonObject jts;
+    jts.insert("nsec",QString("0"));
+    jts.insert("sec",QString::number(QDateTime( QDateTime::currentDateTime()).toMSecsSinceEpoch()));
+
+    jso.insert("last_sync",jts);
+    state.setObject(jso);
+
+    QFile key(this->workPath+"/"+this->stateFileName);
+    key.open(QIODevice::WriteOnly | QIODevice::Text);
+    QTextStream outk(&key);
+    outk << state.toJson();
+    key.close();
+
+}
+
+
+
+//=======================================================================================
+
 bool MSYandexDisk::refreshToken(){
 
     this->access_token=this->token;
@@ -889,22 +915,8 @@ void MSYandexDisk::doSync(){
 
         // save state file
 
-        QJsonDocument state;
-        QJsonObject jso;
-        jso.insert("change_stamp",QString("0"));
+        this->saveStateFile();
 
-        QJsonObject jts;
-        jts.insert("nsec",QString("0"));
-        jts.insert("sec",QString::number(QDateTime( QDateTime::currentDateTime()).toMSecsSinceEpoch()));
-
-        jso.insert("last_sync",jts);
-        state.setObject(jso);
-
-        QFile key(this->workPath+"/"+this->stateFileName);
-        key.open(QIODevice::WriteOnly | QIODevice::Text);
-        QTextStream outk(&key);
-        outk << state.toJson();
-        key.close();
 
 
             qStdOut()<<"Syncronization end" <<endl;
@@ -1100,22 +1112,9 @@ void MSYandexDisk::doSync(){
 
     // save state file
 
-    QJsonDocument state;
-    QJsonObject jso;
-    jso.insert("change_stamp",QString("0"));
+    this->saveStateFile();
 
-    QJsonObject jts;
-    jts.insert("nsec",QString("0"));
-    jts.insert("sec",QString::number(QDateTime( QDateTime::currentDateTime()).toMSecsSinceEpoch()));
 
-    jso.insert("last_sync",jts);
-    state.setObject(jso);
-
-    QFile key(this->workPath+"/"+this->stateFileName);
-    key.open(QIODevice::WriteOnly | QIODevice::Text);
-    QTextStream outk(&key);
-    outk << state.toJson();
-    key.close();
 
 
         qStdOut()<<"Syncronization end" <<endl;

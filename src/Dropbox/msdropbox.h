@@ -50,6 +50,7 @@ public:
      void saveTokenFile(QString path) ;
      bool loadTokenFile(QString path);
      void loadStateFile();
+     void saveStateFile();
      bool refreshToken();
      MSFSObject::ObjectState filelist_defineObjectState(MSLocalFSObject local, MSRemoteFSObject remote);
      void doSync();

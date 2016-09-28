@@ -35,7 +35,8 @@ QString MSProvidersPool::generateRandom(int count){
 
     int Low=35;
     int High=127;
-    qsrand(qrand());
+    qsrand(QDateTime::currentMSecsSinceEpoch());
+    //qsrand(qrand());
 
     QString token="";
 

@@ -23,6 +23,7 @@
 #define MSPROVIDERSPOOL_H
 
 #include <QObject>
+#include <QDateTime>
 #include "qstdout.h"
 #include "src/GoogleDrive/msgoogledrive.h"
 #include "src/Dropbox/msdropbox.h"

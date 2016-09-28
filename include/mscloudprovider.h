@@ -87,6 +87,7 @@ public:
     virtual void saveTokenFile(QString path) =0 ;
     virtual bool loadTokenFile(QString path)=0;
     virtual void loadStateFile()=0;
+    virtual void saveStateFile()=0;
     virtual bool refreshToken()=0;
     virtual MSFSObject::ObjectState filelist_defineObjectState(MSLocalFSObject local, MSRemoteFSObject remote)=0;
     virtual void doSync()=0;
@@ -103,6 +104,10 @@ public:
 
 
     bool local_writeFileContent(QString filePath, MSRequest *req);
+
+    void local_createDirectory(QString path);
+    virtual void local_removeFile(QString path) =0;
+    virtual void local_removeFolder(QString path) =0;
 
 
     QString fileChecksum(QString &fileName, QCryptographicHash::Algorithm hashAlgorithm);
