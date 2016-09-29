@@ -1,9 +1,9 @@
 
-# CloudCross v1.2.2
+# CloudCross v1.2.3
 
 Kamensky Vladimir
 
-01.07.2016
+29.09.2016
 
 
 http://cloudcross.mastersoft24.ru
@@ -61,6 +61,10 @@ For detailed usage instructions see http://cloudcross.mastersoft24.ru/#usage
 	
 Change log:
 
+v1.2.3		Change  path for authorization on Google Drive.
+		Change/fix random generator algorithm.
+		Some minor refactoring.
+
 v1.2.2		Possibility building and working on Windows.
 		Fix build error on certain systems on wrong implicit conversion from char* to QString in
 		QJsonValue::insert() method.
@@ -95,11 +99,11 @@ v1.0.1-rc1 -    first pre-release version of CloudCross
 
 
 
-# CloudCross v1.2.2
+# CloudCross v1.2.3
 
 Каменский Владимир
 
-01.07.2016
+29.09.2016
 
 http://cloudcross.mastersoft24.ru/ru
 
@@ -151,6 +155,10 @@ CloudCross позволяет синхронизировать только ча
 	
 	
 Список изменений:
+
+v1.2.3		Изменен путь для OAuth2 авторизации в Google Drive.
+		Изменен агоритм генерации случайных последовательностей.
+		Небольшой рефакторинг и косметические изменения.
 
 v1.2.2		Реализована возможность сборки и работы под Windows.
 		Исправлена ошибка сборки на некоторый системах, связаная с неявным преобразованием из char* в QString в методе

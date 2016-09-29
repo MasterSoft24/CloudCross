@@ -15,7 +15,7 @@
 
 #define APP_MAJOR_VERSION 1
 #define APP_MINOR_VERSION 2
-#define APP_BUILD_NUMBER  2
+#define APP_BUILD_NUMBER  3
 
 #ifdef Q_OS_WIN
     #define APP_SUFFIX " for Windows"
