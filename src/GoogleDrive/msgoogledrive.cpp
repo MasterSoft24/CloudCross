@@ -37,6 +37,9 @@ MSGoogleDrive::MSGoogleDrive() :
     this->stateFileName=".grive_state";
     this->trashFileName=".trash";
 
+    connect(this,SIGNAL(oAuthCodeRecived(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
+    connect(this,SIGNAL(oAuthError(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
+
 }
 
 //=======================================================================================
@@ -49,7 +52,7 @@ bool MSGoogleDrive::auth(){
     req->setMethod("get");
 
     req->addQueryItem("scope",                  "https://www.googleapis.com/auth/drive+https://www.googleapis.com/auth/userinfo.email+https://www.googleapis.com/auth/userinfo.profile+https://docs.google.com/feeds/+https://docs.googleusercontent.com/+https://spreadsheets.google.com/feeds/");
-    req->addQueryItem("redirect_uri",           "urn:ietf:wg:oauth:2.0:oob");
+    req->addQueryItem("redirect_uri",           "http://127.0.0.1:1973");
     req->addQueryItem("response_type",          "code");
     req->addQueryItem("client_id",              "834415955748-oq0p2m5dro2bvh3bu0o5bp19ok3qrs3f.apps.googleusercontent.com");
     req->addQueryItem("access_type",            "offline");
@@ -65,6 +68,8 @@ bool MSGoogleDrive::auth(){
         return false;
     }
 
+    this->startListener(1973);
+
 //    if(!this->testReplyBodyForError(req->readReplyText())){
 //        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
 //        exit(0);
@@ -72,20 +77,30 @@ bool MSGoogleDrive::auth(){
 
 
     qStdOut()<<"-------------------------------------"<<endl;
-    qStdOut()<< tr("Please go to this URL and get an authentication code:\n")<<endl;
+    qStdOut()<< tr("Please go to this URL and confirm application credentials\n")<<endl;
 
-    qStdOut() << req->replyURL;//lastReply->url().toString();
+    qStdOut() << req->replyURL;
     qStdOut()<<""<<endl;
-    qStdOut()<<"-------------------------------------"<<endl;
-    qStdOut()<< tr("Please input the authentication code here: ")<<endl;
-
-
-    QTextStream s(stdin);
-    QString authCode = s.readLine();
+;
 
     delete(req);
 
-    req=new MSRequest();
+    QEventLoop loop;
+    connect(this, SIGNAL(providerAuthComplete()), &loop, SLOT(quit()));
+    loop.exec();
+
+
+    return true;
+
+
+}
+
+//=======================================================================================
+
+bool MSGoogleDrive::onAuthFinished(QString html, MSCloudProvider *provider){
+
+
+    MSRequest* req=new MSRequest();
 
     //req->setRequestUrl("https://accounts.google.com/o/oauth2/token"); // old path
     req->setRequestUrl("https://www.googleapis.com/oauth2/v4/token");
@@ -93,9 +108,9 @@ bool MSGoogleDrive::auth(){
 
     req->addQueryItem("client_id",          "834415955748-oq0p2m5dro2bvh3bu0o5bp19ok3qrs3f.apps.googleusercontent.com");
     req->addQueryItem("client_secret",      "YMBWydU58CvF3UP9CSna-BwS");
-    req->addQueryItem("code",               authCode.trimmed());
+    req->addQueryItem("code",               html.trimmed());
     req->addQueryItem("grant_type",         "authorization_code");
-    req->addQueryItem("redirect_uri",       "urn:ietf:wg:oauth:2.0:oob");
+    req->addQueryItem("redirect_uri",           "http://127.0.0.1:1973");
 
     req->exec();
 
@@ -103,13 +118,10 @@ bool MSGoogleDrive::auth(){
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
+        this->providerAuthStatus=false;
+        emit providerAuthComplete();
         return false;
     }
-
-//    if(!this->testReplyBodyForError(req->readReplyText())){
-//        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-//        return false;
-//    }
 
 
     QString content= req->replyText;//lastReply->readAll();
@@ -124,15 +136,22 @@ bool MSGoogleDrive::auth(){
 
         this->token=v;
         qStdOut() << "Token was succesfully accepted and saved. To start working with the program run ccross without any options for start full synchronize."<<endl;
+        this->providerAuthStatus=true;
+        emit providerAuthComplete();
         return true;
     }
     else{
+        this->providerAuthStatus=false;
+        emit providerAuthComplete();
         return false;
     }
 
+
 }
 
+
 //=======================================================================================
+
 
 void MSGoogleDrive::saveTokenFile(QString path){
 

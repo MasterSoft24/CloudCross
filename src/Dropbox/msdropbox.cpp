@@ -15,6 +15,9 @@ MSDropbox::MSDropbox() :
     this->tokenFileName=    ".dbox";
     this->stateFileName=    ".dbox_state";
     this->trashFileName=    ".trash_dbox";
+
+    connect(this,SIGNAL(oAuthCodeRecived(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
+    connect(this,SIGNAL(oAuthError(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
 }
 
 
@@ -29,7 +32,7 @@ bool MSDropbox::auth(){
     req->setRequestUrl("https://www.dropbox.com/1/oauth2/authorize");
     req->setMethod("get");
 
-    //req->addQueryItem("redirect_uri",           "urn:ietf:wg:oauth:2.0:oob");
+    req->addQueryItem("redirect_uri",           "http://127.0.0.1:1973");
     req->addQueryItem("response_type",          "code");
     req->addQueryItem("client_id",              "jqw8z760uh31l92");
     req->addQueryItem("state",                  this->generateRandom(20));
@@ -43,32 +46,42 @@ bool MSDropbox::auth(){
         return false;
     }
 
-
+    this->startListener(1973);
 
     qStdOut()<<"-------------------------------------"<<endl;
-    qStdOut()<< tr("Please go to this URL and get an authentication code:\n")<<endl;
+    qStdOut()<< tr("Please go to this URL and confirm application credentials\n")<<endl;
 
-    qStdOut() << req->replyURL;//lastReply->url().toString();
+    qStdOut() << req->replyURL;
     qStdOut()<<""<<endl;
-    qStdOut()<<"-------------------------------------"<<endl;
-    qStdOut()<< tr("Please input the authentication code here: ")<<endl;
 
-
-    QTextStream s(stdin);
-    QString authCode = s.readLine();
 
     delete(req);
 
-    req=new MSRequest();
+
+    QEventLoop loop;
+    connect(this, SIGNAL(providerAuthComplete()), &loop, SLOT(quit()));
+    loop.exec();
+
+
+    return true;
+
+}
+
+//=======================================================================================
+
+
+bool MSDropbox::onAuthFinished(QString html, MSCloudProvider *provider){
+
+    MSRequest* req=new MSRequest();
 
     req->setRequestUrl("https://api.dropboxapi.com/1/oauth2/token");
     req->setMethod("post");
 
     req->addQueryItem("client_id",          "jqw8z760uh31l92");
     req->addQueryItem("client_secret",      "eeuwcu3kzqrbl9j");
-    req->addQueryItem("code",               authCode.trimmed());
+    req->addQueryItem("code",               html.trimmed());
     req->addQueryItem("grant_type",         "authorization_code");
-    //req->addQueryItem("redirect_uri",       "urn:ietf:wg:oauth:2.0:oob");
+    req->addQueryItem("redirect_uri",           "http://127.0.0.1:1973");
 
     req->exec();
 
@@ -76,6 +89,8 @@ bool MSDropbox::auth(){
     if(!req->replyOK()){
         delete(req);
         req->printReplyError();
+        this->providerAuthStatus=false;
+        emit providerAuthComplete();
         return false;
     }
 
@@ -98,17 +113,17 @@ bool MSDropbox::auth(){
 
         this->token=v;
         qStdOut() << "Token was succesfully accepted and saved. To start working with the program run ccross without any options for start full synchronize."<<endl;
+        this->providerAuthStatus=true;
+        emit providerAuthComplete();
         return true;
     }
     else{
+        this->providerAuthStatus=false;
+        emit providerAuthComplete();
         return false;
     }
 
 }
-
-//=======================================================================================
-
-
 
 //=======================================================================================
 

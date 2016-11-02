@@ -88,6 +88,16 @@ public:
      bool directUpload(QString url,QString remotePath);
 
 
+
+
+
+
+public slots:
+
+    bool onAuthFinished(QString html, MSCloudProvider *provider);
+
+
+
 };
 
 #endif // MSDROPBOX_H

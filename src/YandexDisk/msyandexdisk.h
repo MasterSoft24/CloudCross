@@ -90,6 +90,10 @@ public:
      bool directUpload(QString url,QString remotePath);
 
 
+public slots:
+
+    bool onAuthFinished(QString html, MSCloudProvider *provider);
+
 
 };
 

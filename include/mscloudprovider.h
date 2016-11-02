@@ -156,6 +156,7 @@ public:
     bool startListener(int port);
     bool stopListener();
 
+    bool providerAuthStatus;
 
 public slots:
 
@@ -164,10 +165,16 @@ public slots:
 
     //void onAuthComplete(QString code);
 
+
+    virtual bool onAuthFinished(QString html, MSCloudProvider *provider)=0;
+
 signals:
 
     void oAuthCodeRecived(QString code,MSCloudProvider* provider);
     void oAuthError(QString code,MSCloudProvider* provider);
+
+
+    void providerAuthComplete();
 
 };
 

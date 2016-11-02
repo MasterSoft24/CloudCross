@@ -77,7 +77,8 @@ void printVersion(){
 void authGrive(MSProvidersPool* providers){
 
     MSGoogleDrive* gdp=new MSGoogleDrive();
-    if(gdp->auth()){
+    gdp->auth();
+    if(gdp->providerAuthStatus){
 
         providers->addProvider(gdp,true);
         providers->saveTokenFile("GoogleDrive");
@@ -152,7 +153,8 @@ void syncGrive(MSProvidersPool* providers){
 void authDropbox(MSProvidersPool* providers){
 
     MSDropbox* dbp=new MSDropbox();
-    if(dbp->auth()){
+    dbp->auth();
+    if(dbp->providerAuthStatus){
 
         providers->addProvider(dbp,true);
         providers->saveTokenFile("Dropbox");
@@ -227,7 +229,8 @@ void syncDropbox(MSProvidersPool* providers){
 void authYandex(MSProvidersPool* providers){
 
     MSYandexDisk* ydp=new MSYandexDisk();
-    if(ydp->auth()){
+    ydp->auth();
+    if(ydp->providerAuthStatus){
 
         providers->addProvider(ydp,true);
         providers->saveTokenFile("YandexDisk");

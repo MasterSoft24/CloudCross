@@ -15,6 +15,10 @@ MSYandexDisk::MSYandexDisk() :
     this->tokenFileName=    ".yadisk";
     this->stateFileName=    ".yadisk_state";
     this->trashFileName=    ".trash_yadisk";
+
+
+    connect(this,SIGNAL(oAuthCodeRecived(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
+    connect(this,SIGNAL(oAuthError(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
 }
 
 
@@ -22,38 +26,74 @@ MSYandexDisk::MSYandexDisk() :
 
 bool MSYandexDisk::auth(){
 
-
+    this->startListener(1973);
 
     qStdOut()<<"-------------------------------------"<<endl;
-    qStdOut()<< tr("Please go to this URL and get an authentication code:\n")<<endl;
+    qStdOut()<< tr("Please go to this URL and confirm application credentials\n")<<endl;
 
 
-    qStdOut() << "https://oauth.yandex.ru/authorize?response_type=token&client_id=" << "ba0517299fbc4e6db5ec7c040baccca7&state=" << this->generateRandom(20) <<endl;
-
-    qStdOut()<<""<<endl;
-    qStdOut()<<"-------------------------------------"<<endl;
-    qStdOut()<< tr("Please input the authentication code here: ")<<endl;
+    qStdOut() << "https://oauth.yandex.ru/authorize?force_confirm=yes&response_type=code&client_id=ba0517299fbc4e6db5ec7c040baccca7&state=" <<this->generateRandom(20)<<endl;
 
 
 
-    QTextStream s(stdin);
-    QString authCode = s.readLine();
+    QEventLoop loop;
+    connect(this, SIGNAL(providerAuthComplete()), &loop, SLOT(quit()));
+    loop.exec();
 
 
-    QString v=  authCode ;//job["access_token"].toString();
+    return true;
+
+}
+
+
+//=======================================================================================
+
+bool MSYandexDisk::onAuthFinished(QString html, MSCloudProvider *provider){
+
+
+
+    MSRequest* req=new MSRequest();
+
+    req->setRequestUrl("https://oauth.yandex.ru/token");
+    req->setMethod("post");
+
+    req->addQueryItem("client_id",          "ba0517299fbc4e6db5ec7c040baccca7");
+    req->addQueryItem("client_secret",      "aed48ba99efb45a78f5138f63059bfc5");
+    req->addQueryItem("code",               html.trimmed());
+    req->addQueryItem("grant_type",         "authorization_code");
+    //req->addQueryItem("redirect_uri",       "http://127.0.0.1:1973");
+
+    req->exec();
+
+
+    if(!req->replyOK()){
+        delete(req);
+        req->printReplyError();
+        this->providerAuthStatus=false;
+        emit providerAuthComplete();
+        return false;
+    }
+
+    QString content= req->replyText;
+
+    QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+    QJsonObject job = json.object();
+    QString v=job["access_token"].toString();
 
     if(v!=""){
 
         this->token=v;
         qStdOut() << "Token was succesfully accepted and saved. To start working with the program run ccross without any options for start full synchronize."<<endl;
+        this->providerAuthStatus=true;
+        emit providerAuthComplete();
         return true;
     }
     else{
+        this->providerAuthStatus=false;
+        emit providerAuthComplete();
         return false;
     }
-
 }
-
 
 //=======================================================================================
 
