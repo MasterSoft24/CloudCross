@@ -1,9 +1,9 @@
 
-# CloudCross v1.2.3
+# CloudCross v1.2.4
 
 Kamensky Vladimir
 
-29.09.2016
+03.11.2016
 
 
 http://cloudcross.mastersoft24.ru
@@ -61,6 +61,11 @@ For detailed usage instructions see http://cloudcross.mastersoft24.ru/#usage
 	
 Change log:
 
+v1.2.4		Change authentication mechanism to authenticate with using local listener.
+		Added statistic collecting.
+		Changed license type to BSD.
+
+
 v1.2.3		Change  path for authorization on Google Drive.
 		Change/fix random generator algorithm.
 		Some minor refactoring.
@@ -99,11 +104,11 @@ v1.0.1-rc1 -    first pre-release version of CloudCross
 
 
 
-# CloudCross v1.2.3
+# CloudCross v1.2.4
 
 Каменский Владимир
 
-29.09.2016
+03.11.2016
 
 http://cloudcross.mastersoft24.ru/ru
 
@@ -155,6 +160,10 @@ CloudCross позволяет синхронизировать только ча
 	
 	
 Список изменений:
+
+v1.2.4		Изменен  старый механизм аутентификации на аутентификацию с использованием редиректа на локалхост.
+		Добавлен сбор статистики.
+		Изменена лицензия на BSD.
 
 v1.2.3		Изменен путь для OAuth2 авторизации в Google Drive.
 		Изменен агоритм генерации случайных последовательностей.

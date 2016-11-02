@@ -1,22 +1,34 @@
 /*
-    CloudCross: Opensource program for syncronization of local files and folders with Google Drive
+    CloudCross: Opensource program for syncronization of local files and folders with clouds
 
     Copyright (C) 2016  Vladimir Kamensky
     Copyright (C) 2016  Master Soft LLC.
+    All rights reserved.
 
-    This program is free software; you can redistribute it and/or
-    modify it under the terms of the GNU General Public License
-    as published by the Free Software Foundation version 2
-    of the License.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+  BSD License
 
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+  Redistribution and use in source and binary forms, with or without modification, are
+  permitted provided that the following conditions are met:
+
+  - Redistributions of source code must retain the above copyright notice, this list of
+    conditions and the following disclaimer.
+  - Redistributions in binary form must reproduce the above copyright notice, this list
+    of conditions and the following disclaimer in the documentation and/or other
+    materials provided with the distribution.
+  - Neither the name of the "Vladimir Kamensky" or "Master Soft LLC." nor the names of
+    its contributors may be used to endorse or promote products derived from this
+    software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY E
+  XPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES O
+  F MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SH
+  ALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENT
+  AL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROC
+  UREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS I
+  NTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRI
+  CT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF T
+  HE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "include/msidslist.h"
