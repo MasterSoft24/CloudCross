@@ -25,7 +25,8 @@
 
 
 
-MSCloudProvider::MSCloudProvider()
+MSCloudProvider::MSCloudProvider(QObject *parent)
+    : QObject( parent )
 {
     this->lastSyncTime=0;
     this->strategy=MSCloudProvider::SyncStrategy::PreferLocal;// by default
@@ -35,6 +36,10 @@ MSCloudProvider::MSCloudProvider()
     this->flags.insert("useInclude",false);
     this->flags.insert("noHidden",false);
     this->flags.insert("newRev",false);
+
+    this->oauthListener = new QTcpServer();
+    connect(this->oauthListener, SIGNAL(newConnection()), this, SLOT(onIncomingConnection()));
+   // this->oauthListener->connect(SIGNAL(newConnection()),this, SLOT(onIncomingConnection()));
 
 
 }
@@ -210,6 +215,72 @@ QString MSCloudProvider::generateRandom(int count){
     return token;
 
 }
+
+
+
+
+void MSCloudProvider::onIncomingConnection(){
+
+    int u=7;
+
+    this->oauthListenerSocket=this->oauthListener->nextPendingConnection();
+    //QHostAddress pa=this->oauthListenerSocket->co;
+    connect(this->oauthListenerSocket,SIGNAL(readyRead()),this, SLOT(onDataRecieved()));
+}
+
+
+void MSCloudProvider::onDataRecieved(){
+
+
+    QTextStream os(this->oauthListenerSocket);
+        os.setAutoDetectUnicode(true);
+
+       // qDebug() << this->oauthListenerSocket->readAll()+"\n\r";
+        QString c=this->oauthListenerSocket->readLine();
+
+
+        int cb=c.indexOf("code=");
+        int ce=0;
+        QString code;
+
+        if(cb != -1){
+
+            ce=c.indexOf(" ",cb);
+            code=c.mid(cb+5,ce-cb-5);
+
+	    this->oauthListenerSocket->close();
+
+	    this->stopListener();
+
+            emit oAuthCodeRecived(code,this);
+        }
+        else{
+
+	    this->oauthListenerSocket->close();
+
+	    this->stopListener();
+
+            emit oAuthError("",this);
+        }
+
+
+}
+
+
+bool MSCloudProvider::startListener(int port){
+
+   // this->oauthListener->resumeAccepting();
+    this->oauthListener->listen(QHostAddress("127.0.0.1"),port);
+
+}
+
+
+bool MSCloudProvider::stopListener(){
+
+    //this->oauthListener->pauseAccepting();
+    this->oauthListener->close();
+}
+
 
 
 

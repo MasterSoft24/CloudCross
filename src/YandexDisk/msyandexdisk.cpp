@@ -25,14 +25,14 @@ bool MSYandexDisk::auth(){
 
 
     qStdOut()<<"-------------------------------------"<<endl;
-    qStdOut()<< QObject::tr("Please go to this URL and get an authentication code:\n")<<endl;
+    qStdOut()<< tr("Please go to this URL and get an authentication code:\n")<<endl;
 
 
     qStdOut() << "https://oauth.yandex.ru/authorize?response_type=token&client_id=" << "ba0517299fbc4e6db5ec7c040baccca7&state=" << this->generateRandom(20) <<endl;
 
     qStdOut()<<""<<endl;
     qStdOut()<<"-------------------------------------"<<endl;
-    qStdOut()<<QObject::tr("Please input the authentication code here: ")<<endl;
+    qStdOut()<< tr("Please input the authentication code here: ")<<endl;
 
 
 

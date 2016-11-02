@@ -32,14 +32,19 @@
 #include <QList>
 #include <QRegularExpression>
 
+#include <QTcpServer>
+
 #include "msfsobject.h"
 #include "msidslist.h"
 #include "msrequest.h"
 #include "qstdout.h"
 
 
-class MSCloudProvider
+class MSCloudProvider : public QObject
 {
+
+
+    Q_OBJECT
 
 private:
 
@@ -63,7 +68,7 @@ public:
                         PreferRemote=2
     };
 
-    MSCloudProvider();
+    MSCloudProvider(QObject* parent=0);
 
     QString providerName;
 
@@ -141,6 +146,28 @@ public:
     virtual QString getReplyErrorString(QString body) = 0;
 
     virtual bool directUpload(QString url,QString remotePath) =0;
+
+
+
+
+    QTcpServer* oauthListener;
+    QTcpSocket* oauthListenerSocket;
+
+    bool startListener(int port);
+    bool stopListener();
+
+
+public slots:
+
+    void onIncomingConnection();
+    void onDataRecieved();
+
+    //void onAuthComplete(QString code);
+
+signals:
+
+    void oAuthCodeRecived(QString code,MSCloudProvider* provider);
+    void oAuthError(QString code,MSCloudProvider* provider);
 
 };
 

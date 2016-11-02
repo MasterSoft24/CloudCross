@@ -11,11 +11,22 @@
 #include <QDateTime>
 #include <QTextCodec>
 
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QFile>
+#include <QTextStream>
+#include <QStandardPaths>
+#include <QUuid>
 
+
+#include <QSysInfo>
 
 #define APP_MAJOR_VERSION 1
 #define APP_MINOR_VERSION 2
-#define APP_BUILD_NUMBER  3
+#define APP_BUILD_NUMBER  4
+
+#define CCROSS_HOME_DIR "/.ccross"
+#define CCROSS_CONFIG_FILE "/ccross.conf"
 
 #ifdef Q_OS_WIN
     #define APP_SUFFIX " for Windows"
@@ -75,7 +86,6 @@ void authGrive(MSProvidersPool* providers){
        qStdOut() << "Authentication failed"<<endl;
     }
 }
-
 
 
 void listGrive(MSProvidersPool* providers){
@@ -153,7 +163,6 @@ void authDropbox(MSProvidersPool* providers){
 }
 
 
-
 void listDropbox(MSProvidersPool* providers){
 
     MSDropbox* dbp=new MSDropbox();
@@ -214,6 +223,7 @@ void syncDropbox(MSProvidersPool* providers){
 }
 
 
+
 void authYandex(MSProvidersPool* providers){
 
     MSYandexDisk* ydp=new MSYandexDisk();
@@ -269,7 +279,6 @@ void listYandex(MSProvidersPool* providers){
 }
 
 
-
 void syncYandex(MSProvidersPool* providers){
 
     MSYandexDisk* ydp=new MSYandexDisk();
@@ -291,12 +300,148 @@ void syncYandex(MSProvidersPool* providers){
 
 
 
+///////////////////////////////////////////////////////////////////////////////////
+
+
+///
+/// \brief getAIID - get Application Instance ID. Create AIID if no exist.
+/// \return AIID
+///
+QString getAIID(){
+
+    QString home=QDir::homePath() + CCROSS_HOME_DIR;
+    QDir cc=QDir(home);
+
+    if(!cc.exists()){
+       cc.mkpath(home);
+    }
+
+
+    QFile key(home+CCROSS_CONFIG_FILE);
+
+
+    if(!key.open(QIODevice::ReadOnly)){
+
+        QJsonObject co;
+        co["AIID"]="";
+        QJsonDocument cd(co);
+
+
+        QFile key(home+CCROSS_CONFIG_FILE);
+
+
+        bool r=key.open(QIODevice::WriteOnly | QIODevice::Text);
+        if(r){
+            QTextStream outk(&key);
+            //outk << cd.toJson(QJsonDocument::Compact);
+            outk << cd.toJson(QJsonDocument::Indented);
+        }
+        key.close();
+
+
+    }
+
+    QTextStream instream(&key);
+    QString line;
+    while(!instream.atEnd()){
+
+        line+=instream.readLine();
+    }
+
+    key.close();
+
+
+    //QJsonDocument json = QJsonDocument::fromJson(line.toUtf8());
+    QJsonObject job = QJsonDocument::fromJson(line.toUtf8()).object();
+    QString aiid=job["AIID"].toString();
+
+    if(aiid == ""){
+        job["AIID"]=QUuid::createUuid().toString();
+
+        QJsonDocument cd(job);
+
+
+        QFile key(home+CCROSS_CONFIG_FILE);
+
+
+        bool r=key.open(QIODevice::WriteOnly | QIODevice::Text);
+        if(r){
+            QTextStream outk(&key);
+            //outk << cd.toJson(QJsonDocument::Compact);
+            outk << cd.toJson(QJsonDocument::Indented);
+        }
+        key.close();
+        line=job["AIID"].toString();
+    }
+    else{
+        QJsonObject job = QJsonDocument::fromJson(line.toUtf8()).object();
+        line=job["AIID"].toString();
+
+    }
+
+
+    return line;
+
+
+}
+
+
+///
+/// \brief getOS - get OS name
+/// \return OS name
+///
+QString getOS(){
+#if defined(Q_OS_ANDROID)
+return QLatin1String("android");
+#elif defined(Q_OS_BLACKBERRY)
+return QLatin1String("blackberry");
+#elif defined(Q_OS_IOS)
+return QLatin1String("ios");
+#elif defined(Q_OS_MAC)
+return QLatin1String("macos");
+#elif defined(Q_OS_WINCE)
+return QLatin1String("wince");
+#elif defined(Q_OS_WIN)
+return QLatin1String("windows");
+#elif defined(Q_OS_LINUX)
+return QLatin1String("linux");
+#elif defined(Q_OS_UNIX)
+return QLatin1String("unix");
+#else
+return QLatin1String("unknown");
+#endif
+}
+
+
+
+
+
 
 
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
+
+    // Application instance definition
+
+    QString AAID=getAIID();
+    QString OS=getOS();
+
+    QSysInfo sy;
+
+    QString PLATFORM=sy.currentCpuArchitecture();
+    QString DISTR=sy.productType()+" "+sy.productVersion();
+
+    MSRequest* req=new MSRequest();
+    req->setRequestUrl("http://cloudcross.mastersoft24.ru/stat");
+    req->setMethod("get");
+    req->addQueryItem("os",            OS);
+    req->addQueryItem("distr",         DISTR);
+    req->addQueryItem("platform",      PLATFORM);
+    req->addQueryItem("aaid",          AAID);
+
+    req->exec();
 
 
 //    QTextCodec *russian =QTextCodec::codecForName("unicode");

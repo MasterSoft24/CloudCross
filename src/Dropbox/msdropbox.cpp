@@ -46,12 +46,12 @@ bool MSDropbox::auth(){
 
 
     qStdOut()<<"-------------------------------------"<<endl;
-    qStdOut()<< QObject::tr("Please go to this URL and get an authentication code:\n")<<endl;
+    qStdOut()<< tr("Please go to this URL and get an authentication code:\n")<<endl;
 
     qStdOut() << req->replyURL;//lastReply->url().toString();
     qStdOut()<<""<<endl;
     qStdOut()<<"-------------------------------------"<<endl;
-    qStdOut()<<QObject::tr("Please input the authentication code here: ")<<endl;
+    qStdOut()<< tr("Please input the authentication code here: ")<<endl;
 
 
     QTextStream s(stdin);
