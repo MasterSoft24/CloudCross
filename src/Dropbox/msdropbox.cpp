@@ -16,14 +16,16 @@ MSDropbox::MSDropbox() :
     this->stateFileName=    ".dbox_state";
     this->trashFileName=    ".trash_dbox";
 
-    connect(this,SIGNAL(oAuthCodeRecived(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
-    connect(this,SIGNAL(oAuthError(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
 }
 
 
 //=======================================================================================
 
 bool MSDropbox::auth(){
+
+    connect(this,SIGNAL(oAuthCodeRecived(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
+    connect(this,SIGNAL(oAuthError(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
+
 
     MSRequest* req=new MSRequest();
 

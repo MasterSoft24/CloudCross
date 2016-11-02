@@ -37,14 +37,17 @@ MSGoogleDrive::MSGoogleDrive() :
     this->stateFileName=".grive_state";
     this->trashFileName=".trash";
 
-    connect(this,SIGNAL(oAuthCodeRecived(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
-    connect(this,SIGNAL(oAuthError(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
 
 }
 
 //=======================================================================================
 
 bool MSGoogleDrive::auth(){
+
+
+    connect(this,SIGNAL(oAuthCodeRecived(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
+    connect(this,SIGNAL(oAuthError(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
+
 
     MSRequest* req=new MSRequest();
 

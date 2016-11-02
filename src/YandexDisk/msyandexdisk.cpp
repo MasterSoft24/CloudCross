@@ -16,15 +16,17 @@ MSYandexDisk::MSYandexDisk() :
     this->stateFileName=    ".yadisk_state";
     this->trashFileName=    ".trash_yadisk";
 
-
-    connect(this,SIGNAL(oAuthCodeRecived(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
-    connect(this,SIGNAL(oAuthError(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
 }
 
 
 //=======================================================================================
 
 bool MSYandexDisk::auth(){
+
+
+    connect(this,SIGNAL(oAuthCodeRecived(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
+    connect(this,SIGNAL(oAuthError(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
+
 
     this->startListener(1973);
 
