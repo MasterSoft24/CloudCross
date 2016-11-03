@@ -466,20 +466,20 @@ int main(int argc, char *argv[])
     QString AAID=getAIID();
     QString OS=getOS();
 
-    QSysInfo sy;
+//    QSysInfo sy;
 
-    QStringList qv=QString(qVersion()).split(".");
+//    QStringList qv=QString(qVersion()).split(".");
 
     QString PLATFORM;;
     QString DISTR;
 
 
-    if(qv.at(0).toInt()<5){
-        qDebug()<<"Qt version too low";
-        return 0;
-    }
+//    if(qv.at(0).toInt()<5){
+//        qDebug()<<"Qt version too low";
+//        return 0;
+//    }
 
-    if(qv.at(1).toInt()<4){
+//    if(qv.at(1).toInt()<4){
 
         utsname u;
         uname(&u);
@@ -488,12 +488,12 @@ int main(int argc, char *argv[])
         DISTR=QString(u.sysname)+" "+QString(u.release);
 
 
-    }
-    else{
+//    }
+//    else{
 
-        PLATFORM=sy.currentCpuArchitecture();
-        DISTR=sy.productType()+" "+sy.productVersion();
-    }
+//        PLATFORM=sy.currentCpuArchitecture();
+//        DISTR=sy.productType()+" "+sy.productVersion();
+//    }
 
 
     MSRequest* req=new MSRequest();
