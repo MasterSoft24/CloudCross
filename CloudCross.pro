@@ -22,6 +22,7 @@ SOURCES += main.cpp \
     src/common/qstdout.cpp \
     src/Dropbox/msdropbox.cpp \
     src/YandexDisk/msyandexdisk.cpp \
+    src/MailRu/msmailru.cpp
 
 
 
@@ -38,6 +39,7 @@ HEADERS += \
     include/qstdout.h \
     src/Dropbox/msdropbox.h \
     src/YandexDisk/msyandexdisk.h \
+    src/MailRu/msmailru.h
 
 
 target.path = /usr/bin

@@ -58,8 +58,8 @@
 #include <sys/utsname.h>
 
 #define APP_MAJOR_VERSION 1
-#define APP_MINOR_VERSION 2
-#define APP_BUILD_NUMBER  4
+#define APP_MINOR_VERSION 3
+#define APP_BUILD_NUMBER  1
 
 #define CCROSS_HOME_DIR "/.ccross"
 #define CCROSS_CONFIG_FILE "/ccross.conf"
@@ -339,6 +339,26 @@ void syncYandex(MSProvidersPool* providers){
 
 
 
+void authMailru(MSProvidersPool* providers,QString login,QString password){
+
+    MSMailRu* mrp=new MSMailRu();
+    mrp->login=login;
+    mrp->password=password;
+
+    mrp->auth();
+    if(mrp->providerAuthStatus){
+
+        providers->addProvider(mrp,true);
+        providers->saveTokenFile("YandexDisk");
+    }
+    else{
+       qStdOut() << "Authentication failed"<<endl;
+    }
+}
+
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////
 
 
@@ -536,6 +556,9 @@ int main(int argc, char *argv[])
     parser->insertOption(13,"--provider 1"); // google, yandex or dropbox
     parser->insertOption(14,"--direct-upload 2"); // upload file directly to cloud
 
+    parser->insertOption(15,"--login 1");
+    parser->insertOption(16,"--password 1");
+
     //...............
 
     parser->parse(a.arguments());
@@ -554,11 +577,26 @@ int main(int argc, char *argv[])
     }
 
 
-    if((currentProvider != "google")&&(currentProvider != "dropbox")&&(currentProvider != "yandex")){
+    if((currentProvider != "google")&&(currentProvider != "dropbox")&&(currentProvider != "yandex")
+            &&(currentProvider != "mailru")){
         qStdOut()<< "Unknown cloud provider. Application terminated."<< endl;
         return 1;
     }
 
+
+    QStringList mailru_login;
+    QStringList mailru_password;
+
+    if(currentProvider == "mailru"){
+        mailru_login=parser->getParamByName("--login");
+        mailru_password=parser->getParamByName("--password");
+
+        if((mailru_login.size()==0)||(mailru_password.size()==0)){
+            qStdOut()<< "Provider Mail.ru. Login and password required. Application terminated."<< endl;
+            return 1;
+        }
+
+    }
 
 
     QStringList wp=parser->getParamByName("path");
@@ -965,6 +1003,163 @@ int main(int argc, char *argv[])
             case 2: //-- auth
 
                 authYandex(providers);
+                return 0;
+                break;
+
+            case 3: // --version
+
+                printVersion();
+                return 0;
+                break;
+
+
+            case 4: // --path
+
+                providers->setWorkPath(parser->optarg[0]);
+                break;
+
+            case 5: // --prefer
+
+                MSCloudProvider::SyncStrategy s;
+
+                if(parser->optarg[0]=="local"){
+                    s=MSCloudProvider::SyncStrategy::PreferLocal;
+                }
+
+                else{
+                    if(parser->optarg[0]=="remote"){
+                    s=MSCloudProvider::SyncStrategy::PreferRemote;
+                    }
+                    else{
+                        qStdOut()<< "--prefer option value must be an one of \"local\" or \"remote\""<<endl;
+                        return 0;
+                        break;
+                    }
+                }
+
+                providers->setStrategy(s);
+                break;
+
+            case 7:// --list
+
+                listYandex(providers);
+                return 0;
+                break;
+
+            case 6: // --no-hidden
+
+                providers->setFlag("noHidden",true);
+                break;
+
+            case 8: // --use-include
+
+                providers->setFlag("useInclude",true);
+                break;
+
+            case 9: // --no-new-rev
+
+                qStdOut()<< "--no-new-rev option doesn't matter for Yandex provider. "<<endl;
+                //providers->setFlag("noNewRev",true);
+                break;
+
+            case 10: // --dry-run
+
+                providers->setFlag("dryRun",true);
+                break;
+
+            case 11: // --convert-doc
+                  qStdOut()<< "--convert-doc option doesn't matter for Yandex provider. "<<endl;
+//                providers->setFlag("convertDoc",true);
+                break;
+
+            case 12: // --force
+
+
+                if((parser->optarg[0]=="upload")||(parser->optarg[0]=="download")){
+                    providers->setOption("force",parser->optarg[0]);
+                    providers->setFlag("force",true);
+
+
+
+                    if(parser->optarg[0] == "download"){
+
+                        providers->setStrategy(MSCloudProvider::SyncStrategy::PreferRemote);
+                    }
+                    else{
+
+                        providers->setStrategy(MSCloudProvider::SyncStrategy::PreferLocal);
+                    }
+
+                }
+                else{
+                    qStdOut()<< "--force option value must be an one of \"upload\" or \"download\""<<endl;
+                    return 0;
+                    break;
+                }
+                break;
+
+
+            default: // syn execute without any params by default
+
+                syncYandex(providers);
+//                qStdOut()<< "sync dropbox"<<endl;
+
+                return 0;
+                break;
+            }
+
+
+
+        }
+
+
+        if(parser->erorrNum!=0){
+            qStdOut()<< parser->errorString<<endl;
+            return 1;
+        }
+    }
+
+
+
+
+    // ===%%%% MAIL.RU %%%%===
+
+    if(currentProvider == "mailru"){
+
+        while((ret=parser->get())!=-1){
+            switch(ret){
+
+//            case 14:{
+
+//                MSYandexDisk* cp=new MSYandexDisk();
+//                providers->addProvider(cp);
+
+//                if(! providers->loadTokenFile("YandexDisk")){
+//                    return 1;
+//                }
+
+//                if(!providers->refreshToken("YandexDisk")){
+//                    qStdOut()<<"Unauthorized access. Aborted."<<endl;
+//                    return 1;
+//                }
+
+
+//                cp->directUpload(parser->optarg[0],parser->optarg[1]);
+
+//                return 0;
+//                break;
+//            }
+
+            case 1: // --help
+
+                printHelp();
+                return 0;
+                //qStdOut()<< "HELP arg="+parser->optarg;
+                break;
+
+            case 2: //-- auth
+
+                authMailru(providers,mailru_login[0], mailru_password[0]);
                 return 0;
                 break;
 

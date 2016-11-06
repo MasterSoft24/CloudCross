@@ -40,6 +40,7 @@
 #include "src/GoogleDrive/msgoogledrive.h"
 #include "src/Dropbox/msdropbox.h"
 #include "src/YandexDisk/msyandexdisk.h"
+#include "src/MailRu/msmailru.h"
 
 
 class MSProvidersPool
