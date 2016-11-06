@@ -44,6 +44,8 @@
 #include <utime.h>
 #include <sys/time.h>
 
+#include <QNetworkCookieJar>
+
 class MSMailRu : public MSCloudProvider
 {
 public:
@@ -105,7 +107,7 @@ public:
 
 
     bool createHashFromRemote();
-    bool readRemote();//QString parentId,QString currentPath
+    bool readRemote(QString path);//QString parentId,QString currentPath
     bool readLocal(QString path);
 
     bool isFolder(QJsonValue remoteObject);
@@ -127,6 +129,14 @@ public:
 
     QString login;
     QString password;
+
+    QString build;
+    QString x_page_id;
+    QString email;
+    QString x_email;
+    QString api;
+
+    QNetworkCookieJar* cookies;
 
 
 public slots:

@@ -349,12 +349,54 @@ void authMailru(MSProvidersPool* providers,QString login,QString password){
     if(mrp->providerAuthStatus){
 
         providers->addProvider(mrp,true);
-        providers->saveTokenFile("YandexDisk");
+        providers->saveTokenFile("MailRu");
     }
     else{
        qStdOut() << "Authentication failed"<<endl;
     }
 }
+
+
+void listMailru(MSProvidersPool* providers){
+
+    MSMailRu* mrp=new MSMailRu();
+
+    providers->addProvider(mrp,true);
+    if(!providers->loadTokenFile("MailRu")){
+        return ;
+    }
+
+    if(! providers->refreshToken("MailRu")){
+
+        qStdOut()<< "Unauthorized client"<<endl;
+        return;
+    }
+
+    mrp->readRemote("/");
+
+
+
+    QMap<QString,bool>sorted;
+    QMap<QString,bool>::iterator si;
+
+    // sort remote file list
+    QHash<QString,MSFSObject>::iterator li=mrp->syncFileList.begin();
+
+    while(li != mrp->syncFileList.end()){
+        sorted.insert(li.key(),true);
+        li++;
+    }
+
+    si=sorted.begin();
+
+    // print remote file list
+    while(si != sorted.end()){
+        qStdOut() << si.key()<< endl;
+        si++;
+    }
+
+}
+
 
 
 
@@ -1199,7 +1241,7 @@ int main(int argc, char *argv[])
 
             case 7:// --list
 
-                listYandex(providers);
+                listMailru(providers);
                 return 0;
                 break;
 

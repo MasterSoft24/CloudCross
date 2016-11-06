@@ -45,6 +45,8 @@ MSRequest::MSRequest()
     this->manager=new QNetworkAccessManager();
     this->query=new QUrlQuery();
 
+    //this->cookieJar=0;
+
     this->lastReply=0;
     this->outFile=0;
 
@@ -404,6 +406,49 @@ bool MSRequest::replyOK(){
 void MSRequest::printReplyError(){
 
     qStdOut() << this->replyErrorText << endl;
+}
+
+
+
+void MSRequest::MSsetCookieJar(QNetworkCookieJar* cookie)
+{
+
+//    if(*cookie == 0){
+//        *cookie=new QNetworkCookieJar();
+//        this->cookieJar=*cookie;
+//    }
+//    else{
+//        this->cookieJar=*cookie;
+//    }
+
+
+    this->cookieJar=cookie;
+    this->manager->setCookieJar(this->cookieJar);
+
+}
+
+
+
+QJsonObject MSRequest::cookieToJSON()
+{
+    QJsonObject c;
+    //QList<QNetworkCookie> cl=this->manager->cookieJar()->cookiesForUrl(*this->url);
+    QList<QNetworkCookie> cl=this->manager->cookieJar()->cookiesForUrl( QUrl(this->replyURL));
+
+
+    for(int i=0;i < cl.size();i++){
+
+        c.insert(cl[i].name(),QJsonValue::fromVariant(QVariant(cl[i].value())));
+    }
+
+    return c;
+}
+
+
+
+bool MSRequest::cookieFromJSON(QJsonObject cookie)
+{
+
 }
 
 

@@ -44,6 +44,9 @@
 #include "qstdout.h"
 #include <QFile>
 #include <QDataStream>
+#include <QNetworkCookieJar>
+#include <QNetworkCookie>
+#include <QJsonObject>
 
 class MSRequest : public QObject , QNetworkRequest
 {
@@ -53,7 +56,7 @@ public:
     MSRequest();
     ~MSRequest();
 
-private:
+//private:
 
     QUrl* url;
     QUrlQuery* query;
@@ -101,6 +104,14 @@ public:
 
     bool replyOK();
     void printReplyError();
+
+    // cookie functions block
+
+    QNetworkCookieJar* cookieJar;
+
+    void MSsetCookieJar(QNetworkCookieJar *cookie);
+    QJsonObject cookieToJSON();
+    bool cookieFromJSON(QJsonObject cookie);
 
 private slots:
 
