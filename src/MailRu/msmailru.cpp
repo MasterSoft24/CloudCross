@@ -267,8 +267,100 @@ bool MSMailRu::refreshToken()
 
 
 
-bool MSMailRu::remote_file_get(MSFSObject *object)
-{
+bool MSMailRu::remote_file_get(MSFSObject *object){
+
+    if(this->getFlag("dryRun")){
+        return true;
+    }
+
+    QString id=object->remote.data["home"].toString();
+
+    this->auth();
+
+    MSRequest* req_prev;
+    MSRequest* req=new MSRequest();
+
+    req->MSsetCookieJar(this->cookies);
+
+    req->setRequestUrl("https://cloud.mail.ru/api/v2/dispatcher");
+    req->setMethod("get");
+
+    req->addQueryItem("token",       this->token);
+
+    req->exec();
+
+    if(!req->replyOK()){
+        req->printReplyError();
+        delete(req);
+        return false;
+    }
+
+    QString content=req->readReplyText();
+
+    this->cookies=req->manager->cookieJar();
+    req_prev=req;
+
+    QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+    QJsonObject job = json.object();
+    QString serverURL=job["body"].toObject()["get"].toArray()[0].toObject()["url"].toString();
+
+
+        req=new MSRequest();
+
+        req->MSsetCookieJar(this->cookies);
+
+        req->setRequestUrl(serverURL+object->remote.data["home"].toString().mid(1));
+        req->setMethod("get");
+
+        req->addQueryItem("x-email",      this->login);
+
+        req->exec();
+
+        if(!req->replyOK()){
+            req->printReplyError();
+            delete(req);
+            return false;
+        }
+
+        delete(req_prev);
+
+
+    QString filePath=this->workPath+object->path+object->fileName;
+
+
+    if(this->testReplyBodyForError(req->readReplyText())){
+
+        if(object->remote.objectType==MSRemoteFSObject::Type::file){
+
+            //this->local_writeFileContentZip(filePath,req,object->remote.fileSize);
+            this->local_writeFileContent(filePath,req);
+            // set remote "change time" for local file
+
+            utimbuf tb;
+
+            double zz=object->remote.data["mtime"].toDouble();
+            QDateTime zzd=QDateTime::fromTime_t(zz);
+            //fsObject.remote.modifiedDate=this->toMilliseconds(zzd,true);
+
+            tb.actime=(this->toMilliseconds(zzd,true))/1000;
+            tb.modtime=(this->toMilliseconds(zzd,true))/1000;
+
+            utime(filePath.toStdString().c_str(),&tb);
+        }
+    }
+    else{
+
+        if(! this->getReplyErrorString(req->readReplyText()).contains( "path/not_file/")){
+            qStdOut() << "Service error. "<< this->getReplyErrorString(req->readReplyText());
+            delete(req);
+            return false;
+        }
+    }
+
+
+    delete(req);
+    return true;
+
 
 }
 
@@ -355,9 +447,75 @@ void MSMailRu::local_removeFolder(QString path)
 //=======================================================================================
 
 
-MSFSObject::ObjectState MSMailRu::filelist_defineObjectState(MSLocalFSObject local, MSRemoteFSObject remote)
-{
+MSFSObject::ObjectState MSMailRu::filelist_defineObjectState(MSLocalFSObject local, MSRemoteFSObject remote){
 
+
+    if((local.exist)&&(remote.exist)){ //exists both files
+
+//        if(local.md5Hash==remote.md5Hash){
+
+
+//                return MSFSObject::ObjectState::Sync;
+
+//        }
+//        else{
+
+            // compare last modified date for local and remote
+            if(local.modifiedDate==remote.modifiedDate){
+
+                return MSFSObject::ObjectState::Sync;
+
+//                if(this->strategy==MSCloudProvider::SyncStrategy::PreferLocal){
+//                    return MSFSObject::ObjectState::ChangedLocal;
+//                }
+//                else{
+//                    return MSFSObject::ObjectState::ChangedRemote;
+//                }
+
+            }
+            else{
+
+                if(local.objectType == MSLocalFSObject::Type::folder){
+                    return MSFSObject::ObjectState::Sync;
+                }
+
+                if(local.modifiedDate > remote.modifiedDate){
+                    return MSFSObject::ObjectState::ChangedLocal;
+                }
+                else{
+                    return MSFSObject::ObjectState::ChangedRemote;
+                }
+
+            }
+        }
+
+
+    //}
+
+
+    if((local.exist)&&(!remote.exist)){ //exist only local file
+
+        if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
+            return  MSFSObject::ObjectState::NewLocal;
+        }
+        else{
+            return  MSFSObject::ObjectState::DeleteRemote;
+        }
+    }
+
+
+    if((!local.exist)&&(remote.exist)){ //exist only remote file
+
+        if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
+            return  MSFSObject::ObjectState::DeleteLocal;
+        }
+        else{
+            return  MSFSObject::ObjectState::NewRemote;
+        }
+    }
+
+
+    return  MSFSObject::ObjectState::ErrorState;
 }
 
 //=======================================================================================
@@ -998,7 +1156,7 @@ bool MSMailRu::createSyncFileList(){
         return false;
     }
 
-//this->remote_file_get(&(this->syncFileList.values()[0]));
+this->remote_file_get(&(this->syncFileList.values()[0]));
 //this->remote_file_insert(&(this->syncFileList.values()[0]));
 //this->remote_file_update(&(this->syncFileList.values()[0]));
  //this->remote_file_makeFolder(&(this->syncFileList.values()[0]));

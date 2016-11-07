@@ -52,6 +52,8 @@
 #include "qstdout.h"
 
 
+
+
 class MSCloudProvider : public QObject
 {
 
@@ -121,6 +123,8 @@ public:
 
 
     bool local_writeFileContent(QString filePath, MSRequest *req);
+//    bool local_writeFileContentZip(QString filePath, MSRequest *req, unsigned int size);
+//    QByteArray gzipDecompress(QByteArray compressData);
 
     void local_createDirectory(QString path);
     virtual void local_removeFile(QString path) =0;
