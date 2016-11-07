@@ -110,7 +110,9 @@ bool MSMailRu::auth(){
             this->x_page_id=r_out;
         }
         else{
-
+            this->providerAuthStatus=false;
+            delete(req);
+            return false;
         }
 
         start =r.indexOf("\"BUILD\":");
@@ -125,17 +127,25 @@ bool MSMailRu::auth(){
             this->build=r_out;
         }
         else{
-
+            this->providerAuthStatus=false;
+            delete(req);
+            return false;
         }
 
         qStdOut() << "Token was succesfully accepted and saved."<<endl;
 
-        this->cookies=req->manager->cookieJar();
-        this->readRemote("/");
+        //this->cookies=new QNetworkCookieJar(req->manager->cookieJar());
+        this->cookies=(req->manager->cookieJar());
+
+        //this->readRemote("/");
+
+        //delete(req);
+        this->providerAuthStatus=true;
         return true;
     }
     else{
         this->providerAuthStatus=false;
+        delete(req);
         return false;
     }
 
@@ -152,7 +162,7 @@ void MSMailRu::saveTokenFile(QString path)
     QFile key(path+"/"+this->tokenFileName);
     key.open(QIODevice::WriteOnly | QIODevice::Text);
     QTextStream outk(&key);
-    outk << "{\"access_token\" : \""+this->token+"\", \"build\": \""+this->build+"\", \"x_page_id\": \""+this->x_page_id+"\" }";
+    outk << "{\"access_token\" : \""+this->token+"\", \"build\": \""+this->build+"\", \"x_page_id\": \""+this->x_page_id+"\", \"login\": \""+this->login+"\", \"password\": \""+this->password+"\" }";
     key.close();
 }
 
@@ -183,6 +193,8 @@ bool MSMailRu::loadTokenFile(QString path)
     this->token=v;
     this->build=job["build"].toString();
     this->x_page_id=job["x_page_id"].toString();
+    this->login=job["login"].toString();
+    this->password=job["password"].toString();
 
     key.close();
     return true;
@@ -442,35 +454,37 @@ bool MSMailRu::createHashFromRemote()
 
 bool MSMailRu::readRemote(QString path)
 {
-//var uri = new Uri(string.Format("{0}/api/v2/folder?token={1}&home={2}", ConstSettings.CloudDomain, this.Account.AuthToken, HttpUtility.UrlEncode(path)));
-    MSRequest* req=new MSRequest();
 
-    //this->cookies=new QNetworkCookieJar();
+    this->auth();
+
+    if(this->providerAuthStatus == false){
+        return providerAuthStatus;
+    }
+
+    MSRequest* req_prev;
+
+    MSRequest* req=new MSRequest();
 
     req->MSsetCookieJar(this->cookies);
 
     req->setRequestUrl("https://cloud.mail.ru/api/v2/folder");
     req->setMethod("get");
 
-//    req->addHeader("Authorization",                     "Bearer "+this->access_token);
-//    req->addHeader("Content-Type",                      QString("application/json; charset=UTF-8"));
-
     req->addQueryItem("token",       this->token);
     req->addQueryItem("home",       "/");
     req->addQueryItem("build",       this->build);
     req->addQueryItem("x-page-id",      this->x_page_id);
     req->addQueryItem("api",      "2");
-//    req->addQueryItem("offset",      "0");
-//    req->addQueryItem("limit",      "500");
-    req->addQueryItem("email",      "megalion73@inbox.ru");
-    req->addQueryItem("x-email",      "megalion73@inbox.ru");
+    req->addQueryItem("offset",      "0");
+    req->addQueryItem("limit",      "2000000");
+    req->addQueryItem("email",      this->login);
+    req->addQueryItem("x-email",      this->login);
     req->addQueryItem("_",      "1433249148810");
 
-//curl 'https://cloud.mail.ru/api/v2/file?home=%2F&api=2&build=hotfix_CLOUDWEB-7114_38-0-5.201610211410&x-page-id=UC3Z9tMlKC&email=megalion73%40inbox.ru&x-email=megalion73%40inbox.ru&token=844X1uGaZ7f7MoYmqss3rJ4zx8EbXGHW&_=1478407655326' -H 'Cookie: p=Uw8AAMT7dwAA; mrcu=600856BB37C7411FAC665FC6684F; b=z0EAAAD0+VwAJwBAAAAA; searchuid=1787725681455105895; i=AQB8SL5XCAATAAg6E50AAioBAXEBAqgCAdkCAdsCAUYFAmYGAQIHAuwHAQ4KAWopAY0pAZIpAZ8pAcMpAcUpAcYpAdQpAcYACAQBAQABuwEIBAECAAFfAggKA0kAAxIIAhMIApMCCAQB3QAB3AQIBAEBAAHhBAkBAeIECgQSC7UH; VID=2iTUYz1rpKnW0000030614HW::268790694:; act=43bb08cb89444373b1a6db609f8324f9; t=obLD1AAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAACAABILtQcA; sdcs=lMECr3d2sRTn4zmN; s=dpr=1; Mpop=1478415910:5b7c7a5242506d44190502190805001b04071d04064568515c455f0701001e0b73071e545c5f505c58585b0006105d595b5e48184a47:megalion73@inbox.ru:' -H 'DNT: 1' -H 'Accept-Encoding: gzip, deflate, sdch, br' -H 'Accept-Language: ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4' -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.148 Safari/537.36 Vivaldi/1.4.589.38' -H 'Accept: */*' -H 'Referer: https://cloud.mail.ru/home/' -H 'X-Requested-With: XMLHttpRequest' -H 'Connection: keep-alive' --compressed
 
     req->exec();
 
-     req->cookieToJSON();
+    this->cookies=  req->manager->cookieJar();
 
 
     if(!req->replyOK()){
@@ -479,22 +493,306 @@ bool MSMailRu::readRemote(QString path)
         return false;
     }
 
-
-
-
     QString list=req->readReplyText();
 
-    QJsonDocument json = QJsonDocument::fromJson(list.toUtf8());
-    QJsonObject job = json.object();
 
-int g=77;
+    //delete(req);
+    req_prev = req;
+
+    QVector<QJsonObject> stack;
+    QJsonArray entries;
+
+
+    do{
+
+        QJsonDocument json = QJsonDocument::fromJson(list.toUtf8());
+        QJsonObject job = json.object();
+
+
+
+        entries=job["body"].toObject()["list"].toArray();
+
+
+        for(int i=0; i < entries.size(); i++){// file processing circle
+
+            QJsonObject o=entries[i].toObject();
+
+            if(o["type"] == "folder"){
+                stack.push_back(o);
+                continue;
+            }
+
+            MSFSObject fsObject;
+
+            fsObject.path = QFileInfo(o["home"].toString()).path()+"/";
+
+            if(fsObject.path == "//"){
+               fsObject.path ="/";
+            }
+
+            fsObject.remote.fileSize=  o["size"].toInt();
+            fsObject.remote.data=o;
+            fsObject.remote.exist=true;
+            fsObject.isDocFormat=false;
+            //fsObject.remote.md5Hash=o["hash"].toString();
+
+            fsObject.state=MSFSObject::ObjectState::NewRemote;
+
+            fsObject.fileName=o["name"].toString();
+            fsObject.remote.objectType=MSRemoteFSObject::Type::file;
+            double zz=o["mtime"].toDouble();
+            QDateTime zzd=QDateTime::fromTime_t(zz);
+            fsObject.remote.modifiedDate=this->toMilliseconds(zzd,true);
+
+            if(! this->filterServiceFileNames(o["home"].toString())){// skip service files and dirs
+
+                continue;
+            }
+
+
+            if(this->getFlag("useInclude")){//  --use-include
+
+                if( this->filterIncludeFileNames(o["home"].toString())){
+
+                    continue;
+                }
+            }
+            else{// use exclude by default
+
+                if(! this->filterExcludeFileNames(o["home"].toString())){
+
+                    continue;
+                }
+            }
+
+            this->syncFileList.insert(o["home"].toString(), fsObject);
+
+
+        }
+
+
+        if(stack.size() >0){
+
+            QJsonObject nl=stack.first();
+            stack.pop_front();
+
+
+
+            MSFSObject fsObject;
+
+            fsObject.path = QFileInfo(nl["home"].toString()).path()+"/";
+
+            if(fsObject.path == "//"){
+               fsObject.path ="/";
+            }
+
+            fsObject.remote.fileSize=  nl["size"].toInt();
+            fsObject.remote.data=nl;
+            fsObject.remote.exist=true;
+            fsObject.isDocFormat=false;
+            //fsObject.remote.md5Hash=nl["hash"].toString();
+
+            fsObject.state=MSFSObject::ObjectState::NewRemote;
+
+            fsObject.fileName=nl["name"].toString();
+            fsObject.remote.objectType=MSRemoteFSObject::Type::folder;
+            double zz=nl["mtime"].toDouble();
+            QDateTime zzd=QDateTime::fromTime_t(zz);
+            fsObject.remote.modifiedDate=this->toMilliseconds(zzd,true);
+
+            if(this->getFlag("useInclude")){//  --use-include
+
+                if( this->filterIncludeFileNames(nl["home"].toString())){
+
+                    continue;
+                }
+            }
+            else{// use exclude by default
+
+                if(! this->filterExcludeFileNames(nl["home"].toString())){
+
+                    continue;
+                }
+            }
+
+            this->syncFileList.insert(nl["home"].toString(), fsObject);
+
+
+            req=new MSRequest();
+
+            req->MSsetCookieJar(this->cookies);
+
+
+
+            req->setRequestUrl("https://cloud.mail.ru/api/v2/folder");
+            req->setMethod("get");
+
+            req->addQueryItem("token",       this->token);
+            req->addQueryItem("home",       nl["home"].toString());
+            req->addQueryItem("build",       this->build);
+            req->addQueryItem("x-page-id",      this->x_page_id);
+            req->addQueryItem("api",      "2");
+            req->addQueryItem("offset",      "0");
+            req->addQueryItem("limit",      "2000000");
+            req->addQueryItem("email",      this->login);
+            req->addQueryItem("x-email",      this->login);
+            req->addQueryItem("_",      "1433249148810");
+
+
+            req->exec();
+
+            this->cookies=req->manager->cookieJar();
+
+
+            if(!req->replyOK()){
+                delete(req);
+                req->printReplyError();
+                return false;
+            }
+
+            list=req->readReplyText();
+
+            delete(req_prev);
+
+           //delete(req);
+            req_prev = req;
+
+
+        }
+        else{
+            break;
+        }
+
+
+
+
+
+    }while(entries.size() >= 0);
+
+
+    delete(req_prev);
 }
 
 //=======================================================================================
 
 
-bool MSMailRu::readLocal(QString path)
-{
+bool MSMailRu::readLocal(QString path){
+
+
+    QDir dir(path);
+    QDir::Filters entryInfoList_flags=QDir::Files|QDir::Dirs |QDir::NoDotAndDotDot;
+
+    if(! this->getFlag("noHidden")){// if show hidden
+        entryInfoList_flags= entryInfoList_flags | QDir::System | QDir::Hidden;
+    }
+
+        QFileInfoList files = dir.entryInfoList(entryInfoList_flags);
+
+        foreach(const QFileInfo &fi, files){
+
+            QString Path = fi.absoluteFilePath();
+            QString relPath=fi.absoluteFilePath().replace(this->workPath,"");
+
+            if(! this->filterServiceFileNames(relPath)){// skip service files and dirs
+                continue;
+            }
+
+
+            if(fi.isDir()){
+
+                readLocal(Path);
+            }
+
+            if(this->getFlag("useInclude")){//  --use-include
+
+                if( this->filterIncludeFileNames(relPath)){
+                    continue;
+                }
+            }
+            else{// use exclude by default
+
+                if(! this->filterExcludeFileNames(relPath)){
+                    continue;
+                }
+            }
+
+
+
+            QHash<QString,MSFSObject>::iterator i=this->syncFileList.find(relPath);
+
+
+
+            if(i!=this->syncFileList.end()){// if object exists in Google Drive
+
+                MSFSObject* fsObject = &(i.value());
+
+
+                fsObject->local.fileSize=  fi.size();
+                //fsObject->local.md5Hash= this->fileChecksum(Path,QCryptographicHash::Sha1);
+                fsObject->local.exist=true;
+                fsObject->getLocalMimeType(this->workPath);
+
+                if(fi.isDir()){
+                    fsObject->local.objectType=MSLocalFSObject::Type::folder;
+                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+                }
+                else{
+
+                    fsObject->local.objectType=MSLocalFSObject::Type::file;
+                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+
+                }
+
+
+                fsObject->isDocFormat=false;
+
+
+                fsObject->state=this->filelist_defineObjectState(fsObject->local,fsObject->remote);
+
+            }
+            else{
+
+                MSFSObject fsObject;
+
+                fsObject.state=MSFSObject::ObjectState::NewLocal;
+
+                if(relPath.lastIndexOf("/")==0){
+                    fsObject.path="/";
+                }
+                else{
+                    fsObject.path=QString(relPath).left(relPath.lastIndexOf("/"))+"/";
+                }
+
+                fsObject.fileName=fi.fileName();
+                fsObject.getLocalMimeType(this->workPath);
+
+                fsObject.local.fileSize=  fi.size();
+                //fsObject.local.md5Hash= this->fileChecksum(Path,QCryptographicHash::Sha1);
+                fsObject.local.exist=true;
+
+                if(fi.isDir()){
+                    fsObject.local.objectType=MSLocalFSObject::Type::folder;
+                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+                }
+                else{
+
+                    fsObject.local.objectType=MSLocalFSObject::Type::file;
+                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+
+                }
+
+                fsObject.state=this->filelist_defineObjectState(fsObject.local,fsObject.remote);
+
+                fsObject.isDocFormat=false;
+
+
+                this->syncFileList.insert(relPath,fsObject);
+
+            }
+
+        }
+
+        return true;
 
 }
 
@@ -517,33 +815,199 @@ bool MSMailRu::isFile(QJsonValue remoteObject)
 //=======================================================================================
 
 
-bool MSMailRu::filterServiceFileNames(QString path)
-{
+bool MSMailRu::filterServiceFileNames(QString path){
+
+    QString reg=this->trashFileName+"*|"+this->tokenFileName+"|"+this->stateFileName+"|.include|.exclude|~";
+    QRegExp regex(reg);
+    int ind = regex.indexIn(path);
+
+    if(ind != -1){
+        return false;
+    }
+    return true;
+}
+
+//=======================================================================================
+
+
+bool MSMailRu::filterIncludeFileNames(QString path){
+
+    if(this->includeList==""){
+        return true;
+    }
+
+    // catch paths with  beginning masks from include/exclude lists
+    bool isBegin=false;
+    bool start;
+    QRegularExpression regex3(path);
+    regex3.patternErrorOffset();
+    QRegularExpressionMatch m1= regex3.match(this->includeList);
+
+    if(m1.hasMatch()){
+        start=m1.capturedStart();
+
+        if((this->includeList.mid(start-1,1)=="|") ||(start==0)){
+            isBegin=true;
+        }
+    }
+
+    QRegularExpression regex2(this->includeList);
+
+    regex2.patternErrorOffset();
+
+    QRegularExpressionMatch m = regex2.match(path);
+
+    if(m.hasMatch()){
+        return false;
+    }
+    else{
+        if(isBegin){
+            return false;
+        }
+        else{
+            return true;
+        }
+    }
+}
+
+//=======================================================================================
+
+
+bool MSMailRu::filterExcludeFileNames(QString path){
+
+    if(this->excludeList==""){
+        return true;
+    }
+
+    // catch paths with  beginning masks from include/exclude lists
+    bool isBegin=false;
+    bool start;
+    QRegularExpression regex3(path);
+    regex3.patternErrorOffset();
+    QRegularExpressionMatch m1= regex3.match(this->excludeList);
+
+    if(m1.hasMatch()){
+        start=m1.capturedStart();
+
+        if((this->excludeList.mid(start-1,1)=="|") ||(start==0)){
+            isBegin=true;
+        }
+    }
+
+
+    QRegularExpression regex2(this->excludeList);
+
+    regex2.patternErrorOffset();
+
+    QRegularExpressionMatch m = regex2.match(path);
+
+    if(m.hasMatch()){
+        return false;
+    }
+    else{
+        if(isBegin){
+            return false;
+        }
+        else{
+            return true;
+        }
+    }
+
 
 }
 
 //=======================================================================================
 
 
-bool MSMailRu::filterIncludeFileNames(QString path)
-{
+bool MSMailRu::createSyncFileList(){
 
-}
+    if(this->getFlag("useInclude")){
+        QFile key(this->workPath+"/.include");
 
-//=======================================================================================
+        if(key.open(QIODevice::ReadOnly)){
+
+            QTextStream instream(&key);
+            QString line;
+            while(!instream.atEnd()){
+
+                QString line=instream.readLine();
+                if(line.isEmpty()){
+                        continue;
+                }
+
+                this->includeList=this->includeList+line+"|";
+            }
+            this->includeList=this->includeList.left(this->includeList.size()-1);
+
+            QRegularExpression regex2(this->includeList);
+
+            if(regex2.patternErrorOffset()!=-1){
+                qStdOut()<<"Include filelist contains errors. Program will be terminated.";
+                return false;
+            }
+
+        }
+    }
+    else{
+        QFile key(this->workPath+"/.exclude");
+
+        if(key.open(QIODevice::ReadOnly)){
+
+            QTextStream instream(&key);
+            QString line;
+            while(!instream.atEnd()){
+
+                QString line=instream.readLine();
+                if(line.isEmpty()){
+                        continue;
+                }
+                this->excludeList=this->excludeList+line+"|";
+            }
+            this->excludeList=this->excludeList.left(this->excludeList.size()-1);
+
+            QRegularExpression regex2(this->excludeList);
+
+            if(regex2.patternErrorOffset()!=-1){
+                qStdOut()<<"Exclude filelist contains errors. Program will be terminated.";
+                return false;
+            }
+        }
+    }
 
 
-bool MSMailRu::filterExcludeFileNames(QString path)
-{
-
-}
-
-//=======================================================================================
+    qStdOut()<< "Reading remote files"<<endl;
 
 
-bool MSMailRu::createSyncFileList()
-{
+    //this->createHashFromRemote();
 
+    // begin create
+
+
+
+    if(!this->readRemote("/")){// top level files and folders
+
+        qStdOut()<<"Error occured on reading remote files" <<endl;
+        return false;
+    }
+
+    qStdOut()<<"Reading local files and folders" <<endl;
+
+    if(!this->readLocal(this->workPath)){
+
+        qStdOut()<<"Error occured on local files and folders" <<endl;
+        return false;
+    }
+
+//this->remote_file_get(&(this->syncFileList.values()[0]));
+//this->remote_file_insert(&(this->syncFileList.values()[0]));
+//this->remote_file_update(&(this->syncFileList.values()[0]));
+ //this->remote_file_makeFolder(&(this->syncFileList.values()[0]));
+// this->remote_createDirectory((this->syncFileList.values()[0].path+this->syncFileList.values()[0].fileName));
+
+
+    this->doSync();
+
+    return true;
 }
 
 //=======================================================================================

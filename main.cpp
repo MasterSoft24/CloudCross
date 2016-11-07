@@ -398,6 +398,24 @@ void listMailru(MSProvidersPool* providers){
 }
 
 
+void syncMailru(MSProvidersPool* providers){
+
+    MSMailRu* mrp=new MSMailRu();
+
+    providers->addProvider(mrp);
+    if(! providers->loadTokenFile("MailRu")){
+        exit(0);
+    }
+
+    if(!providers->refreshToken("MailRu")){
+        qStdOut()<<"Unauthorized access. Aborted."<<endl;
+        exit(0);
+    }
+
+    mrp->createSyncFileList();
+
+}
+
 
 
 
@@ -1300,7 +1318,7 @@ int main(int argc, char *argv[])
 
             default: // syn execute without any params by default
 
-                syncYandex(providers);
+                syncMailru(providers);
 //                qStdOut()<< "sync dropbox"<<endl;
 
                 return 0;
