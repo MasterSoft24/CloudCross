@@ -70,6 +70,8 @@ public:
     bool remote_file_trash(MSFSObject* object);
     // create directory on remote, recursively if nesessary
     bool remote_createDirectory(QString path);
+    // request for various url's
+    QString remote_dispatcher(QString target);
 
 
 
