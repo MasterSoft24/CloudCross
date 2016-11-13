@@ -132,7 +132,6 @@ bool MSMailRu::auth(){
             return false;
         }
 
-        qStdOut() << "Token was succesfully accepted and saved."<<endl;
 
         //this->cookies=new QNetworkCookieJar(req->manager->cookieJar());
         this->cookies=(req->manager->cookieJar());
@@ -524,6 +523,7 @@ bool MSMailRu::remote_file_insert(MSFSObject *object){
         }
 
 
+
         req->printReplyError();
         delete(req);
         return false;
@@ -533,11 +533,26 @@ bool MSMailRu::remote_file_insert(MSFSObject *object){
 
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject job = json.object();
-    int status=job["body"].toObject()["status"].toInt();
+    int status=job["status"].toInt();
 
     delete(req);
 
     if(status == 200){
+
+        // set time for local file to tome of remote file to prevent re-downloading
+        utimbuf tb;
+        QString filePath=this->workPath+object->path+object->fileName;
+
+
+        double zz=job["time"].toDouble();
+        QDateTime zzd=QDateTime::fromTime_t(zz/1000);
+        //fsObject.remote.modifiedDate=this->toMilliseconds(zzd,true);
+
+        tb.actime=(this->toMilliseconds(zzd,true))/1000;
+        tb.modtime=(this->toMilliseconds(zzd,true))/1000;
+
+        utime(filePath.toStdString().c_str(),&tb);
+
         return true;
     }
     else{

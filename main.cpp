@@ -350,6 +350,8 @@ void authMailru(MSProvidersPool* providers,QString login,QString password){
 
         providers->addProvider(mrp,true);
         providers->saveTokenFile("MailRu");
+        qStdOut() << "Token was succesfully accepted and saved."<<endl;
+
     }
     else{
        qStdOut() << "Authentication failed"<<endl;
