@@ -397,20 +397,23 @@ bool MSDropbox::readRemote(){ //QString parentId,QString currentPath
                       }
 
 
-                      if(this->getFlag("useInclude")){//  --use-include
+                      if(this->getFlag("useInclude") && this->includeList != ""){//  --use-include
 
                           if( this->filterIncludeFileNames(o["path_display"].toString())){
-
+                              i++;
                               continue;
                           }
                       }
                       else{// use exclude by default
 
+                      if(this->excludeList != ""){
                           if(! this->filterExcludeFileNames(o["path_display"].toString())){
-
+                              i++;
                               continue;
                           }
                       }
+                      }
+
 
                       this->syncFileList.insert(o["path_display"].toString(), fsObject);
 
@@ -717,17 +720,21 @@ bool MSDropbox::readLocal(QString path){
                 readLocal(Path);
             }
 
-            if(this->getFlag("useInclude")){//  --use-include
+            if(this->getFlag("useInclude") && this->includeList != ""){//  --use-include
 
-                if( this->filterIncludeFileNames(relPath)){
-                    continue;
-                }
+            if( this->filterIncludeFileNames(relPath)){
+
+                continue;
+            }
             }
             else{// use exclude by default
 
+            if(this->excludeList != ""){
                 if(! this->filterExcludeFileNames(relPath)){
-                    continue;
+
+                continue;
                 }
+            }
             }
 
 

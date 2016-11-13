@@ -619,7 +619,7 @@ bool MSGoogleDrive::readRemote(QString parentId,QString currentPath){
             this->readRemote(o["id"].toString(),currentPath+fsObject.fileName+"/");
         }
 
-        if(this->getFlag("useInclude")){//  --use-include
+        if(this->getFlag("useInclude") && this->includeList != ""){//  --use-include
 
             if( this->filterIncludeFileNames(currentPath+fsObject.fileName)){
                 i++;
@@ -628,10 +628,12 @@ bool MSGoogleDrive::readRemote(QString parentId,QString currentPath){
         }
         else{// use exclude by default
 
-            if(! this->filterExcludeFileNames(currentPath+fsObject.fileName)){
-                i++;
-                continue;
-            }
+	    if(this->excludeList != ""){
+		if(! this->filterExcludeFileNames(currentPath+fsObject.fileName)){
+		    i++;
+		    continue;
+		}
+	    }
         }
 
         this->syncFileList.insert(currentPath+fsObject.fileName, fsObject);
@@ -678,18 +680,23 @@ bool MSGoogleDrive::readLocal(QString path){
                 readLocal(Path);
             }
 
-            if(this->getFlag("useInclude")){//  --use-include
 
-                if( this->filterIncludeFileNames(relPath)){
-                    continue;
-                }
-            }
-            else{// use exclude by default
+	    if(this->getFlag("useInclude") && this->includeList != ""){//  --use-include
 
-                if(! this->filterExcludeFileNames(relPath)){
-                    continue;
-                }
-            }
+		if( this->filterIncludeFileNames(relPath)){
+
+		    continue;
+		}
+	    }
+	    else{// use exclude by default
+
+		if(this->excludeList != ""){
+		    if(! this->filterExcludeFileNames(relPath)){
+
+			continue;
+		    }
+		}
+	    }
 
 
 

@@ -442,7 +442,7 @@ QString getAIID(){
     if(!key.open(QIODevice::ReadOnly)){
 
         QJsonObject co;
-        co["AIID"]="";
+        co["AIID"]=QString("");
         QJsonDocument cd(co);
 
 

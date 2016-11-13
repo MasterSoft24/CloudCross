@@ -367,7 +367,7 @@ bool MSYandexDisk::readRemote(QString currentPath){ //QString parentId,QString c
                       }
 
 
-                      if(this->getFlag("useInclude")){//  --use-include
+                      if(this->getFlag("useInclude") && this->includeList != ""){//  --use-include
 
                           if( this->filterIncludeFileNames(yPath)){
 
@@ -376,11 +376,14 @@ bool MSYandexDisk::readRemote(QString currentPath){ //QString parentId,QString c
                       }
                       else{// use exclude by default
 
-                          if(! this->filterExcludeFileNames(yPath)){
+                      if(this->excludeList != ""){
+                      if(! this->filterExcludeFileNames(yPath)){
 
-                              continue;
-                          }
+                          continue;
                       }
+                      }
+                      }
+
 
                       if(this->isFolder(o)){
                           this->readRemote(yPath);
@@ -682,17 +685,21 @@ bool MSYandexDisk::readLocal(QString path){
                 readLocal(Path);
             }
 
-            if(this->getFlag("useInclude")){//  --use-include
+            if(this->getFlag("useInclude") && this->includeList != ""){//  --use-include
 
-                if( this->filterIncludeFileNames(relPath)){
-                    continue;
-                }
+            if( this->filterIncludeFileNames(relPath)){
+
+                continue;
+            }
             }
             else{// use exclude by default
 
+            if(this->excludeList != ""){
                 if(! this->filterExcludeFileNames(relPath)){
-                    continue;
+
+                continue;
                 }
+            }
             }
 
 
