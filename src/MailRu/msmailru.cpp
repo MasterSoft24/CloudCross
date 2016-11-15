@@ -39,7 +39,7 @@
 #include <QJsonArray>
 
 
-#define DROPBOX_MAX_FILESIZE  8000000
+#define MAILRU_MAX_FILESIZE  8000000
 
 
 MSMailRu::MSMailRu()
@@ -308,6 +308,10 @@ QString MSMailRu::remote_dispatcher(QString target){
 bool MSMailRu::remote_file_get(MSFSObject *object){
 
     if(this->getFlag("dryRun")){
+        return true;
+    }
+
+    if(object->remote.objectType == MSRemoteFSObject::Type::folder){
         return true;
     }
 
@@ -1435,27 +1439,34 @@ bool MSMailRu::createHashFromRemote(){
 
 //=======================================================================================
 
-
-bool MSMailRu::readRemote(QString path)
+bool MSMailRu::readRemote(QString path,QNetworkCookieJar* cookie)
 {
 
-    this->auth();
+    if(cookie == NULL){
 
-    if(this->providerAuthStatus == false){
-        return providerAuthStatus;
+        this->auth();
+
+        if(this->providerAuthStatus == false){
+            return providerAuthStatus;
+        }
     }
 
     MSRequest* req_prev;
 
     MSRequest* req=new MSRequest();
 
-    req->MSsetCookieJar(this->cookies);
+    if(cookie == NULL){
+        req->MSsetCookieJar(this->cookies);
+    }
+    else{
+        req->MSsetCookieJar(cookie);
+    }
 
     req->setRequestUrl("https://cloud.mail.ru/api/v2/folder");
     req->setMethod("get");
 
     req->addQueryItem("token",       this->token);
-    req->addQueryItem("home",       "/");
+    req->addQueryItem("home",       path);
     req->addQueryItem("build",       this->build);
     req->addQueryItem("x-page-id",      this->x_page_id);
     req->addQueryItem("api",      "2");
@@ -1468,9 +1479,6 @@ bool MSMailRu::readRemote(QString path)
 
     req->exec();
 
-    this->cookies=  req->manager->cookieJar();
-
-
     if(!req->replyOK()){
         delete(req);
         req->printReplyError();
@@ -1480,31 +1488,15 @@ bool MSMailRu::readRemote(QString path)
     QString list=req->readReplyText();
 
 
-    //delete(req);
-    req_prev = req;
-
-    QVector<QJsonObject> stack;
-    QJsonArray entries;
+    QJsonDocument json = QJsonDocument::fromJson(list.toUtf8());
+    QJsonObject job = json.object();
+    QJsonArray entries=job["body"].toObject()["list"].toArray();
 
 
-    do{
-
-        QJsonDocument json = QJsonDocument::fromJson(list.toUtf8());
-        QJsonObject job = json.object();
-
-
-
-        entries=job["body"].toObject()["list"].toArray();
-
-
-        for(int i=0; i < entries.size(); i++){// file processing circle
+        for(int i=0; i < entries.size(); i++){
 
             QJsonObject o=entries[i].toObject();
 
-            if(o["type"] == "folder"){
-                stack.push_back(o);
-                continue;
-            }
 
             MSFSObject fsObject;
 
@@ -1514,19 +1506,39 @@ bool MSMailRu::readRemote(QString path)
                fsObject.path ="/";
             }
 
-            fsObject.remote.fileSize=  o["size"].toInt();
-            fsObject.remote.data=o;
-            fsObject.remote.exist=true;
-            fsObject.isDocFormat=false;
-            //fsObject.remote.md5Hash=o["hash"].toString();
+            if(o["type"] == "folder"){
 
-            fsObject.state=MSFSObject::ObjectState::NewRemote;
+                fsObject.remote.data=o;
+                fsObject.remote.exist=true;
+                fsObject.isDocFormat=false;
+                //fsObject.remote.md5Hash=o["hash"].toString();
 
-            fsObject.fileName=o["name"].toString();
-            fsObject.remote.objectType=MSRemoteFSObject::Type::file;
-            double zz=o["mtime"].toDouble();
-            QDateTime zzd=QDateTime::fromTime_t(zz);
-            fsObject.remote.modifiedDate=this->toMilliseconds(zzd,true);
+                fsObject.state=MSFSObject::ObjectState::NewRemote;
+
+                fsObject.fileName=o["name"].toString();
+                fsObject.remote.objectType=MSRemoteFSObject::Type::folder;
+
+                this->readRemote(fsObject.path+fsObject.fileName,req->manager->cookieJar());
+
+            }
+            else{
+
+                fsObject.remote.fileSize=  o["size"].toInt();
+                fsObject.remote.data=o;
+                fsObject.remote.exist=true;
+                fsObject.isDocFormat=false;
+                //fsObject.remote.md5Hash=o["hash"].toString();
+
+                fsObject.state=MSFSObject::ObjectState::NewRemote;
+
+                fsObject.fileName=o["name"].toString();
+                fsObject.remote.objectType=MSRemoteFSObject::Type::file;
+                double zz=o["mtime"].toDouble();
+                QDateTime zzd=QDateTime::fromTime_t(zz);
+                fsObject.remote.modifiedDate=this->toMilliseconds(zzd,true);
+            }
+
+
 
             if(! this->filterServiceFileNames(o["home"].toString())){// skip service files and dirs
 
@@ -1554,108 +1566,11 @@ bool MSMailRu::readRemote(QString path)
 
         }
 
+    delete(req);
 
-        if(stack.size() >0){
-
-            QJsonObject nl=stack.first();
-            stack.pop_front();
-
-
-
-            MSFSObject fsObject;
-
-            fsObject.path = QFileInfo(nl["home"].toString()).path()+"/";
-
-            if(fsObject.path == "//"){
-               fsObject.path ="/";
-            }
-
-            fsObject.remote.fileSize=  nl["size"].toInt();
-            fsObject.remote.data=nl;
-            fsObject.remote.exist=true;
-            fsObject.isDocFormat=false;
-            //fsObject.remote.md5Hash=nl["hash"].toString();
-
-            fsObject.state=MSFSObject::ObjectState::NewRemote;
-
-            fsObject.fileName=nl["name"].toString();
-            fsObject.remote.objectType=MSRemoteFSObject::Type::folder;
-            double zz=nl["mtime"].toDouble();
-            QDateTime zzd=QDateTime::fromTime_t(zz);
-            fsObject.remote.modifiedDate=this->toMilliseconds(zzd,true);
-
-            if(this->getFlag("useInclude")){//  --use-include
-
-                if( this->filterIncludeFileNames(nl["home"].toString())){
-
-                    continue;
-                }
-            }
-            else{// use exclude by default
-
-                if(! this->filterExcludeFileNames(nl["home"].toString())){
-
-                    continue;
-                }
-            }
-
-            this->syncFileList.insert(nl["home"].toString(), fsObject);
-
-
-            req=new MSRequest();
-
-            req->MSsetCookieJar(this->cookies);
-
-
-
-            req->setRequestUrl("https://cloud.mail.ru/api/v2/folder");
-            req->setMethod("get");
-
-            req->addQueryItem("token",       this->token);
-            req->addQueryItem("home",       nl["home"].toString());
-            req->addQueryItem("build",       this->build);
-            req->addQueryItem("x-page-id",      this->x_page_id);
-            req->addQueryItem("api",      "2");
-            req->addQueryItem("offset",      "0");
-            req->addQueryItem("limit",      "2000000");
-            req->addQueryItem("email",      this->login);
-            req->addQueryItem("x-email",      this->login);
-            req->addQueryItem("_",      "1433249148810");
-
-
-            req->exec();
-
-            this->cookies=req->manager->cookieJar();
-
-
-            if(!req->replyOK()){
-                delete(req);
-                req->printReplyError();
-                return false;
-            }
-
-            list=req->readReplyText();
-
-            delete(req_prev);
-
-           //delete(req);
-            req_prev = req;
-
-
-        }
-        else{
-            break;
-        }
-
-
-
-
-
-    }while(entries.size() >= 0);
-
-
-    delete(req_prev);
+    return true;
 }
+
 
 //=======================================================================================
 
@@ -1974,7 +1889,7 @@ bool MSMailRu::createSyncFileList(){
 
 
 
-    if(!this->readRemote("/")){// top level files and folders
+    if(!this->readRemote("/",NULL)){// top level files and folders
 
         qStdOut()<<"Error occured on reading remote files" <<endl;
         return false;

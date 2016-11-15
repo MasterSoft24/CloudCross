@@ -128,6 +128,7 @@ public:
     void local_createDirectory(QString path);
     virtual void local_removeFile(QString path) =0;
     virtual void local_removeFolder(QString path) =0;
+    //void local_createDirectory(QString path);
 
 
     QString fileChecksum(QString &fileName, QCryptographicHash::Algorithm hashAlgorithm);

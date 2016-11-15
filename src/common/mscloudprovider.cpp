@@ -184,7 +184,18 @@ bool MSCloudProvider::local_writeFileContent(QString filePath, MSRequest* req){
 
 
     QFile file(filePath);
-    file.open(QIODevice::WriteOnly );
+
+    if(!file.open(QIODevice::WriteOnly )){
+
+        QFileInfo d=QFileInfo(filePath);
+        QString p=d.absolutePath();
+        this->local_createDirectory(p);
+
+        if(!file.open(QIODevice::WriteOnly )){
+            return false;
+        }
+    }
+
     QDataStream outk(&file);
 
     QByteArray ba;
@@ -201,7 +212,19 @@ bool MSCloudProvider::local_writeFileContent(QString filePath, MSRequest* req){
 
 //=======================================================================================
 
+void MSCloudProvider::local_createDirectory(QString path){
 
+    if(this->getFlag("dryRun")){
+        return;
+    }
+
+    QDir d;
+    d.mkpath(path);
+
+}
+
+
+//=======================================================================================
 
 QString MSCloudProvider::generateRandom(int count){
 
