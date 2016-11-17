@@ -43,6 +43,7 @@
 #include <QCryptographicHash>
 #include <QList>
 #include <QRegularExpression>
+#include <QNetworkProxy>
 
 #include <QTcpServer>
 
@@ -66,6 +67,8 @@ private:
 
 
 public:
+
+    QNetworkProxy* proxyServer;
 
     QString currentPath;// directory where program was run
     QString workPath;// path set with -p option

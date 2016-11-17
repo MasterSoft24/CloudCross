@@ -53,7 +53,7 @@ MSCloudProvider::MSCloudProvider(QObject *parent)
     connect(this->oauthListener, SIGNAL(newConnection()), this, SLOT(onIncomingConnection()));
    // this->oauthListener->connect(SIGNAL(newConnection()),this, SLOT(onIncomingConnection()));
 
-
+    this->proxyServer=0;
 }
 
 void MSCloudProvider::saveTokenFile(QString path){

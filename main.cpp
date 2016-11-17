@@ -59,7 +59,7 @@
 
 #define APP_MAJOR_VERSION 1
 #define APP_MINOR_VERSION 3
-#define APP_BUILD_NUMBER  1
+#define APP_BUILD_NUMBER  0
 
 #define CCROSS_HOME_DIR "/.ccross"
 #define CCROSS_CONFIG_FILE "/ccross.conf"
@@ -615,11 +615,15 @@ int main(int argc, char *argv[])
     parser->insertOption(10,"--dry-run");
     parser->insertOption(11,"--convert-doc");
     parser->insertOption(12,"--force 1");
-    parser->insertOption(13,"--provider 1"); // google, yandex or dropbox
+    parser->insertOption(13,"--provider 1"); // google, yandex, dropbox or mailru
     parser->insertOption(14,"--direct-upload 2"); // upload file directly to cloud
 
     parser->insertOption(15,"--login 1");
     parser->insertOption(16,"--password 1");
+
+    parser->insertOption(17,"--http-proxy 1");
+    parser->insertOption(17,"--socks5-proxy 1");
+
 
     //...............
 

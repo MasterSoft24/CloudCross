@@ -47,13 +47,14 @@
 #include <QNetworkCookieJar>
 #include <QNetworkCookie>
 #include <QJsonObject>
+#include <QNetworkProxy>
 
 class MSRequest : public QObject , QNetworkRequest
 {
   Q_OBJECT
 
 public:
-    MSRequest();
+    MSRequest(QNetworkProxy* proxy=0);
     ~MSRequest();
 
 //private:
@@ -104,6 +105,11 @@ public:
 
     bool replyOK();
     void printReplyError();
+
+
+    // proxy block
+
+    void setProxy(QNetworkProxy *proxy);
 
     // cookie functions block
 
