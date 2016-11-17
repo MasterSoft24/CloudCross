@@ -39,6 +39,8 @@ MSProvidersPool::MSProvidersPool()
 {
     this->getCurrentPath();
     this->strategy=MSCloudProvider::SyncStrategy::PreferLocal;
+    this->proxyAddrString="";
+    this->proxyTypeString="";
 
 }
 

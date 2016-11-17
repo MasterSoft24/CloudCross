@@ -56,6 +56,32 @@ MSCloudProvider::MSCloudProvider(QObject *parent)
     this->proxyServer=0;
 }
 
+bool MSCloudProvider::setProxyServer(QString type,QString proxy)
+{
+    QStringList pa=proxy.split(':');
+
+    if(pa.size()!=2){
+        return false;
+    }
+
+    QString addr=pa[0];
+    qint32 port= pa[1].toInt();
+
+    this->proxyServer = new QNetworkProxy();
+
+    this->proxyServer->setHostName(addr);
+    this->proxyServer->setPort(port);
+
+    if(type == "http"){
+        this->proxyServer->setType(QNetworkProxy::HttpProxy);
+    }
+    if(type == "socks5"){
+        this->proxyServer->setType(QNetworkProxy::Socks5Proxy);
+    }
+
+    return true;
+}
+
 void MSCloudProvider::saveTokenFile(QString path){
     // fix warning message
     path=path;

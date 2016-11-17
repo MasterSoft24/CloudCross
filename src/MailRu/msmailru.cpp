@@ -58,7 +58,7 @@ MSMailRu::MSMailRu()
 bool MSMailRu::auth(){
 
 
-    MSRequest* req=new MSRequest();
+    MSRequest* req=new MSRequest(this->proxyServer);
 
     this->cookies=new QNetworkCookieJar();
 
@@ -84,7 +84,7 @@ bool MSMailRu::auth(){
         return false;
     }
 
-    req->cookieToJSON();
+    //req->cookieToJSON();
 
     QString r=req->replyText;
 
@@ -269,7 +269,7 @@ QString MSMailRu::remote_dispatcher(QString target){
     this->auth();
 
 
-    MSRequest* req=new MSRequest();
+    MSRequest* req=new MSRequest(this->proxyServer);
 
     req->MSsetCookieJar(this->cookies);
 
@@ -320,7 +320,7 @@ bool MSMailRu::remote_file_get(MSFSObject *object){
     this->auth();
 
     MSRequest* req_prev;
-    MSRequest* req=new MSRequest();
+    MSRequest* req=new MSRequest(this->proxyServer);
 
     req->MSsetCookieJar(this->cookies);
 
@@ -347,7 +347,7 @@ bool MSMailRu::remote_file_get(MSFSObject *object){
     QString serverURL=job["body"].toObject()["get"].toArray()[0].toObject()["url"].toString();
 
 
-        req=new MSRequest();
+        req=new MSRequest(this->proxyServer);
 
         req->MSsetCookieJar(this->cookies);
 
@@ -420,7 +420,7 @@ bool MSMailRu::remote_file_insert(MSFSObject *object){
     QString url=this->remote_dispatcher("upload");
 
     MSRequest* req_prev;
-    MSRequest* req=new MSRequest();
+    MSRequest* req=new MSRequest(this->proxyServer);
 
     QString bound="ccross-data";
 
@@ -481,7 +481,7 @@ bool MSMailRu::remote_file_insert(MSFSObject *object){
     this->cookies=req->manager->cookieJar();
     req_prev=req;
 
-    req=new MSRequest();
+    req=new MSRequest(this->proxyServer);
 
     req->MSsetCookieJar(this->cookies);
 
@@ -588,7 +588,7 @@ bool MSMailRu::remote_file_makeFolder(MSFSObject *object){
 
     this->auth();
 
-    MSRequest* req=new MSRequest();
+    MSRequest* req=new MSRequest(this->proxyServer);
 
     req->MSsetCookieJar(this->cookies);
 
@@ -668,7 +668,7 @@ bool MSMailRu::remote_file_trash(MSFSObject *object){
 
     this->auth();
 
-    MSRequest* req=new MSRequest();
+    MSRequest* req=new MSRequest(this->proxyServer);
 
     req->MSsetCookieJar(this->cookies);
 
@@ -1453,7 +1453,7 @@ bool MSMailRu::readRemote(QString path,QNetworkCookieJar* cookie)
 
     MSRequest* req_prev;
 
-    MSRequest* req=new MSRequest();
+    MSRequest* req=new MSRequest(this->proxyServer);
 
     if(cookie == NULL){
         req->MSsetCookieJar(this->cookies);
@@ -1918,8 +1918,188 @@ bool MSMailRu::createSyncFileList(){
 //=======================================================================================
 
 
-bool MSMailRu::directUpload(QString url, QString remotePath)
-{
+bool MSMailRu::directUpload(QString url, QString remotePath){
+
+    // download file into temp file ---------------------------------------------------------------
+
+    MSRequest *reqd = new MSRequest(this->proxyServer);
+
+    QString filePath=this->workPath+"/"+this->generateRandom(10);
+
+    reqd->setMethod("get");
+    reqd->download(url,filePath);
+
+
+    if(!reqd->replyOK()){
+        reqd->printReplyError();
+        delete(reqd);
+        exit(1);
+    }
+
+    QFileInfo fileRemote(remotePath);
+    QString path=fileRemote.absoluteFilePath();
+
+    path=QString(path).left(path.lastIndexOf("/"));
+
+    MSFSObject object;
+    object.path=path+"/";
+    object.fileName=fileRemote.fileName();
+
+    this->syncFileList.insert(object.path+object.fileName,object);
+
+    if(path!="/"){
+
+        QStringList dirs=path.split("/");
+
+        MSFSObject* obj=0;
+        QString cPath="/";
+
+        for(int i=1;i<dirs.size();i++){
+
+            obj=new MSFSObject();
+            obj->path=cPath+dirs[i];
+            obj->fileName="";
+            obj->remote.exist=false;
+            this->remote_file_makeFolder(obj);
+            cPath+=dirs[i]+"/";
+            delete(obj);
+
+        }
+
+
+    }
+
+
+
+    delete(reqd);
+
+    // upload file to remote ------------------------------------------------------------------------
+
+    // get shard server address
+    this->auth();
+    QString urld=this->remote_dispatcher("upload");
+
+    MSRequest* req_prev;
+    MSRequest* req=new MSRequest(this->proxyServer);
+
+    QString bound="ccross-data";
+
+    req->MSsetCookieJar(this->cookies);
+
+    // upload file body to intermediate server and recive confirm hash
+
+    req->setRequestUrl(urld); //url "https://cloclo3-upload.cloud.mail.ru/upload/"
+    req->setMethod("post");
+
+    req->addHeader("Content-Type", "multipart/form-data; boundary=----"+QString(bound).toLocal8Bit());
+
+    req->addQueryItem("cloud_domain",       "2");
+    req->addQueryItem("fileapi14785802593646",       "");
+
+    req->addQueryItem("x-email",      this->login);
+
+
+    QByteArray mediaData;
+
+    mediaData.append(QString("------"+bound+"\r\n").toLocal8Bit());
+    mediaData.append(QString("Content-Disposition: form-data; name=\"file\"; filename=\""+object.fileName+"\"\r\n"));
+    mediaData.append(QString("Content-Type: application/octet-stream\r\n\r\n").toLocal8Bit());
+
+
+    // read file content and put him into request body
+
+
+    QFile file(filePath);
+
+
+    if (!file.open(QIODevice::ReadOnly)){
+
+        //error file not found
+        qStdOut()<<"Unable to open of "+filePath <<endl;
+        delete(req);
+        return false;
+    }
+    mediaData.append(file.readAll());
+
+    file.close();
+
+    mediaData.append(QString("\r\n------"+bound+"--\r\n").toLocal8Bit());
+
+    req->addHeader("Content-Length",QString::number(mediaData.length()).toLocal8Bit());
+
+    req->post(mediaData);
+
+
+    if(!req->replyOK()){
+        req->printReplyError();
+        delete(req);
+        return false;
+    }
+
+
+    QStringList arr=QString(req->readReplyText()).split(';'); // at this point we recieve confirmation hash in arr[0] and size of file in arr[1]
+
+    this->cookies=req->manager->cookieJar();
+    req_prev=req;
+
+    req=new MSRequest(this->proxyServer);
+
+    req->MSsetCookieJar(this->cookies);
+
+    delete(req_prev);
+
+
+    req->setRequestUrl("https://cloud.mail.ru/api/v2/file/add");
+    req->setMethod("post");
+
+    req->addQueryItem("api",       "2");
+    req->addQueryItem("build",       this->build);
+    req->addQueryItem("conflict",       "rename"); // api does not contains ignore param CLOUDWEB-5028 (7114 too)
+    req->addQueryItem("email",       this->login);
+    req->addQueryItem("home",       object.path+object.fileName);
+    req->addQueryItem("hash",       arr[0]);
+    req->addQueryItem("size",       arr[1].left(arr[1].length() - 2));
+    req->addQueryItem("token",       this->token);
+    req->addQueryItem("x-email",       this->login);
+    req->addQueryItem("x-page-id",       this->x_page_id);
+
+    req->exec();
+
+    if(!req->replyOK()){
+
+        QString content=req->readReplyText();
+
+        QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+        QJsonObject job = json.object();
+        QString error=job["body"].toObject()["home"].toObject()["error"].toString();
+
+
+
+        req->printReplyError();
+        delete(req);
+        return false;
+    }
+
+    QString content=req->readReplyText();
+
+    QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+    QJsonObject job = json.object();
+    int status=job["status"].toInt();
+
+    file.remove();
+
+    delete(req);
+
+    if(status == 200){
+
+
+
+        return true;
+    }
+    else{
+        return false;
+    }
+
 
 }
 

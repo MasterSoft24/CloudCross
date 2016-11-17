@@ -457,14 +457,7 @@ bool MSRequest::cookieFromJSON(QJsonObject cookie)
 
 void MSRequest::setProxy(QNetworkProxy *proxy){
 
-//QNetworkProxy* proxy = new QNetworkProxy(QNetworkProxy::HttpProxy, "209.203.144.69", 8080);
-
-//QNetworkProxy* proxy = new QNetworkProxy();
-//proxy->setType(QNetworkProxy::HttpProxy);
-//proxy->setHostName("154.16.127.214");
-//proxy->setPort(80);
-
-this->manager->setProxy(*proxy);
+    this->manager->setProxy(*proxy);
 
 }
 

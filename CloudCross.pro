@@ -48,5 +48,5 @@ INSTALLS += target
 
 DISTFILES += \
     README.MD \
-    doc/ccross.1
+    doc/ccross.ronn
 

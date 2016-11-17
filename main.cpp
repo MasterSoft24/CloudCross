@@ -97,12 +97,19 @@ void printHelp(){
                             "                              This option overrides --prefer option value.") <<endl;
 
     qStdOut()<< QObject::tr("   --provider arg             Set cloud provider for current sync operation. On this moment this option can be \n"
-                            "                              a \"google\", \"yandex\" or \"dropbox\". Default provider is Google Drive") <<endl;
+                            "                              a \"google\", \"yandex\", \"mailru\" or \"dropbox\". Default provider is Google Drive") <<endl;
 
     qStdOut()<< QObject::tr("   --direct-upload url path   Allow upload file directly to cloud from URL.\n"
                             "                              All options, except --provider and --path, are ignored.\n"
                             "                              Uploaded file will be stored on remote storage into location which was defined by path.") <<endl;
-
+    qStdOut()<< QObject::tr("   --login arg                Set login for access to cloud provider. \n"
+                            "                              Now it used only for Cloud Mail.ru") <<endl;
+    qStdOut()<< QObject::tr("   --password arg             Set password for access to cloud provider. \n"
+                            "                              Now it used only for Cloud Mail.ru") <<endl;
+    qStdOut()<< QObject::tr("   --http-proxy arg           Use http proxy server for connection to cloud provider. \n"
+                            "                              <arg> must be in a ip_address_or_host_name:port_number format") <<endl;
+    qStdOut()<< QObject::tr("   --socks5-proxy arg         Use socks5 proxy server for connection to cloud provider. \n"
+                            "                              <arg> must be in a ip_address_or_host_name:port_number format") <<endl;
 }
 
 void printVersion(){
@@ -113,6 +120,9 @@ void printVersion(){
 void authGrive(MSProvidersPool* providers){
 
     MSGoogleDrive* gdp=new MSGoogleDrive();
+
+    gdp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
     gdp->auth();
     if(gdp->providerAuthStatus){
 
@@ -128,6 +138,8 @@ void authGrive(MSProvidersPool* providers){
 void listGrive(MSProvidersPool* providers){
 
     MSGoogleDrive* gdp=new MSGoogleDrive();
+
+    gdp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
 
     providers->addProvider(gdp,true);
     if(!providers->loadTokenFile("GoogleDrive")){
@@ -170,6 +182,8 @@ void syncGrive(MSProvidersPool* providers){
 
     MSGoogleDrive* gdp=new MSGoogleDrive();
 
+    gdp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
     providers->addProvider(gdp);
     if(! providers->loadTokenFile("GoogleDrive")){
         exit(0);
@@ -189,6 +203,9 @@ void syncGrive(MSProvidersPool* providers){
 void authDropbox(MSProvidersPool* providers){
 
     MSDropbox* dbp=new MSDropbox();
+
+    dbp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
     dbp->auth();
     if(dbp->providerAuthStatus){
 
@@ -204,6 +221,8 @@ void authDropbox(MSProvidersPool* providers){
 void listDropbox(MSProvidersPool* providers){
 
     MSDropbox* dbp=new MSDropbox();
+
+    dbp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
 
     providers->addProvider(dbp,true);
     if(!providers->loadTokenFile("Dropbox")){
@@ -246,6 +265,8 @@ void syncDropbox(MSProvidersPool* providers){
 
     MSDropbox* dbp=new MSDropbox();
 
+    dbp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
     providers->addProvider(dbp);
     if(! providers->loadTokenFile("Dropbox")){
         exit(0);
@@ -265,6 +286,9 @@ void syncDropbox(MSProvidersPool* providers){
 void authYandex(MSProvidersPool* providers){
 
     MSYandexDisk* ydp=new MSYandexDisk();
+
+    ydp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
     ydp->auth();
     if(ydp->providerAuthStatus){
 
@@ -280,6 +304,8 @@ void authYandex(MSProvidersPool* providers){
 void listYandex(MSProvidersPool* providers){
 
     MSYandexDisk* ydp=new MSYandexDisk();
+
+    ydp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
 
     providers->addProvider(ydp,true);
     if(!providers->loadTokenFile("YandexDisk")){
@@ -322,6 +348,8 @@ void syncYandex(MSProvidersPool* providers){
 
     MSYandexDisk* ydp=new MSYandexDisk();
 
+    ydp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
     providers->addProvider(ydp);
     if(! providers->loadTokenFile("YandexDisk")){
         exit(0);
@@ -342,6 +370,9 @@ void syncYandex(MSProvidersPool* providers){
 void authMailru(MSProvidersPool* providers,QString login,QString password){
 
     MSMailRu* mrp=new MSMailRu();
+
+    mrp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
     mrp->login=login;
     mrp->password=password;
 
@@ -362,6 +393,8 @@ void authMailru(MSProvidersPool* providers,QString login,QString password){
 void listMailru(MSProvidersPool* providers){
 
     MSMailRu* mrp=new MSMailRu();
+
+    mrp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
 
     providers->addProvider(mrp,true);
     if(!providers->loadTokenFile("MailRu")){
@@ -403,6 +436,8 @@ void listMailru(MSProvidersPool* providers){
 void syncMailru(MSProvidersPool* providers){
 
     MSMailRu* mrp=new MSMailRu();
+
+    mrp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
 
     providers->addProvider(mrp);
     if(! providers->loadTokenFile("MailRu")){
@@ -533,6 +568,7 @@ return QLatin1String("unknown");
 #endif
 }
 
+///////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -622,7 +658,7 @@ int main(int argc, char *argv[])
     parser->insertOption(16,"--password 1");
 
     parser->insertOption(17,"--http-proxy 1");
-    parser->insertOption(17,"--socks5-proxy 1");
+    parser->insertOption(18,"--socks5-proxy 1");
 
 
     //...............
@@ -683,6 +719,9 @@ int main(int argc, char *argv[])
         if(currentProvider=="google"){//------------------------------------------
 
             MSGoogleDrive* cp=new MSGoogleDrive();
+
+            cp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
             providers->addProvider(cp);
 
             if(! providers->loadTokenFile("GoogleDrive")){
@@ -701,13 +740,16 @@ int main(int argc, char *argv[])
             }
             cp->directUpload(p[0],p[1]);
 
-            qStdOut() << "Uploaded file was be stored in google:/"<< p[1]<<endl;
+            qStdOut() << "Uploaded file was  stored in google:/"<< p[1]<<endl;
 
         }
 
         if(currentProvider=="dropbox"){//----------------------------------------
 
             MSDropbox* cp=new MSDropbox();
+
+            cp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
             providers->addProvider(cp);
 
             if(! providers->loadTokenFile("Dropbox")){
@@ -727,12 +769,15 @@ int main(int argc, char *argv[])
             }
             cp->directUpload(p[0],p[1]);
 
-            qStdOut() << "Uploaded file was be stored in dropbox:/"<< p[1]<<endl;
+            qStdOut() << "Uploaded file was stored in dropbox:/"<< p[1]<<endl;
         }
 
         if(currentProvider=="yandex"){//---------------------------------------
 
             MSYandexDisk* cp=new MSYandexDisk();
+
+            cp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
             providers->addProvider(cp);
 
             if(! providers->loadTokenFile("YandexDisk")){
@@ -751,7 +796,35 @@ int main(int argc, char *argv[])
             }
             cp->directUpload(p[0],p[1]);
 
-            qStdOut() << "Uploaded file was be stored in yandex:/"<< p[1]<<endl;
+            qStdOut() << "Uploaded file was stored in yandex:/"<< p[1]<<endl;
+        }
+
+
+        if(currentProvider=="mailru"){//---------------------------------------
+
+            MSMailRu* cp=new MSMailRu();
+
+            cp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
+            providers->addProvider(cp);
+
+            if(! providers->loadTokenFile("MailRu")){
+                return 1;
+            }
+
+            if(!providers->refreshToken("MailRu")){
+                qStdOut()<<"Unauthorized access. Aborted."<<endl;
+                return 1;
+            }
+
+            QStringList p=parser->getParamByName("direct-upload");
+            if(p.size()<2){
+                qStdOut()<<"Option --direct-upload. Missing required argument"<<endl;
+                return 1;
+            }
+            cp->directUpload(p[0],p[1]);
+
+            qStdOut() << "Uploaded file was stored in mail.ru:/"<< p[1]<<endl;
         }
 
         qStdOut() << "Direct uploading completed"<<endl;
@@ -873,6 +946,18 @@ int main(int argc, char *argv[])
                     }
                     break;
 
+                case 17:
+                        providers->proxyTypeString="http";
+                        providers->proxyAddrString=parser->optarg[0];
+
+                    break;
+
+                case 18:
+
+                    providers->proxyTypeString="socks5";
+                    providers->proxyAddrString=parser->optarg[0];
+
+                    break;
 
                 default: // syn execute without any params by default
 
@@ -1006,6 +1091,19 @@ int main(int argc, char *argv[])
                     return 0;
                     break;
                 }
+                break;
+
+            case 17:
+                    providers->proxyTypeString="http";
+                    providers->proxyAddrString=parser->optarg[0];
+
+                break;
+
+            case 18:
+
+                providers->proxyTypeString="socks5";
+                providers->proxyAddrString=parser->optarg[0];
+
                 break;
 
 
@@ -1164,6 +1262,19 @@ int main(int argc, char *argv[])
                 }
                 break;
 
+            case 17:
+                    providers->proxyTypeString="http";
+                    providers->proxyAddrString=parser->optarg[0];
+
+                break;
+
+            case 18:
+
+                providers->proxyTypeString="socks5";
+                providers->proxyAddrString=parser->optarg[0];
+
+                break;
+
 
             default: // syn execute without any params by default
 
@@ -1320,6 +1431,20 @@ int main(int argc, char *argv[])
                     break;
                 }
                 break;
+
+            case 17:
+                    providers->proxyTypeString="http";
+                    providers->proxyAddrString=parser->optarg[0];
+
+                break;
+
+            case 18:
+
+                providers->proxyTypeString="socks5";
+                providers->proxyAddrString=parser->optarg[0];
+
+                break;
+
 
 
             default: // syn execute without any params by default

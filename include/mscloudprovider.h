@@ -104,6 +104,8 @@ public:
     MSIDsList ids_list;
 
 
+    bool setProxyServer(QString type, QString proxy);
+
 
     virtual bool auth() = 0;
     virtual void saveTokenFile(QString path) =0 ;

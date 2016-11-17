@@ -68,7 +68,8 @@ public:
     QHash<QString,bool>flags;
     QHash<QString,QString>options;
 
-
+    QString proxyAddrString;
+    QString proxyTypeString;
 
     void addProvider(MSCloudProvider* provider, bool statelessMode=false);
 

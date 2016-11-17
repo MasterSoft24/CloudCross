@@ -61,7 +61,7 @@ bool MSGoogleDrive::auth(){
     connect(this,SIGNAL(oAuthError(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
 
 
-    MSRequest* req=new MSRequest();
+    MSRequest* req=new MSRequest(this->proxyServer);
 
     req->setRequestUrl("https://accounts.google.com/o/oauth2/v2/auth");
     req->setMethod("get");
@@ -115,7 +115,7 @@ bool MSGoogleDrive::auth(){
 bool MSGoogleDrive::onAuthFinished(QString html, MSCloudProvider *provider){
 
 
-    MSRequest* req=new MSRequest();
+    MSRequest* req=new MSRequest(this->proxyServer);
 
     //req->setRequestUrl("https://accounts.google.com/o/oauth2/token"); // old path
     req->setRequestUrl("https://www.googleapis.com/oauth2/v4/token");
@@ -265,7 +265,7 @@ void MSGoogleDrive::saveStateFile(){
 
 bool MSGoogleDrive::refreshToken(){
 
-    MSRequest* req=new MSRequest();
+    MSRequest* req=new MSRequest(this->proxyServer);
 
     req->setRequestUrl("https://www.googleapis.com/oauth2/v4/token");
     req->setMethod("post");
@@ -318,7 +318,7 @@ bool MSGoogleDrive::refreshToken(){
 
 bool MSGoogleDrive::createHashFromRemote(){
 
-    MSRequest* req=new MSRequest();
+    MSRequest* req=new MSRequest(this->proxyServer);
 
     req->setRequestUrl("https://www.googleapis.com/drive/v2/files");
     req->setMethod("get");
@@ -352,7 +352,7 @@ bool MSGoogleDrive::createHashFromRemote(){
 
         delete(req);
 
-        req=new MSRequest();
+        req=new MSRequest(this->proxyServer);
 
 
         req->setRequestUrl("https://www.googleapis.com/drive/v2/files");
@@ -1632,7 +1632,7 @@ bool MSGoogleDrive::remote_file_generateIDs(int count){
     QList<QString> lst;
 
     while(count > 0){
-        MSRequest *req = new MSRequest();
+        MSRequest *req = new MSRequest(this->proxyServer);
 
         req->setRequestUrl("https://www.googleapis.com/drive/v2/files/generateIds");
         req->setMethod("get");
@@ -1702,7 +1702,7 @@ bool MSGoogleDrive::remote_file_get(MSFSObject* object){
 
     QString id=object->remote.data["id"].toString();
 
-    MSRequest *req = new MSRequest();
+    MSRequest *req = new MSRequest(this->proxyServer);
 
     req->setRequestUrl("https://www.googleapis.com/drive/v2/files/"+id);
     req->setMethod("get");
@@ -1835,7 +1835,7 @@ bool MSGoogleDrive::remote_file_insert(MSFSObject *object){
         parentID= po.remote.data["id"].toString();
     }
 
-    MSRequest *req = new MSRequest();
+    MSRequest *req = new MSRequest(this->proxyServer);
 
     req->setRequestUrl("https://www.googleapis.com/upload/drive/v2/files");
     req->setMethod("post");
@@ -2007,7 +2007,7 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
     }
 
 
-    MSRequest *req = new MSRequest();
+    MSRequest *req = new MSRequest(this->proxyServer);
 
     req->setRequestUrl("https://www.googleapis.com/upload/drive/v2/files/"+id);
     req->setMethod("post");
@@ -2108,7 +2108,7 @@ bool MSGoogleDrive::remote_file_makeFolder(MSFSObject *object){
         return true;
     }
 
-    MSRequest *req = new MSRequest();
+    MSRequest *req = new MSRequest(this->proxyServer);
 
     req->setRequestUrl("https://www.googleapis.com/drive/v2/files");
     req->setMethod("post");
@@ -2174,7 +2174,7 @@ bool MSGoogleDrive::remote_file_makeFolder(MSFSObject *object, QString parentID)
         return true;
     }
 
-    MSRequest *req = new MSRequest();
+    MSRequest *req = new MSRequest(this->proxyServer);
 
     req->setRequestUrl("https://www.googleapis.com/drive/v2/files");
     req->setMethod("post");
@@ -2252,7 +2252,7 @@ bool MSGoogleDrive::remote_file_trash(MSFSObject *object){
 
     QString id=object->remote.data["id"].toString();
 
-    MSRequest *req = new MSRequest();
+    MSRequest *req = new MSRequest(this->proxyServer);
 
     req->setRequestUrl("https://www.googleapis.com/drive/v2/files/"+id+"/trash");
     req->setMethod("post");
@@ -2471,7 +2471,7 @@ bool MSGoogleDrive::directUpload(QString url, QString remotePath){
 
     // download file into temp file ---------------------------------------------------------------
 
-    MSRequest *req = new MSRequest();
+    MSRequest *req = new MSRequest(this->proxyServer);
 
     QString tempFileName=this->generateRandom(10);
     QString filePath=this->workPath+"/"+tempFileName;
@@ -2591,7 +2591,7 @@ bool MSGoogleDrive::directUpload(QString url, QString remotePath){
         parentID= po.remote.data["id"].toString();
     }
 
-    req = new MSRequest();
+    req = new MSRequest(this->proxyServer);
 
     req->setRequestUrl("https://www.googleapis.com/upload/drive/v2/files");
     req->setMethod("post");
