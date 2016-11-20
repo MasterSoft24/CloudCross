@@ -74,9 +74,12 @@
 #define APP_NAME "CloudCross"
 
 
+void printVersion(){
+    qStdOut() << APP_NAME << " v"<<APP_MAJOR_VERSION<<"."<<APP_MINOR_VERSION<<"."<<APP_BUILD_NUMBER<<APP_SUFFIX <<endl;
+}
 
 void printHelp(){
-    qStdOut() << APP_NAME << " v"<<APP_MAJOR_VERSION<<"."<<APP_MINOR_VERSION<<"."<<APP_BUILD_NUMBER<<APP_SUFFIX <<endl;
+    printVersion();
     qStdOut()<< QObject::tr("is a opensource program for sync local files with a many cloud storages.\n") <<endl;
     qStdOut()<< QObject::tr("Options:") <<endl;
     qStdOut()<< QObject::tr("   -h [ --help ]              Produce help message") <<endl;
@@ -112,9 +115,6 @@ void printHelp(){
                             "                              <arg> must be in a ip_address_or_host_name:port_number format") <<endl;
 }
 
-void printVersion(){
-    qStdOut() << APP_NAME << " v"<<APP_MAJOR_VERSION<<"."<<APP_MINOR_VERSION<<"."<<APP_BUILD_NUMBER<<APP_SUFFIX <<endl;
-}
 
 
 void authGrive(MSProvidersPool* providers){
@@ -363,7 +363,6 @@ void syncYandex(MSProvidersPool* providers){
     ydp->createSyncFileList();
 
 }
-
 
 
 
