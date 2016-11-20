@@ -667,7 +667,7 @@ int main(int argc, char *argv[])
 
     //...............
 
-    parser->parse(a.arguments());
+    parser->parse(opts);
 
 
     int ret;
