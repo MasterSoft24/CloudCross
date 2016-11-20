@@ -59,8 +59,8 @@
 #define APP_MINOR_VERSION 3
 #define APP_BUILD_NUMBER  0
 
-#define CCROSS_HOME_DIR "/.ccross"
-#define CCROSS_CONFIG_FILE "/ccross.conf"
+#define CCROSS_HOME_DIR ".ccross"
+#define CCROSS_CONFIG_FILE "ccross.conf"
 
 #ifdef Q_OS_WIN
     #define APP_SUFFIX " for Windows"
@@ -469,7 +469,7 @@ void syncMailru(MSProvidersPool* providers){
 ///
 QString getAIID(){
 
-    QString home=QDir::homePath() + CCROSS_HOME_DIR;
+    QString home=QDir::homePath() + QDir::separator() + CCROSS_HOME_DIR;
     QDir cc=QDir(home);
 
     if(!cc.exists()){
@@ -477,17 +477,16 @@ QString getAIID(){
     }
 
 
-    QFile key(home+CCROSS_CONFIG_FILE);
-
+    QString config=home + QDir::separator() + CCROSS_CONFIG_FILE;
+    QFile key(config);
+    QString aiid;
 
     if(!key.open(QIODevice::ReadOnly)){
 
         QJsonObject co;
-        co["AIID"]=QString("");
+        aiid=QUuid::createUuid().toString();
+        co["AIID"]=aiid;
         QJsonDocument cd(co);
-
-
-        QFile key(home+CCROSS_CONFIG_FILE);
 
 
         bool r=key.open(QIODevice::WriteOnly | QIODevice::Text);
@@ -496,51 +495,24 @@ QString getAIID(){
             //outk << cd.toJson(QJsonDocument::Compact);
             outk << cd.toJson(QJsonDocument::Indented);
         }
-        key.close();
 
 
     }
+    else{
+        QTextStream instream(&key);
+        QString line;
+        while(!instream.atEnd()){
 
-    QTextStream instream(&key);
-    QString line;
-    while(!instream.atEnd()){
+            line+=instream.readLine();
+        }
 
-        line+=instream.readLine();
+        QJsonObject job = QJsonDocument::fromJson(line.toUtf8()).object();
+        aiid=job["AIID"].toString();
     }
 
     key.close();
 
-
-    //QJsonDocument json = QJsonDocument::fromJson(line.toUtf8());
-    QJsonObject job = QJsonDocument::fromJson(line.toUtf8()).object();
-    QString aiid=job["AIID"].toString();
-
-    if(aiid == ""){
-        job["AIID"]=QUuid::createUuid().toString();
-
-        QJsonDocument cd(job);
-
-
-        QFile key(home+CCROSS_CONFIG_FILE);
-
-
-        bool r=key.open(QIODevice::WriteOnly | QIODevice::Text);
-        if(r){
-            QTextStream outk(&key);
-            //outk << cd.toJson(QJsonDocument::Compact);
-            outk << cd.toJson(QJsonDocument::Indented);
-        }
-        key.close();
-        line=job["AIID"].toString();
-    }
-    else{
-        QJsonObject job = QJsonDocument::fromJson(line.toUtf8()).object();
-        line=job["AIID"].toString();
-
-    }
-
-
-    return line;
+    return aiid;
 
 
 }
@@ -592,7 +564,7 @@ int main(int argc, char *argv[])
 
 //    QStringList qv=QString(qVersion()).split(".");
 
-    QString PLATFORM;;
+    QString PLATFORM;
     QString DISTR;
 
 
