@@ -71,6 +71,13 @@
 
 #define APP_NAME "CloudCross"
 
+enum ProviderType{
+    Google,
+    Dropbox,
+    Yandex,
+    Mailru
+};
+
 
 void printVersion(){
     qStdOut() << APP_NAME << " v"<<APP_MAJOR_VERSION<<"."<<APP_MINOR_VERSION<<"."<<APP_BUILD_NUMBER<<APP_SUFFIX <<endl;
@@ -665,28 +672,39 @@ int main(int argc, char *argv[])
 
     int ret;
 
-    QString currentProvider="google";
+    ProviderType currentProvider;
 
     QStringList prov=parser->getParamByName("provider");
 
 
 
     if(prov.size() != 0){
-        currentProvider=prov[0];
+        if(prov[0] == "google"){
+            currentProvider=ProviderType::Google;
+        }
+        else if(prov[0] == "dropbox"){
+            currentProvider=ProviderType::Dropbox;
+        }
+        else if(prov[0] == "yandex"){
+            currentProvider=ProviderType::Yandex;
+        }
+        else if(prov[0] == "mailru"){
+            currentProvider=ProviderType::Mailru;
+        }
+        else {
+            qStdOut()<< "Unknown cloud provider. Application terminated."<< endl;
+            return 1;
+        }
     }
-
-
-    if((currentProvider != "google")&&(currentProvider != "dropbox")&&(currentProvider != "yandex")
-            &&(currentProvider != "mailru")){
-        qStdOut()<< "Unknown cloud provider. Application terminated."<< endl;
-        return 1;
+    else{
+        currentProvider=ProviderType::Google;
     }
 
 
     QStringList mailru_login;
     QStringList mailru_password;
 
-    if(currentProvider == "mailru"){
+    if(currentProvider == ProviderType::Mailru){
         mailru_login=parser->getParamByName("--login");
         mailru_password=parser->getParamByName("--password");
 
@@ -713,7 +731,9 @@ int main(int argc, char *argv[])
 
         qStdOut() << "Start direct uploading..."<<endl;
 
-        if(currentProvider=="google"){//------------------------------------------
+        switch(currentProvider){
+
+        case ProviderType::Google:{//------------------------------------------
 
             MSGoogleDrive* cp=new MSGoogleDrive();
 
@@ -738,10 +758,10 @@ int main(int argc, char *argv[])
             cp->directUpload(p[0],p[1]);
 
             qStdOut() << "Uploaded file was  stored in google:/"<< p[1]<<endl;
-
         }
+            break;
 
-        if(currentProvider=="dropbox"){//----------------------------------------
+        case ProviderType::Dropbox:{//----------------------------------------
 
             MSDropbox* cp=new MSDropbox();
 
@@ -768,8 +788,9 @@ int main(int argc, char *argv[])
 
             qStdOut() << "Uploaded file was stored in dropbox:/"<< p[1]<<endl;
         }
+            break;
 
-        if(currentProvider=="yandex"){//---------------------------------------
+        case ProviderType::Yandex:{//---------------------------------------
 
             MSYandexDisk* cp=new MSYandexDisk();
 
@@ -795,9 +816,9 @@ int main(int argc, char *argv[])
 
             qStdOut() << "Uploaded file was stored in yandex:/"<< p[1]<<endl;
         }
+            break;
 
-
-        if(currentProvider=="mailru"){//---------------------------------------
+        case ProviderType::Mailru:{//---------------------------------------
 
             MSMailRu* cp=new MSMailRu();
 
@@ -823,6 +844,11 @@ int main(int argc, char *argv[])
 
             qStdOut() << "Uploaded file was stored in mail.ru:/"<< p[1]<<endl;
         }
+            break;
+
+        default:
+            break;
+        }
 
         qStdOut() << "Direct uploading completed"<<endl;
 
@@ -843,17 +869,21 @@ int main(int argc, char *argv[])
 
         case 2: //-- auth
 
-            if(currentProvider == "google"){
+            switch(currentProvider){
+            case ProviderType::Google:
                 authGrive(providers);
-            }
-            else if(currentProvider == "dropbox"){
+                break;
+            case ProviderType::Dropbox:
                 authDropbox(providers);
-            }
-            else if(currentProvider == "yandex"){
+                break;
+            case ProviderType::Yandex:
                 authYandex(providers);
-            }
-            else if(currentProvider == "mailru"){
+                break;
+            case ProviderType::Mailru:
                 authMailru(providers,mailru_login[0], mailru_password[0]);
+                break;
+            default:
+                break;
             }
 
             return 0;
@@ -895,17 +925,21 @@ int main(int argc, char *argv[])
 
         case 7:// --list
 
-            if(currentProvider == "google"){
+            switch(currentProvider){
+            case ProviderType::Google:
                 listGrive(providers);
-            }
-            else if(currentProvider == "dropbox"){
+                break;
+            case ProviderType::Dropbox:
                 listDropbox(providers);
-            }
-            else if(currentProvider == "yandex"){
+                break;
+            case ProviderType::Yandex:
                 listYandex(providers);
-            }
-            else if(currentProvider == "mailru"){
+                break;
+            case ProviderType::Mailru:
                 listMailru(providers);
+                break;
+            default:
+                break;
             }
 
             return 0;
@@ -923,7 +957,7 @@ int main(int argc, char *argv[])
 
         case 9: // --no-new-rev
 
-            if(currentProvider == "google"){
+            if(currentProvider == ProviderType::Google){
                 providers->setFlag("noNewRev",true);
             }
             else{
@@ -938,7 +972,7 @@ int main(int argc, char *argv[])
 
         case 11: // --convert-doc
 
-            if(currentProvider == "google"){
+            if(currentProvider == ProviderType::Google){
                 providers->setFlag("convertDoc",true);
             }
             else{
@@ -1007,20 +1041,24 @@ int main(int argc, char *argv[])
 
         default: // syn execute without any params by default
 
-            if(currentProvider == "google"){
+            switch(currentProvider){
+            case ProviderType::Google:
                 syncGrive(providers);
-            }
-            else if(currentProvider == "dropbox"){
+                break;
+            case ProviderType::Dropbox:
                 syncDropbox(providers);
 //                qStdOut()<< "sync dropbox"<<endl;
-            }
-            else if(currentProvider == "yandex"){
+                break;
+            case ProviderType::Yandex:
                 syncYandex(providers);
 //                qStdOut()<< "sync yandex"<<endl;
-            }
-            else if(currentProvider == "mailru"){
+                break;
+            case ProviderType::Mailru:
                 syncMailru(providers);
 //                qStdOut()<< "sync mailru"<<endl;
+                break;
+            default:
+                break;
             }
 
             //exit(0);
