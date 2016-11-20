@@ -46,8 +46,6 @@
 #include <QDateTime>
 #include <QTextCodec>
 
-#include <QJsonDocument>
-#include <QJsonObject>
 #include <QFile>
 #include <QTextStream>
 #include <QStandardPaths>
