@@ -578,7 +578,8 @@ bool MSMailRu::remote_file_update(MSFSObject *object)
 
 bool MSMailRu::remote_file_generateIDs(int count)
 {
-
+Q_UNUSED(count);
+return true;
 }
 
 //=======================================================================================
@@ -658,7 +659,8 @@ bool MSMailRu::remote_file_makeFolder(MSFSObject *object){
 
 void MSMailRu::remote_file_makeFolder(MSFSObject *object, QString parentID)
 {
-
+Q_UNUSED(object)
+parentID="";
 }
 
 //=======================================================================================
@@ -1447,11 +1449,14 @@ bool MSMailRu::readRemote(QString path,QNetworkCookieJar* cookie)
         this->auth();
 
         if(this->providerAuthStatus == false){
+
+            qStdOut()<<"Authentication failed. Possibly you need re-auth or login and passwrd is incorrect" <<endl;
+
             return providerAuthStatus;
         }
     }
 
-    MSRequest* req_prev;
+    //MSRequest* req_prev;
 
     MSRequest* req=new MSRequest(this->proxyServer);
 
@@ -1506,7 +1511,7 @@ bool MSMailRu::readRemote(QString path,QNetworkCookieJar* cookie)
                fsObject.path ="/";
             }
 
-            if(o["type"] == "folder"){
+            if(o["type"] == QString("folder")){
 
                 fsObject.remote.data=o;
                 fsObject.remote.exist=true;
@@ -2110,6 +2115,9 @@ bool MSMailRu::directUpload(QString url, QString remotePath){
 bool MSMailRu::onAuthFinished(QString html, MSCloudProvider *provider)
 {
 
+    html="";
+    provider=0;
+    provider++;
     return true;
 
 }

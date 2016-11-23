@@ -283,7 +283,6 @@ QString MSCloudProvider::generateRandom(int count){
 
 void MSCloudProvider::onIncomingConnection(){
 
-    int u=7;
 
     this->oauthListenerSocket=this->oauthListener->nextPendingConnection();
     //QHostAddress pa=this->oauthListenerSocket->co;
@@ -332,7 +331,8 @@ void MSCloudProvider::onDataRecieved(){
 bool MSCloudProvider::startListener(int port){
 
    // this->oauthListener->resumeAccepting();
-    this->oauthListener->listen(QHostAddress("127.0.0.1"),port);
+    return this->oauthListener->listen(QHostAddress("127.0.0.1"),port);
+
 
 }
 
@@ -341,6 +341,7 @@ bool MSCloudProvider::stopListener(){
 
     //this->oauthListener->pauseAccepting();
     this->oauthListener->close();
+    return true;
 }
 
 

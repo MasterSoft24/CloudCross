@@ -107,6 +107,8 @@ bool MSDropbox::auth(){
 
 bool MSDropbox::onAuthFinished(QString html, MSCloudProvider *provider){
 
+    Q_UNUSED(provider)
+
     MSRequest* req=new MSRequest(this->proxyServer);
 
     req->setRequestUrl("https://api.dropboxapi.com/1/oauth2/token");

@@ -451,7 +451,8 @@ QJsonObject MSRequest::cookieToJSON()
 
 bool MSRequest::cookieFromJSON(QJsonObject cookie)
 {
-
+    cookie=QJsonObject();
+return true;
 }
 
 

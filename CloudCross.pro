@@ -10,6 +10,8 @@ CONFIG -= app_bundle
 TEMPLATE = app
 
 
+QMAKE_CXXFLAGS_WARN_OFF -= -Wno-unused-parameter
+
 SOURCES += main.cpp \
     src/common/msrequest.cpp \
     src/common/msoptparser.cpp \

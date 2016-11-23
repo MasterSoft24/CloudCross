@@ -114,6 +114,7 @@ bool MSGoogleDrive::auth(){
 
 bool MSGoogleDrive::onAuthFinished(QString html, MSCloudProvider *provider){
 
+Q_UNUSED(provider)
 
     MSRequest* req=new MSRequest(this->proxyServer);
 

@@ -85,7 +85,7 @@ bool MSYandexDisk::auth(){
 
 bool MSYandexDisk::onAuthFinished(QString html, MSCloudProvider *provider){
 
-
+Q_UNUSED(provider)
 
     MSRequest* req=new MSRequest(this->proxyServer);
 

@@ -72,6 +72,7 @@
 #define APP_NAME "CloudCross"
 
 enum ProviderType{
+
     Google,
     Dropbox,
     Yandex,
@@ -676,16 +677,7 @@ int main(int argc, char *argv[])
     QStringList mailru_login;
     QStringList mailru_password;
 
-    if(currentProvider == ProviderType::Mailru){
-        mailru_login=parser->getParamByName("--login");
-        mailru_password=parser->getParamByName("--password");
 
-        if((mailru_login.size()==0)||(mailru_password.size()==0)){
-            qStdOut()<< "Provider Mail.ru. Login and password required. Application terminated."<< endl;
-            return 1;
-        }
-
-    }
 
 
     QStringList wp=parser->getParamByName("path");
@@ -852,7 +844,18 @@ int main(int argc, char *argv[])
                 authYandex(providers);
                 break;
             case ProviderType::Mailru:
+
+                mailru_login=parser->getParamByName("--login");
+                mailru_password=parser->getParamByName("--password");
+
+                if((mailru_login.size()==0)||(mailru_password.size()==0)){
+                     qStdOut()<< "Provider Mail.ru. Login and password required. Application terminated."<< endl;
+                     return 1;
+                }
+
+
                 authMailru(providers,mailru_login[0], mailru_password[0]);
+
                 break;
             default:
                 break;
