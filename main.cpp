@@ -46,8 +46,6 @@
 #include <QDateTime>
 #include <QTextCodec>
 
-#include <QJsonDocument>
-#include <QJsonObject>
 #include <QFile>
 #include <QTextStream>
 #include <QStandardPaths>
@@ -61,8 +59,8 @@
 #define APP_MINOR_VERSION 3
 #define APP_BUILD_NUMBER  0
 
-#define CCROSS_HOME_DIR "/.ccross"
-#define CCROSS_CONFIG_FILE "/ccross.conf"
+#define CCROSS_HOME_DIR ".ccross"
+#define CCROSS_CONFIG_FILE "ccross.conf"
 
 #ifdef Q_OS_WIN
     #define APP_SUFFIX " for Windows"
@@ -73,10 +71,20 @@
 
 #define APP_NAME "CloudCross"
 
+enum ProviderType{
+    Google,
+    Dropbox,
+    Yandex,
+    Mailru
+};
 
+
+void printVersion(){
+    qStdOut() << APP_NAME << " v"<<APP_MAJOR_VERSION<<"."<<APP_MINOR_VERSION<<"."<<APP_BUILD_NUMBER<<APP_SUFFIX <<endl;
+}
 
 void printHelp(){
-    qStdOut() << APP_NAME << " v"<<APP_MAJOR_VERSION<<"."<<APP_MINOR_VERSION<<"."<<APP_BUILD_NUMBER<<APP_SUFFIX <<endl;
+    printVersion();
     qStdOut()<< QObject::tr("is a opensource program for sync local files with a many cloud storages.\n") <<endl;
     qStdOut()<< QObject::tr("Options:") <<endl;
     qStdOut()<< QObject::tr("   -h [ --help ]              Produce help message") <<endl;
@@ -112,9 +120,6 @@ void printHelp(){
                             "                              <arg> must be in a ip_address_or_host_name:port_number format") <<endl;
 }
 
-void printVersion(){
-    qStdOut() << APP_NAME << " v"<<APP_MAJOR_VERSION<<"."<<APP_MINOR_VERSION<<"."<<APP_BUILD_NUMBER<<APP_SUFFIX <<endl;
-}
 
 
 void authGrive(MSProvidersPool* providers){
@@ -366,7 +371,6 @@ void syncYandex(MSProvidersPool* providers){
 
 
 
-
 void authMailru(MSProvidersPool* providers,QString login,QString password){
 
     MSMailRu* mrp=new MSMailRu();
@@ -465,7 +469,7 @@ void syncMailru(MSProvidersPool* providers){
 ///
 QString getAIID(){
 
-    QString home=QDir::homePath() + CCROSS_HOME_DIR;
+    QString home=QDir::homePath() + QDir::separator() + CCROSS_HOME_DIR;
     QDir cc=QDir(home);
 
     if(!cc.exists()){
@@ -473,17 +477,16 @@ QString getAIID(){
     }
 
 
-    QFile key(home+CCROSS_CONFIG_FILE);
-
+    QString config=home + QDir::separator() + CCROSS_CONFIG_FILE;
+    QFile key(config);
+    QString aiid;
 
     if(!key.open(QIODevice::ReadOnly)){
 
         QJsonObject co;
-        co["AIID"]=QString("");
+        aiid=QUuid::createUuid().toString();
+        co["AIID"]=aiid;
         QJsonDocument cd(co);
-
-
-        QFile key(home+CCROSS_CONFIG_FILE);
 
 
         bool r=key.open(QIODevice::WriteOnly | QIODevice::Text);
@@ -492,51 +495,24 @@ QString getAIID(){
             //outk << cd.toJson(QJsonDocument::Compact);
             outk << cd.toJson(QJsonDocument::Indented);
         }
-        key.close();
 
 
     }
+    else{
+        QTextStream instream(&key);
+        QString line;
+        while(!instream.atEnd()){
 
-    QTextStream instream(&key);
-    QString line;
-    while(!instream.atEnd()){
+            line+=instream.readLine();
+        }
 
-        line+=instream.readLine();
+        QJsonObject job = QJsonDocument::fromJson(line.toUtf8()).object();
+        aiid=job["AIID"].toString();
     }
 
     key.close();
 
-
-    //QJsonDocument json = QJsonDocument::fromJson(line.toUtf8());
-    QJsonObject job = QJsonDocument::fromJson(line.toUtf8()).object();
-    QString aiid=job["AIID"].toString();
-
-    if(aiid == ""){
-        job["AIID"]=QUuid::createUuid().toString();
-
-        QJsonDocument cd(job);
-
-
-        QFile key(home+CCROSS_CONFIG_FILE);
-
-
-        bool r=key.open(QIODevice::WriteOnly | QIODevice::Text);
-        if(r){
-            QTextStream outk(&key);
-            //outk << cd.toJson(QJsonDocument::Compact);
-            outk << cd.toJson(QJsonDocument::Indented);
-        }
-        key.close();
-        line=job["AIID"].toString();
-    }
-    else{
-        QJsonObject job = QJsonDocument::fromJson(line.toUtf8()).object();
-        line=job["AIID"].toString();
-
-    }
-
-
-    return line;
+    return aiid;
 
 
 }
@@ -588,7 +564,7 @@ int main(int argc, char *argv[])
 
 //    QStringList qv=QString(qVersion()).split(".");
 
-    QString PLATFORM;;
+    QString PLATFORM;
     QString DISTR;
 
 
@@ -663,33 +639,44 @@ int main(int argc, char *argv[])
 
     //...............
 
-    parser->parse(a.arguments());
+    parser->parse(opts);
 
 
     int ret;
 
-    QString currentProvider="google";
+    ProviderType currentProvider;
 
     QStringList prov=parser->getParamByName("provider");
 
 
 
     if(prov.size() != 0){
-        currentProvider=prov[0];
+        if(prov[0] == "google"){
+            currentProvider=ProviderType::Google;
+        }
+        else if(prov[0] == "dropbox"){
+            currentProvider=ProviderType::Dropbox;
+        }
+        else if(prov[0] == "yandex"){
+            currentProvider=ProviderType::Yandex;
+        }
+        else if(prov[0] == "mailru"){
+            currentProvider=ProviderType::Mailru;
+        }
+        else {
+            qStdOut()<< "Unknown cloud provider. Application terminated."<< endl;
+            return 1;
+        }
     }
-
-
-    if((currentProvider != "google")&&(currentProvider != "dropbox")&&(currentProvider != "yandex")
-            &&(currentProvider != "mailru")){
-        qStdOut()<< "Unknown cloud provider. Application terminated."<< endl;
-        return 1;
+    else{
+        currentProvider=ProviderType::Google;
     }
 
 
     QStringList mailru_login;
     QStringList mailru_password;
 
-    if(currentProvider == "mailru"){
+    if(currentProvider == ProviderType::Mailru){
         mailru_login=parser->getParamByName("--login");
         mailru_password=parser->getParamByName("--password");
 
@@ -716,7 +703,9 @@ int main(int argc, char *argv[])
 
         qStdOut() << "Start direct uploading..."<<endl;
 
-        if(currentProvider=="google"){//------------------------------------------
+        switch(currentProvider){
+
+        case ProviderType::Google:{//------------------------------------------
 
             MSGoogleDrive* cp=new MSGoogleDrive();
 
@@ -741,10 +730,10 @@ int main(int argc, char *argv[])
             cp->directUpload(p[0],p[1]);
 
             qStdOut() << "Uploaded file was  stored in google:/"<< p[1]<<endl;
-
         }
+            break;
 
-        if(currentProvider=="dropbox"){//----------------------------------------
+        case ProviderType::Dropbox:{//----------------------------------------
 
             MSDropbox* cp=new MSDropbox();
 
@@ -771,8 +760,9 @@ int main(int argc, char *argv[])
 
             qStdOut() << "Uploaded file was stored in dropbox:/"<< p[1]<<endl;
         }
+            break;
 
-        if(currentProvider=="yandex"){//---------------------------------------
+        case ProviderType::Yandex:{//---------------------------------------
 
             MSYandexDisk* cp=new MSYandexDisk();
 
@@ -798,9 +788,9 @@ int main(int argc, char *argv[])
 
             qStdOut() << "Uploaded file was stored in yandex:/"<< p[1]<<endl;
         }
+            break;
 
-
-        if(currentProvider=="mailru"){//---------------------------------------
+        case ProviderType::Mailru:{//---------------------------------------
 
             MSMailRu* cp=new MSMailRu();
 
@@ -826,6 +816,11 @@ int main(int argc, char *argv[])
 
             qStdOut() << "Uploaded file was stored in mail.ru:/"<< p[1]<<endl;
         }
+            break;
+
+        default:
+            break;
+        }
 
         qStdOut() << "Direct uploading completed"<<endl;
 
@@ -834,652 +829,220 @@ int main(int argc, char *argv[])
 
 
 
+    while((ret=parser->get())!=-1){
+        switch(ret){
 
-    // ===%%%% GOOGLE DRIVE %%%%===
+        case 1: // --help
 
-    if(currentProvider == "google"){
+            printHelp();
+            return 0;
+            //qStdOut()<< "HELP arg="+parser->optarg;
+            break;
 
-            while((ret=parser->get())!=-1){
-                switch(ret){
+        case 2: //-- auth
 
-                case 1: // --help
-
-                    printHelp();
-                    return 0;
-                    //qStdOut()<< "HELP arg="+parser->optarg;
-                    break;
-
-                case 2: //-- auth
-
-                    authGrive(providers);
-                    return 0;
-                    break;
-
-                case 3: // --version
-
-                    printVersion();
-                    return 0;
-                    break;
-
-
-                case 4: // --path
-
-                    providers->setWorkPath(parser->optarg[0]);
-                    break;
-
-                case 5: // --prefer
-
-                    MSCloudProvider::SyncStrategy s;
-
-                    if(parser->optarg[0]=="local"){
-                        s=MSCloudProvider::SyncStrategy::PreferLocal;
-                    }
-
-                    else{
-                        if(parser->optarg[0]=="remote"){
-                        s=MSCloudProvider::SyncStrategy::PreferRemote;
-                        }
-                        else{
-                            qStdOut()<< "--prefer option value must be an one of \"local\" or \"remote\""<<endl;
-                            return 0;
-                            break;
-                        }
-                    }
-
-                    providers->setStrategy(s);
-                    break;
-
-                case 7:// --list
-
-                    listGrive(providers);
-                    return 0;
-                    break;
-
-                case 6: // --no-hidden
-
-                    providers->setFlag("noHidden",true);
-                    break;
-
-                case 8: // --use-include
-
-                    providers->setFlag("useInclude",true);
-                    break;
-
-                case 9: // --no-new-rev
-
-                    providers->setFlag("noNewRev",true);
-                    break;
-
-                case 10: // --dry-run
-
-                    providers->setFlag("dryRun",true);
-                    break;
-
-                case 11: // --convert-doc
-
-                    providers->setFlag("convertDoc",true);
-                    break;
-
-                case 12: // --force
-
-
-                    if((parser->optarg[0]=="upload")||(parser->optarg[0]=="download")){
-                        providers->setOption("force",parser->optarg[0]);
-                        providers->setFlag("force",true);
-
-
-
-                        if(parser->optarg[0] == "download"){
-
-                            providers->setStrategy(MSCloudProvider::SyncStrategy::PreferRemote);
-                        }
-                        else{
-
-                            providers->setStrategy(MSCloudProvider::SyncStrategy::PreferLocal);
-                        }
-
-                    }
-                    else{
-                        qStdOut()<< "--force option value must be an one of \"upload\" or \"download\""<<endl;
-                        return 0;
-                        break;
-                    }
-                    break;
-
-                case 17:
-                        providers->proxyTypeString="http";
-                        providers->proxyAddrString=parser->optarg[0];
-
-                    break;
-
-                case 18:
-
-                    providers->proxyTypeString="socks5";
-                    providers->proxyAddrString=parser->optarg[0];
-
-                    break;
-
-                default: // syn execute without any params by default
-
-                    syncGrive(providers);
-
-
-                    //exit(0);
-                    return 0;
-                    break;
-                }
-
-
-
-            }
-
-            if(parser->erorrNum!=0){
-                qStdOut()<< parser->errorString<<endl;
-                exit(1);
-            }
-    }
-
-
-
-    // ===%%%% DROPBOX %%%%===
-
-    if(currentProvider == "dropbox"){
-
-        while((ret=parser->get())!=-1){
-            switch(ret){
-
-            case 1: // --help
-
-                printHelp();
-                return 0;
-                //qStdOut()<< "HELP arg="+parser->optarg;
+            switch(currentProvider){
+            case ProviderType::Google:
+                authGrive(providers);
                 break;
-
-            case 2: //-- auth
-
+            case ProviderType::Dropbox:
                 authDropbox(providers);
-                return 0;
                 break;
-
-            case 3: // --version
-
-                printVersion();
-                return 0;
+            case ProviderType::Yandex:
+                authYandex(providers);
                 break;
-
-
-            case 4: // --path
-
-                providers->setWorkPath(parser->optarg[0]);
+            case ProviderType::Mailru:
+                authMailru(providers,mailru_login[0], mailru_password[0]);
                 break;
+            default:
+                break;
+            }
 
-            case 5: // --prefer
+            return 0;
+            break;
 
-                MSCloudProvider::SyncStrategy s;
+        case 3: // --version
 
-                if(parser->optarg[0]=="local"){
-                    s=MSCloudProvider::SyncStrategy::PreferLocal;
-                }
+            printVersion();
+            return 0;
+            break;
 
-                else{
-                    if(parser->optarg[0]=="remote"){
+
+        case 4: // --path
+
+            providers->setWorkPath(parser->optarg[0]);
+            break;
+
+        case 5: // --prefer
+
+            MSCloudProvider::SyncStrategy s;
+
+            if(parser->optarg[0]=="local"){
+                s=MSCloudProvider::SyncStrategy::PreferLocal;
+            }
+
+            else{
+                if(parser->optarg[0]=="remote"){
                     s=MSCloudProvider::SyncStrategy::PreferRemote;
-                    }
-                    else{
-                        qStdOut()<< "--prefer option value must be an one of \"local\" or \"remote\""<<endl;
-                        return 0;
-                        break;
-                    }
-                }
-
-                providers->setStrategy(s);
-                break;
-
-            case 7:// --list
-
-                listDropbox(providers);
-                return 0;
-                break;
-
-            case 6: // --no-hidden
-
-                providers->setFlag("noHidden",true);
-                break;
-
-            case 8: // --use-include
-
-                providers->setFlag("useInclude",true);
-                break;
-
-            case 9: // --no-new-rev
-
-                qStdOut()<< "--no-new-rev option doesn't matter for Dropbox provider. "<<endl;
-                //providers->setFlag("noNewRev",true);
-                break;
-
-            case 10: // --dry-run
-
-                providers->setFlag("dryRun",true);
-                break;
-
-            case 11: // --convert-doc
-                  qStdOut()<< "--convert-doc option doesn't matter for Dropbox provider. "<<endl;
-//                providers->setFlag("convertDoc",true);
-                break;
-
-            case 12: // --force
-
-
-                if((parser->optarg[0]=="upload")||(parser->optarg[0]=="download")){
-                    providers->setOption("force",parser->optarg[0]);
-                    providers->setFlag("force",true);
-
-
-
-                    if(parser->optarg[0] == "download"){
-
-                        providers->setStrategy(MSCloudProvider::SyncStrategy::PreferRemote);
-                    }
-                    else{
-
-                        providers->setStrategy(MSCloudProvider::SyncStrategy::PreferLocal);
-                    }
-
                 }
                 else{
-                    qStdOut()<< "--force option value must be an one of \"upload\" or \"download\""<<endl;
+                    qStdOut()<< "--prefer option value must be an one of \"local\" or \"remote\""<<endl;
                     return 0;
                     break;
                 }
+            }
+
+            providers->setStrategy(s);
+            break;
+
+        case 7:// --list
+
+            switch(currentProvider){
+            case ProviderType::Google:
+                listGrive(providers);
                 break;
-
-            case 17:
-                    providers->proxyTypeString="http";
-                    providers->proxyAddrString=parser->optarg[0];
-
+            case ProviderType::Dropbox:
+                listDropbox(providers);
                 break;
+            case ProviderType::Yandex:
+                listYandex(providers);
+                break;
+            case ProviderType::Mailru:
+                listMailru(providers);
+                break;
+            default:
+                break;
+            }
 
-            case 18:
+            return 0;
+            break;
 
-                providers->proxyTypeString="socks5";
+        case 6: // --no-hidden
+
+            providers->setFlag("noHidden",true);
+            break;
+
+        case 8: // --use-include
+
+            providers->setFlag("useInclude",true);
+            break;
+
+        case 9: // --no-new-rev
+
+            if(currentProvider == ProviderType::Google){
+                providers->setFlag("noNewRev",true);
+            }
+            else{
+                qStdOut()<< "--no-new-rev option doesn't matter for this provider. "<<endl;
+            }
+            break;
+
+        case 10: // --dry-run
+
+            providers->setFlag("dryRun",true);
+            break;
+
+        case 11: // --convert-doc
+
+            if(currentProvider == ProviderType::Google){
+                providers->setFlag("convertDoc",true);
+            }
+            else{
+                qStdOut()<< "--convert-doc option doesn't matter for this provider. "<<endl;
+            }
+            break;
+
+        case 12: // --force
+
+            if((parser->optarg[0]=="upload")||(parser->optarg[0]=="download")){
+                providers->setOption("force",parser->optarg[0]);
+                providers->setFlag("force",true);
+
+
+
+                if(parser->optarg[0] == "download"){
+
+                    providers->setStrategy(MSCloudProvider::SyncStrategy::PreferRemote);
+                }
+                else{
+
+                    providers->setStrategy(MSCloudProvider::SyncStrategy::PreferLocal);
+                }
+
+            }
+            else{
+                qStdOut()<< "--force option value must be an one of \"upload\" or \"download\""<<endl;
+                return 0;
+                break;
+            }
+            break;
+
+//        case 14:{
+
+//            MSYandexDisk* cp=new MSYandexDisk();
+//            providers->addProvider(cp);
+
+//            if(! providers->loadTokenFile("YandexDisk")){
+//                return 1;
+//            }
+
+//            if(!providers->refreshToken("YandexDisk")){
+//                qStdOut()<<"Unauthorized access. Aborted."<<endl;
+//                return 1;
+//            }
+
+
+//            cp->directUpload(parser->optarg[0],parser->optarg[1]);
+
+//            return 0;
+//            break;
+//        }
+
+        case 17:
+                providers->proxyTypeString="http";
                 providers->proxyAddrString=parser->optarg[0];
 
+            break;
+
+        case 18:
+
+            providers->proxyTypeString="socks5";
+            providers->proxyAddrString=parser->optarg[0];
+
+            break;
+
+        default: // syn execute without any params by default
+
+            switch(currentProvider){
+            case ProviderType::Google:
+                syncGrive(providers);
                 break;
-
-
-            default: // syn execute without any params by default
-
+            case ProviderType::Dropbox:
                 syncDropbox(providers);
 //                qStdOut()<< "sync dropbox"<<endl;
-
-                return 0;
                 break;
-            }
-
-
-
-        }
-
-
-        if(parser->erorrNum!=0){
-            qStdOut()<< parser->errorString<<endl;
-            return 1;
-        }
-    }
-
-
-
-    // ===%%%% YANDEXDISK %%%%===
-
-    if(currentProvider == "yandex"){
-
-        while((ret=parser->get())!=-1){
-            switch(ret){
-
-//            case 14:{
-
-//                MSYandexDisk* cp=new MSYandexDisk();
-//                providers->addProvider(cp);
-
-//                if(! providers->loadTokenFile("YandexDisk")){
-//                    return 1;
-//                }
-
-//                if(!providers->refreshToken("YandexDisk")){
-//                    qStdOut()<<"Unauthorized access. Aborted."<<endl;
-//                    return 1;
-//                }
-
-
-//                cp->directUpload(parser->optarg[0],parser->optarg[1]);
-
-//                return 0;
-//                break;
-//            }
-
-            case 1: // --help
-
-                printHelp();
-                return 0;
-                //qStdOut()<< "HELP arg="+parser->optarg;
-                break;
-
-            case 2: //-- auth
-
-                authYandex(providers);
-                return 0;
-                break;
-
-            case 3: // --version
-
-                printVersion();
-                return 0;
-                break;
-
-
-            case 4: // --path
-
-                providers->setWorkPath(parser->optarg[0]);
-                break;
-
-            case 5: // --prefer
-
-                MSCloudProvider::SyncStrategy s;
-
-                if(parser->optarg[0]=="local"){
-                    s=MSCloudProvider::SyncStrategy::PreferLocal;
-                }
-
-                else{
-                    if(parser->optarg[0]=="remote"){
-                    s=MSCloudProvider::SyncStrategy::PreferRemote;
-                    }
-                    else{
-                        qStdOut()<< "--prefer option value must be an one of \"local\" or \"remote\""<<endl;
-                        return 0;
-                        break;
-                    }
-                }
-
-                providers->setStrategy(s);
-                break;
-
-            case 7:// --list
-
-                listYandex(providers);
-                return 0;
-                break;
-
-            case 6: // --no-hidden
-
-                providers->setFlag("noHidden",true);
-                break;
-
-            case 8: // --use-include
-
-                providers->setFlag("useInclude",true);
-                break;
-
-            case 9: // --no-new-rev
-
-                qStdOut()<< "--no-new-rev option doesn't matter for Yandex provider. "<<endl;
-                //providers->setFlag("noNewRev",true);
-                break;
-
-            case 10: // --dry-run
-
-                providers->setFlag("dryRun",true);
-                break;
-
-            case 11: // --convert-doc
-                  qStdOut()<< "--convert-doc option doesn't matter for Yandex provider. "<<endl;
-//                providers->setFlag("convertDoc",true);
-                break;
-
-            case 12: // --force
-
-
-                if((parser->optarg[0]=="upload")||(parser->optarg[0]=="download")){
-                    providers->setOption("force",parser->optarg[0]);
-                    providers->setFlag("force",true);
-
-
-
-                    if(parser->optarg[0] == "download"){
-
-                        providers->setStrategy(MSCloudProvider::SyncStrategy::PreferRemote);
-                    }
-                    else{
-
-                        providers->setStrategy(MSCloudProvider::SyncStrategy::PreferLocal);
-                    }
-
-                }
-                else{
-                    qStdOut()<< "--force option value must be an one of \"upload\" or \"download\""<<endl;
-                    return 0;
-                    break;
-                }
-                break;
-
-            case 17:
-                    providers->proxyTypeString="http";
-                    providers->proxyAddrString=parser->optarg[0];
-
-                break;
-
-            case 18:
-
-                providers->proxyTypeString="socks5";
-                providers->proxyAddrString=parser->optarg[0];
-
-                break;
-
-
-            default: // syn execute without any params by default
-
+            case ProviderType::Yandex:
                 syncYandex(providers);
-//                qStdOut()<< "sync dropbox"<<endl;
-
-                return 0;
+//                qStdOut()<< "sync yandex"<<endl;
                 break;
-            }
-
-
-
-        }
-
-
-        if(parser->erorrNum!=0){
-            qStdOut()<< parser->errorString<<endl;
-            return 1;
-        }
-    }
-
-
-
-
-    // ===%%%% MAIL.RU %%%%===
-
-    if(currentProvider == "mailru"){
-
-        while((ret=parser->get())!=-1){
-            switch(ret){
-
-//            case 14:{
-
-//                MSYandexDisk* cp=new MSYandexDisk();
-//                providers->addProvider(cp);
-
-//                if(! providers->loadTokenFile("YandexDisk")){
-//                    return 1;
-//                }
-
-//                if(!providers->refreshToken("YandexDisk")){
-//                    qStdOut()<<"Unauthorized access. Aborted."<<endl;
-//                    return 1;
-//                }
-
-
-//                cp->directUpload(parser->optarg[0],parser->optarg[1]);
-
-//                return 0;
-//                break;
-//            }
-
-            case 1: // --help
-
-                printHelp();
-                return 0;
-                //qStdOut()<< "HELP arg="+parser->optarg;
-                break;
-
-            case 2: //-- auth
-
-                authMailru(providers,mailru_login[0], mailru_password[0]);
-                return 0;
-                break;
-
-            case 3: // --version
-
-                printVersion();
-                return 0;
-                break;
-
-
-            case 4: // --path
-
-                providers->setWorkPath(parser->optarg[0]);
-                break;
-
-            case 5: // --prefer
-
-                MSCloudProvider::SyncStrategy s;
-
-                if(parser->optarg[0]=="local"){
-                    s=MSCloudProvider::SyncStrategy::PreferLocal;
-                }
-
-                else{
-                    if(parser->optarg[0]=="remote"){
-                    s=MSCloudProvider::SyncStrategy::PreferRemote;
-                    }
-                    else{
-                        qStdOut()<< "--prefer option value must be an one of \"local\" or \"remote\""<<endl;
-                        return 0;
-                        break;
-                    }
-                }
-
-                providers->setStrategy(s);
-                break;
-
-            case 7:// --list
-
-                listMailru(providers);
-                return 0;
-                break;
-
-            case 6: // --no-hidden
-
-                providers->setFlag("noHidden",true);
-                break;
-
-            case 8: // --use-include
-
-                providers->setFlag("useInclude",true);
-                break;
-
-            case 9: // --no-new-rev
-
-                qStdOut()<< "--no-new-rev option doesn't matter for Yandex provider. "<<endl;
-                //providers->setFlag("noNewRev",true);
-                break;
-
-            case 10: // --dry-run
-
-                providers->setFlag("dryRun",true);
-                break;
-
-            case 11: // --convert-doc
-                  qStdOut()<< "--convert-doc option doesn't matter for Yandex provider. "<<endl;
-//                providers->setFlag("convertDoc",true);
-                break;
-
-            case 12: // --force
-
-
-                if((parser->optarg[0]=="upload")||(parser->optarg[0]=="download")){
-                    providers->setOption("force",parser->optarg[0]);
-                    providers->setFlag("force",true);
-
-
-
-                    if(parser->optarg[0] == "download"){
-
-                        providers->setStrategy(MSCloudProvider::SyncStrategy::PreferRemote);
-                    }
-                    else{
-
-                        providers->setStrategy(MSCloudProvider::SyncStrategy::PreferLocal);
-                    }
-
-                }
-                else{
-                    qStdOut()<< "--force option value must be an one of \"upload\" or \"download\""<<endl;
-                    return 0;
-                    break;
-                }
-                break;
-
-            case 17:
-                    providers->proxyTypeString="http";
-                    providers->proxyAddrString=parser->optarg[0];
-
-                break;
-
-            case 18:
-
-                providers->proxyTypeString="socks5";
-                providers->proxyAddrString=parser->optarg[0];
-
-                break;
-
-
-
-            default: // syn execute without any params by default
-
+            case ProviderType::Mailru:
                 syncMailru(providers);
-//                qStdOut()<< "sync dropbox"<<endl;
-
-                return 0;
+//                qStdOut()<< "sync mailru"<<endl;
+                break;
+            default:
                 break;
             }
 
-
-
-        }
-
-
-        if(parser->erorrNum!=0){
-            qStdOut()<< parser->errorString<<endl;
-            return 1;
+            //exit(0);
+            return 0;
+            break;
         }
     }
 
+    if(parser->erorrNum!=0){
+        qStdOut()<< parser->errorString<<endl;
+        exit(1);
+    }
 
     //return a.exec();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
