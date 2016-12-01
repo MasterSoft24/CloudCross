@@ -46,6 +46,7 @@ ccross [options]
 * --version	print CloudCross version
 * --list	print remote file list. Can be used for .include/.exclude file creation
 * --auth	Cloud service athentication
+* --no-stats	Do not collect and send anonymous statistics
 
 	
 	

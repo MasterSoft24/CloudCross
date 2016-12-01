@@ -119,6 +119,7 @@ void printHelp(){
                             "                              <arg> must be in a ip_address_or_host_name:port_number format") <<endl;
     qStdOut()<< QObject::tr("   --socks5-proxy arg         Use socks5 proxy server for connection to cloud provider. \n"
                             "                              <arg> must be in a ip_address_or_host_name:port_number format") <<endl;
+    qStdOut()<< QObject::tr("   --no-stats                 Do not collect and send anonymous statistics") <<endl;
 }
 
 
@@ -556,60 +557,12 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    // Application instance definition
-
-    QString AAID=getAIID();
-    QString OS=getOS();
-
-//    QSysInfo sy;
-
-//    QStringList qv=QString(qVersion()).split(".");
-
-    QString PLATFORM;
-    QString DISTR;
-
-
-//    if(qv.at(0).toInt()<5){
-//        qDebug()<<"Qt version too low";
-//        return 0;
-//    }
-
-//    if(qv.at(1).toInt()<4){
-
-        utsname u;
-        uname(&u);
-
-        PLATFORM=u.machine;
-        DISTR=QString(u.sysname)+" "+QString(u.release);
-
-
-//    }
-//    else{
-
-//        PLATFORM=sy.currentCpuArchitecture();
-//        DISTR=sy.productType()+" "+sy.productVersion();
-//    }
-
-
-    MSRequest* req=new MSRequest();
-    req->setRequestUrl("http://cloudcross.mastersoft24.ru/stat");
-    req->setMethod("get");
-    req->addQueryItem("os",            OS);
-    req->addQueryItem("distr",         DISTR);
-    req->addQueryItem("platform",      PLATFORM);
-    req->addQueryItem("aaid",          AAID);
-
-    req->exec();
-
 
 //    QTextCodec *russian =QTextCodec::codecForName("unicode");
 //     QTextCodec::setCodecForLocale(russian);
 
 
     // create main objects
-
-    MSProvidersPool* providers=new MSProvidersPool();
-
 
     QStringList opts=a.arguments();
 
@@ -637,13 +590,36 @@ int main(int argc, char *argv[])
     parser->insertOption(17,"--http-proxy 1");
     parser->insertOption(18,"--socks5-proxy 1");
 
+    parser->insertOption(19,"--no-stats"); //don't collect and send anonymous statistics
+
 
     //...............
 
     parser->parse(opts);
 
+    if(!parser->isParamExist("no-stats")){
+        // Application instance definition
 
-    int ret;
+        QString AAID=getAIID();
+        QString OS=getOS();
+
+        utsname u;
+        uname(&u);
+
+        QString PLATFORM=u.machine;
+        QString DISTR=QString(u.sysname)+" "+QString(u.release);
+
+
+        MSRequest* req=new MSRequest();
+        req->setRequestUrl("http://cloudcross.mastersoft24.ru/stat");
+        req->setMethod("get");
+        req->addQueryItem("os",            OS);
+        req->addQueryItem("distr",         DISTR);
+        req->addQueryItem("platform",      PLATFORM);
+        req->addQueryItem("aaid",          AAID);
+
+        req->exec();
+    }
 
     ProviderType currentProvider;
 
@@ -679,6 +655,8 @@ int main(int argc, char *argv[])
 
 
 
+
+    MSProvidersPool* providers=new MSProvidersPool();
 
     QStringList wp=parser->getParamByName("path");
     if(wp.size()==0){
@@ -820,6 +798,7 @@ int main(int argc, char *argv[])
     }
 
 
+    int ret;
 
     while((ret=parser->get())!=-1){
         switch(ret){
