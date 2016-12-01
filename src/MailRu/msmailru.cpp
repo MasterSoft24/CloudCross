@@ -601,7 +601,7 @@ bool MSMailRu::remote_file_makeFolder(MSFSObject *object){
     req->addQueryItem("build",       this->build);
     req->addQueryItem("conflict",       "strict");// api does not contains ignore param CLOUDWEB-5028 (7114 too)
     req->addQueryItem("email",       this->login);
-    req->addQueryItem("home",        "/TestFolder"); //object->path+object->fileName
+    req->addQueryItem("home",        object->path+object->fileName); //object->path+object->fileName
     req->addQueryItem("token",       this->token);
     req->addQueryItem("x-email",     this->login);
     req->addQueryItem("x-page-id",   this->x_page_id);
@@ -1523,7 +1523,7 @@ bool MSMailRu::readRemote(QString path,QNetworkCookieJar* cookie)
                 fsObject.fileName=o["name"].toString();
                 fsObject.remote.objectType=MSRemoteFSObject::Type::folder;
 
-                this->readRemote(fsObject.path+fsObject.fileName,req->manager->cookieJar());
+                this->readRemote(fsObject.path+fsObject.fileName,0);//req->manager->cookieJar()
 
             }
             else{
@@ -2114,10 +2114,9 @@ bool MSMailRu::directUpload(QString url, QString remotePath){
 // not used
 bool MSMailRu::onAuthFinished(QString html, MSCloudProvider *provider)
 {
+Q_UNUSED(html);
+Q_UNUSED(provider);
 
-    html="";
-    provider=0;
-    provider++;
     return true;
 
 }

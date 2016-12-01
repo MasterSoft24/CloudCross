@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "CCROSS" "" "November 2016" "" ""
+.TH "CCROSS" "" "December 2016" "" ""
 .
 .SH "NAME"
 \fBccross\fR
@@ -53,7 +53,7 @@ ccross \fIoptions\fR
 \-\-force Forcing upload or download files\. It can be a one of "upload" or "download"\. This option overrides \-\-prefer option value\.
 .
 .IP "\(bu" 4
-\-\-provider arg Provider selecting\. Can be a one of "google" or "dropbox"
+\-\-provider arg Provider selecting\. Can be a one of "google", "dropbox", "yandex" or "mailru"
 .
 .IP "\(bu" 4
 \-\-direct\-upload url path Allow upload file directly to cloud from URL\. All options, except \-\-provider and \-\-path, are ignored\. Uploaded file will be stored on remote storage into location which was defined by path\.
@@ -95,6 +95,16 @@ For detailed usage instructions see
 \fIhttp://cloudcross\.mastersoft24\.ru/#usage\fR
 .
 .SH "Change log:"
+.
+.SS "v1\.3\.1"
+.
+.IP "\(bu" 4
+Fix some Mail\.Ru working errors
+.
+.IP "\(bu" 4
+Remove necessity for definition login and password for each Mail\.ru operation\. Now it needed only for authentication
+.
+.IP "" 0
 .
 .SS "v1\.3\.0"
 .

@@ -57,7 +57,7 @@
 
 #define APP_MAJOR_VERSION 1
 #define APP_MINOR_VERSION 3
-#define APP_BUILD_NUMBER  0
+#define APP_BUILD_NUMBER  1
 
 #define CCROSS_HOME_DIR ".ccross"
 #define CCROSS_CONFIG_FILE "ccross.conf"
@@ -1044,7 +1044,7 @@ int main(int argc, char *argv[])
 
     if(parser->erorrNum!=0){
         qStdOut()<< parser->errorString<<endl;
-        exit(1);
+        return 1;
     }
 
     //return a.exec();

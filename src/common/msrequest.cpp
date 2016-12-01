@@ -426,7 +426,7 @@ void MSRequest::MSsetCookieJar(QNetworkCookieJar* cookie)
 
 
     this->cookieJar=cookie;
-    this->manager->setCookieJar(this->cookieJar);
+    this->manager->setCookieJar(cookie);//this->cookieJar
 
 }
 

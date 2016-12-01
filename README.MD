@@ -61,6 +61,10 @@ For detailed usage instructions see http://cloudcross.mastersoft24.ru/#usage
 	
 ## Change log:
 
+### v1.3.1
+- Fix some Mail.Ru working errors
+- Remove necessity for definition login and password  for each Mail.ru operation. Now it needed only for authentication
+
 ### v1.3.0
 - Cloud Mail.ru support added.
 - Added options for proxy servers using (--http-proxy and --socks5-proxy)
@@ -174,6 +178,10 @@ CloudCross позволяет синхронизировать только ча
 	
 	
 ## История изменений:
+
+### v1.3.1
+- Исправлены некоторые ошибки возникающие при работе с Mail.Ru
+- Исключена необходимость указывать логин и пароль для каждой операции с Mail.Ru. Теперь это необходимо только при аутентификации.
 
 ### v1.3.0
 - Добавлена поддержка облака Mail.ru.
