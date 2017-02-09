@@ -122,6 +122,7 @@ public:
 
 
 
+     QString getInfo(); // get info about cloud
 
 
 

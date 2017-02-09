@@ -41,6 +41,7 @@
 #include "src/Dropbox/msdropbox.h"
 #include "src/YandexDisk/msyandexdisk.h"
 #include "src/MailRu/msmailru.h"
+#include "src/OneDrive/msonedrive.h"
 
 
 class MSProvidersPool

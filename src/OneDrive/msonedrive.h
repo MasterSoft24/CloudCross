@@ -1,8 +1,8 @@
 /*
     CloudCross: Opensource program for syncronization of local files and folders with clouds
 
-    Copyright (C) 2016  Vladimir Kamensky
-    Copyright (C) 2016  Master Soft LLC.
+    Copyright (C) 2017  Vladimir Kamensky
+    Copyright (C) 2017  Master Soft LLC.
     All rights reserved.
 
 
@@ -30,26 +30,19 @@
   CT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF T
   HE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#ifndef MSONEDRIVE_H
+#define MSONEDRIVE_H
+
+#include "include/mscloudprovider.h"
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QJsonArray>
 
 
-#ifndef MSMAILRU_H
-#define MSMAILRU_H
-
-#include <include/mscloudprovider.h>
-#include <QFile>
-#include <QDir>
-#include <QFileDevice>
-
-#include <sys/types.h>
-#include <utime.h>
-#include <sys/time.h>
-
-#include <QNetworkCookieJar>
-
-class MSMailRu : public MSCloudProvider
+class MSOneDrive : public MSCloudProvider
 {
 public:
-    MSMailRu();
+    MSOneDrive();
 
 
 
@@ -70,8 +63,6 @@ public:
     bool remote_file_trash(MSFSObject* object);
     // create directory on remote, recursively if nesessary
     bool remote_createDirectory(QString path);
-    // request for various url's
-    QString remote_dispatcher(QString target);
 
 
 
@@ -109,7 +100,7 @@ public:
 
 
     bool createHashFromRemote();
-    bool readRemote(QString path, QNetworkCookieJar *cookie);//QString parentId,QString currentPath
+    bool readRemote();//QString parentId,QString currentPath
     bool readLocal(QString path);
 
     bool isFolder(QJsonValue remoteObject);
@@ -125,22 +116,10 @@ public:
 
     bool directUpload(QString url,QString remotePath);
 
-     QString getInfo(); // get info about cloud
 
 
+    QString getInfo(); // get info about cloud
 
-    // MAIL.RU ONLY
-
-    QString login;
-    QString password;
-
-    QString build;
-    QString x_page_id;
-    QString email;
-    QString x_email;
-    QString api;
-
-    QNetworkCookieJar* cookies;
 
 
 public slots:
@@ -151,4 +130,4 @@ public slots:
 
 };
 
-#endif // MSMAILRU_H
+#endif // MSONEDRIVE_H

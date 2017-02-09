@@ -2412,3 +2412,93 @@ bool MSDropbox::directUpload(QString url, QString remotePath){
 
 }
 
+QString MSDropbox::getInfo(){
+
+
+    MSRequest *req0 = new MSRequest(this->proxyServer);
+
+    req0->setRequestUrl("https://api.dropboxapi.com/2/users/get_current_account");
+    req0->setMethod("post");
+
+    req0->addHeader("Authorization",                     "Bearer "+this->access_token);
+
+    req0->notUseContentType=true;
+
+    req0->exec();
+
+
+    if(!req0->replyOK()){
+        req0->printReplyError();
+
+        qStdOut()<< req0->replyText;
+        delete(req0);
+        return "false";
+    }
+
+    if(!this->testReplyBodyForError(req0->readReplyText())){
+        qStdOut()<< "Service error. " << this->getReplyErrorString(req0->readReplyText()) << endl;
+        delete(req0);
+        return "false";
+    }
+
+
+    QString content0=req0->readReplyText();
+
+
+    QJsonDocument json0 = QJsonDocument::fromJson(content0.toUtf8());
+    QJsonObject job0 = json0.object();
+
+
+    delete(req0);
+
+
+
+    MSRequest *req = new MSRequest(this->proxyServer);
+
+    req->setRequestUrl("https://api.dropboxapi.com/2/users/get_space_usage");
+    req->setMethod("post");
+
+    req->addHeader("Authorization",                     "Bearer "+this->access_token);
+
+    req->notUseContentType=true;
+
+    req->exec();
+
+
+    if(!req->replyOK()){
+        req->printReplyError();
+
+        qStdOut()<< req->replyText;
+        delete(req);
+        return "false";
+    }
+
+    if(!this->testReplyBodyForError(req->readReplyText())){
+        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+        delete(req);
+        return "false";
+    }
+
+
+    QString content=req->readReplyText();
+
+
+    QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+    QJsonObject job = json.object();
+
+    if(job["allocation"].toObject().size()== 0){
+        //qStdOut()<< "Error getting cloud information " <<endl;
+        return "false";
+    }
+
+    delete(req);
+
+    QJsonObject out;
+    out["account"]=job0["email"].toString();
+    out["total"]= QString::number( (uint64_t)job["allocation"].toObject()["allocated"].toDouble());
+    out["usage"]= QString::number( job["used"].toInt());
+
+    return QString( QJsonDocument(out).toJson());
+
+}
+

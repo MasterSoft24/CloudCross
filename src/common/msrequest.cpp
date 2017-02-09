@@ -122,7 +122,15 @@ void MSRequest::methodCharger(QNetworkRequest req){
 
 
     if(this->requestMethod=="post"){
-        req.setHeader(QNetworkRequest::ContentTypeHeader,"application/x-www-form-urlencoded");
+
+        if(!req.hasRawHeader("Content-Type")){
+
+            if(!this->notUseContentType){
+                req.setHeader(QNetworkRequest::ContentTypeHeader,"application/x-www-form-urlencoded");
+            }
+        }
+
+
 
         QByteArray ba;
         ba+=this->query->toString();

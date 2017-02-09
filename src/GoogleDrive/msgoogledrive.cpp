@@ -2687,3 +2687,67 @@ bool MSGoogleDrive::directUpload(QString url, QString remotePath){
 
     return true;
 }
+
+
+
+
+QString MSGoogleDrive::getInfo(){
+
+//    "storageQuota": {
+//        "limit": long,
+//        "usage": long,
+//        "usageInDrive": long,
+//        "usageInDriveTrash": long
+//      }
+
+    MSRequest *req = new MSRequest(this->proxyServer);
+
+    req->setRequestUrl("https://www.googleapis.com/drive/v3/about");
+    req->setMethod("get");
+
+    req->addHeader("Authorization",                     "Bearer "+this->access_token);
+
+    req->addQueryItem("fields",     "storageQuota,user");
+
+    req->exec();
+
+
+    if(!req->replyOK()){
+        req->printReplyError();
+        delete(req);
+        return "false";
+    }
+
+    if(!this->testReplyBodyForError(req->readReplyText())){
+        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+        delete(req);
+        return "false";
+    }
+
+
+    QString content=req->readReplyText();
+
+    QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+    QJsonObject job = json.object();
+
+    int zz=job["storageQuota"].toObject().size();
+
+    if(job["storageQuota"].toObject().size()== 0){
+        //qStdOut()<< "Error getting cloud information " <<endl;
+        return "false";
+    }
+
+    delete(req);
+
+    QJsonObject out;
+    out["account"]=job["user"].toObject()["emailAddress"].toString();
+    out["total"]=job["storageQuota"].toObject()["limit"].toString();
+    out["usage"]=job["storageQuota"].toObject()["usage"].toString();
+
+    return QString( QJsonDocument(out).toJson());
+}
+
+
+
+
+

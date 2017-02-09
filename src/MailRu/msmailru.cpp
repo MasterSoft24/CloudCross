@@ -2108,6 +2108,47 @@ bool MSMailRu::directUpload(QString url, QString remotePath){
 
 }
 
+QString MSMailRu::getInfo(){
+
+    this->auth();
+
+
+    MSRequest* req=new MSRequest(this->proxyServer);
+
+    req->MSsetCookieJar(this->cookies);
+
+    req->setRequestUrl("https://cloud.mail.ru/api/v2/user/space");
+    req->setMethod("get");
+
+    req->addQueryItem("token",       this->token);
+
+    req->exec();
+
+    if(!req->replyOK()){
+        req->printReplyError();
+        delete(req);
+        return "false";
+    }
+
+    QString content=req->readReplyText();
+
+
+    QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+    QJsonObject job = json.object();
+    //QString serverURL=job["body"].toObject()["get"].toArray()[0].toObject()["url"].toString();
+
+    delete(req);
+
+    QJsonObject out; //1048576
+    out["account"]=job["email"].toString();
+    out["total"]= QString::number(  (uint64_t)job["body"].toObject()["total"].toDouble());
+    out["usage"]= QString::number( (uint64_t)job["body"].toObject()["used"].toDouble());
+
+    return QString( QJsonDocument(out).toJson());
+
+
+}
+
 //=======================================================================================
 
 

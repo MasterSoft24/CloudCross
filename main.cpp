@@ -56,8 +56,8 @@
 #include <sys/utsname.h>
 
 #define APP_MAJOR_VERSION 1
-#define APP_MINOR_VERSION 3
-#define APP_BUILD_NUMBER  1
+#define APP_MINOR_VERSION 4
+#define APP_BUILD_NUMBER  0
 
 #define CCROSS_HOME_DIR ".ccross"
 #define CCROSS_CONFIG_FILE "ccross.conf"
@@ -76,7 +76,8 @@ enum ProviderType{
     Google,
     Dropbox,
     Yandex,
-    Mailru
+    Mailru,
+    OneDrive
 };
 
 
@@ -106,7 +107,7 @@ void printHelp(){
                             "                              This option overrides --prefer option value.") <<endl;
 
     qStdOut()<< QObject::tr("   --provider arg             Set cloud provider for current sync operation. On this moment this option can be \n"
-                            "                              a \"google\", \"yandex\", \"mailru\" or \"dropbox\". Default provider is Google Drive") <<endl;
+                            "                              a \"google\", \"yandex\", \"mailru\", \"onedrive\" or \"dropbox\". Default provider is Google Drive") <<endl;
 
     qStdOut()<< QObject::tr("   --direct-upload url path   Allow upload file directly to cloud from URL.\n"
                             "                              All options, except --provider and --path, are ignored.\n"
@@ -119,6 +120,7 @@ void printHelp(){
                             "                              <arg> must be in a ip_address_or_host_name:port_number format") <<endl;
     qStdOut()<< QObject::tr("   --socks5-proxy arg         Use socks5 proxy server for connection to cloud provider. \n"
                             "                              <arg> must be in a ip_address_or_host_name:port_number format") <<endl;
+    qStdOut()<< QObject::tr("   --cloud-space              Show total and free spase  of cloud \n")<<endl;
 }
 
 
@@ -205,6 +207,46 @@ void syncGrive(MSProvidersPool* providers){
 }
 
 
+void infoGrive(MSProvidersPool* providers){
+
+    MSGoogleDrive* gdp=new MSGoogleDrive();
+
+    gdp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
+    providers->addProvider(gdp,true);
+    if(!providers->loadTokenFile("GoogleDrive")){
+        return ;
+    }
+
+    if(! providers->refreshToken("GoogleDrive")){
+
+        qStdOut()<< "Unauthorized client"<<endl;
+       return;
+    }
+
+
+    QString info=gdp->getInfo();
+
+    if(info == "false"){
+
+        qStdOut()<< "Error getting cloud information " <<endl;
+        return;
+    }
+
+    QJsonDocument json = QJsonDocument::fromJson(info.toUtf8());
+    QJsonObject job = json.object();
+
+    double usage=  job["usage"].toString().toDouble();
+    double total=  job["total"].toString().toDouble();
+    double free= total - usage;
+
+    qStdOut()<< job["account"].toString()<< endl << endl << "total: "<< (uint64_t)total <<endl << "usage: "<< (uint64_t)usage << endl << "free: "<< (uint64_t)free <<endl;
+    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1048576<<" MB" <<endl << "usage: "<< (uint64_t)usage/1048576<<" MB"  << endl << "free: "<< (uint64_t)free/1048576<<" MB"  <<endl;
+    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)free/1073741824<<" GB"  <<endl;
+
+
+}
+
 
 void authDropbox(MSProvidersPool* providers){
 
@@ -284,6 +326,47 @@ void syncDropbox(MSProvidersPool* providers){
     }
 
     dbp->createSyncFileList();
+
+}
+
+
+void infoDropbox(MSProvidersPool* providers){
+
+    MSDropbox* dbp=new MSDropbox();
+
+    dbp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
+    providers->addProvider(dbp,true);
+    if(!providers->loadTokenFile("Dropbox")){
+        return ;
+    }
+
+    if(! providers->refreshToken("Dropbox")){
+
+        qStdOut()<< "Unauthorized client"<<endl;
+       return;
+    }
+
+
+    QString info=dbp->getInfo();
+
+    if(info == "false"){
+
+        qStdOut()<< "Error getting cloud information " <<endl;
+        return;
+    }
+
+    QJsonDocument json = QJsonDocument::fromJson(info.toUtf8());
+    QJsonObject job = json.object();
+
+    double usage=  job["usage"].toString().toDouble();
+    double total=  job["total"].toString().toDouble();
+    double free= total - usage;
+
+    qStdOut()<< job["account"].toString()<< endl << endl << "total: "<< (uint64_t)total <<endl << "usage: "<< (uint64_t)usage << endl << "free: "<< (uint64_t)free <<endl;
+    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1048576<<" MB" <<endl << "usage: "<< (uint64_t)usage/1048576<<" MB"  << endl << "free: "<< (uint64_t)free/1048576<<" MB"  <<endl;
+    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)free/1073741824<<" GB"  <<endl;
+
 
 }
 
@@ -371,6 +454,45 @@ void syncYandex(MSProvidersPool* providers){
 }
 
 
+void infoYandex(MSProvidersPool* providers){
+
+    MSYandexDisk* dbp=new MSYandexDisk();
+
+    dbp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
+    providers->addProvider(dbp,true);
+    if(!providers->loadTokenFile("YandexDisk")){
+        return ;
+    }
+
+    if(! providers->refreshToken("YandexDisk")){
+
+        qStdOut()<< "Unauthorized client"<<endl;
+       return;
+    }
+
+
+    QString info=dbp->getInfo();
+
+    if(info == "false"){
+
+        qStdOut()<< "Error getting cloud information " <<endl;
+        return;
+    }
+
+    QJsonDocument json = QJsonDocument::fromJson(info.toUtf8());
+    QJsonObject job = json.object();
+
+    double usage=  job["usage"].toString().toDouble();
+    double total=  job["total"].toString().toDouble();
+    double free= total - usage;
+
+    qStdOut()<< job["account"].toString()<< endl << endl << "total: "<< (uint64_t)total <<endl << "usage: "<< (uint64_t)usage << endl << "free: "<< (uint64_t)free <<endl;
+    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1048576<<" MB" <<endl << "usage: "<< (uint64_t)usage/1048576<<" MB"  << endl << "free: "<< (uint64_t)free/1048576<<" MB"  <<endl;
+    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)free/1073741824<<" GB"  <<endl;
+
+
+}
 
 void authMailru(MSProvidersPool* providers,QString login,QString password){
 
@@ -459,6 +581,66 @@ void syncMailru(MSProvidersPool* providers){
 }
 
 
+void infoMailru(MSProvidersPool* providers){
+
+    MSMailRu* dbp=new MSMailRu();
+
+    dbp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
+    providers->addProvider(dbp,true);
+    if(!providers->loadTokenFile("MailRu")){
+        return ;
+    }
+
+    if(! providers->refreshToken("MailRu")){
+
+        qStdOut()<< "Unauthorized client"<<endl;
+       return;
+    }
+
+
+    QString info=dbp->getInfo();
+
+    if(info == "false"){
+
+        qStdOut()<< "Error getting cloud information " <<endl;
+        return;
+    }
+
+    QJsonDocument json = QJsonDocument::fromJson(info.toUtf8());
+    QJsonObject job = json.object();
+
+    double usage=  job["usage"].toString().toDouble();
+    double total=  job["total"].toString().toDouble();
+    double free= total - usage;
+
+    qStdOut()<< job["account"].toString()<< endl << endl << "total: n/d" <<endl << "usage: n/d" << endl << "free: n/d" <<endl;
+    qStdOut()<< "" << endl << "total: "<< (uint64_t)total<<" MB" <<endl << "usage: "<< (uint64_t)usage<<" MB"  << endl << "free: "<< (uint64_t)free<<" MB"  <<endl;
+    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1000<<" GB" <<endl << "usage: "<< (uint64_t)usage/1000<<" GB"  << endl << "free: "<< (uint64_t)free/1000<<" GB"  <<endl;
+
+
+}
+
+
+
+
+void authOneDrive(MSProvidersPool* providers){
+
+    MSOneDrive* odp=new MSOneDrive();
+
+    odp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
+    odp->auth();
+    if(odp->providerAuthStatus){
+
+        providers->addProvider(odp,true);
+        providers->saveTokenFile("OneDrive");
+    }
+    else{
+       qStdOut() << "Authentication failed"<<endl;
+    }
+
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -554,7 +736,11 @@ return QLatin1String("unknown");
 
 int main(int argc, char *argv[])
 {
+    qputenv("QT_LOGGING_RULES", "qt.network.ssl.warning=false");
+
+
     QCoreApplication a(argc, argv);
+
 
     // Application instance definition
 
@@ -637,6 +823,8 @@ int main(int argc, char *argv[])
     parser->insertOption(17,"--http-proxy 1");
     parser->insertOption(18,"--socks5-proxy 1");
 
+    parser->insertOption(19,"--cloud-space");
+
 
     //...............
 
@@ -663,6 +851,9 @@ int main(int argc, char *argv[])
         }
         else if(prov[0] == "mailru"){
             currentProvider=ProviderType::Mailru;
+        }
+        else if(prov[0] == "onedrive"){
+            currentProvider=ProviderType::OneDrive;
         }
         else {
             qStdOut()<< "Unknown cloud provider. Application terminated."<< endl;
@@ -857,6 +1048,12 @@ int main(int argc, char *argv[])
                 authMailru(providers,mailru_login[0], mailru_password[0]);
 
                 break;
+
+            case ProviderType::OneDrive:
+                authOneDrive(providers);
+
+                break;
+
             default:
                 break;
             }
@@ -1013,6 +1210,30 @@ int main(int argc, char *argv[])
             providers->proxyAddrString=parser->optarg[0];
 
             break;
+
+        case 19: // --cloud-space
+
+            switch(currentProvider){
+                case ProviderType::Google:
+                    infoGrive(providers);
+                    break;
+                case ProviderType::Dropbox:
+                    infoDropbox(providers);
+                    break;
+                case ProviderType::Yandex:
+                    infoYandex(providers);
+                    break;
+                case ProviderType::Mailru:
+                    infoMailru(providers);
+                    break;
+                default:
+                    break;
+
+                }
+
+            return 0;
+            break;
+
 
         default: // syn execute without any params by default
 

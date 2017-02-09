@@ -80,6 +80,8 @@ public:
     QNetworkReply::NetworkError replyError;
     QString replyErrorText;
 
+    bool notUseContentType=false; // do not use any Content-Type header for request (for example needed for some Dropbox requests)
+
     QList<QPair<QByteArray,QByteArray>> replyHeaders;
 
     QByteArray readReplyText();

@@ -137,6 +137,8 @@ public:
 
      bool directUpload(QString url,QString remotePath);
 
+     QString getInfo(); // get info about cloud
+
 public slots:
 
     bool onAuthFinished(QString html, MSCloudProvider *provider);

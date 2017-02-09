@@ -2043,3 +2043,97 @@ bool MSYandexDisk::directUpload(QString url, QString remotePath){
     return true;
 }
 
+
+
+
+QString MSYandexDisk::getInfo(){
+
+    MSRequest *req0 = new MSRequest(this->proxyServer);
+
+    req0->setRequestUrl("https://login.yandex.ru/info");
+    req0->setMethod("get");
+
+   // req0->addHeader("Authorization",                     "OAuth "+this->access_token);
+   // req0->addHeader("Accept:",                      QString("*/*"));
+
+    req0->addQueryItem("oauth_token",QString(this->access_token));
+
+
+    req0->exec();
+
+
+    if(!req0->replyOK()){
+        req0->printReplyError();
+
+        qStdOut()<< req0->replyText;
+        delete(req0);
+        return "false";
+    }
+
+    if(!this->testReplyBodyForError(req0->readReplyText())){
+        qStdOut()<< "Service error. " << this->getReplyErrorString(req0->readReplyText()) << endl;
+        delete(req0);
+        return "false";
+    }
+
+
+    QString content0=req0->readReplyText();
+
+    QJsonDocument json0 = QJsonDocument::fromJson(content0.toUtf8());
+    QJsonObject job0 = json0.object();
+
+
+
+
+
+    MSRequest *req = new MSRequest(this->proxyServer);
+
+    req->setRequestUrl("https://cloud-api.yandex.net/v1/disk/");
+    req->setMethod("get");
+
+    req->addHeader("Authorization",                     "OAuth "+this->access_token);
+    req->addHeader("Content-Type",                      QString("application/json; charset=UTF-8"));
+
+
+
+    req->exec();
+
+
+    if(!req->replyOK()){
+        req->printReplyError();
+
+        qStdOut()<< req->replyText;
+        delete(req);
+        return "false";
+    }
+
+    if(!this->testReplyBodyForError(req->readReplyText())){
+        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+        delete(req);
+        return "false";
+    }
+
+
+    QString content=req->readReplyText();
+    QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+    QJsonObject job = json.object();
+
+    if(((uint64_t)job["total_space"].toDouble()) == 0){
+        //qStdOut()<< "Error getting cloud information " <<endl;
+        return "false";
+    }
+
+
+    QJsonObject out;
+    out["account"]=job0["login"].toString()+"@yandex.ru";
+    out["total"]= QString::number( (uint64_t)job["total_space"].toDouble());
+    out["usage"]= QString::number( job["used_space"].toInt());
+
+    return QString( QJsonDocument(out).toJson());
+
+}
+
+
+
+
+
