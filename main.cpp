@@ -55,6 +55,10 @@
 #include <QSysInfo>
 #include <sys/utsname.h>
 
+
+
+
+
 #define APP_MAJOR_VERSION 1
 #define APP_MINOR_VERSION 4
 #define APP_BUILD_NUMBER  0
@@ -643,6 +647,57 @@ void authOneDrive(MSProvidersPool* providers){
 }
 
 
+void listOneDrive(MSProvidersPool* providers){
+
+    MSOneDrive* gdp=new MSOneDrive();
+
+    gdp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
+    providers->addProvider(gdp,true);
+    if(!providers->loadTokenFile("OneDrive")){
+        return ;
+    }
+
+    if(! providers->refreshToken("OneDrive")){
+
+        qStdOut()<< "Unauthorized client"<<endl;
+       return;
+    }
+
+
+
+    gdp->readRemote("");
+
+
+
+    QMap<QString,bool>sorted;
+    QMap<QString,bool>::iterator si;
+
+    // sort remote file list
+    QHash<QString,MSFSObject>::iterator li=gdp->syncFileList.begin();
+
+    while(li != gdp->syncFileList.end()){
+        sorted.insert(li.key(),true);
+        li++;
+    }
+
+    si=sorted.begin();
+
+    // print remote file list
+    while(si != sorted.end()){
+        qStdOut() << si.key()<< endl;
+        si++;
+    }
+
+}
+
+
+
+
+
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////
 
 
@@ -1110,6 +1165,10 @@ int main(int argc, char *argv[])
             case ProviderType::Mailru:
                 listMailru(providers);
                 break;
+            case ProviderType::OneDrive:
+                listOneDrive(providers);
+                break;
+
             default:
                 break;
             }

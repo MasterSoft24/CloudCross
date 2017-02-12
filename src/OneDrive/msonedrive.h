@@ -100,7 +100,7 @@ public:
 
 
     bool createHashFromRemote();
-    bool readRemote();//QString parentId,QString currentPath
+    bool readRemote(QString rootPath);//QString parentId,QString currentPath
     bool readLocal(QString path);
 
     bool isFolder(QJsonValue remoteObject);

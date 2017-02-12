@@ -76,7 +76,7 @@ bool MSOneDrive::auth(){
     qStdOut()<< tr("Please go to this URL and confirm application credentials\n")<<endl;
 
 
-    qStdOut() << "https://login.live.com/oauth20_authorize.srf?client_id=07bcebfb-0764-450a-b9ef-e839c592a418&scope=onedrive.readwrite&response_type=code&redirect_uri=http://localhost:1973" << "" <<endl;
+    qStdOut() << "https://login.live.com/oauth20_authorize.srf?client_id=07bcebfb-0764-450a-b9ef-e839c592a418&scope=onedrive.readwrite offline_access&response_type=code&redirect_uri=http://localhost:1973" <<endl;
 
 
 
@@ -176,8 +176,39 @@ void MSOneDrive::saveStateFile(){
 
 bool MSOneDrive::refreshToken(){
 
+//    this->access_token=this->token;
+//    return true;
+
+    MSRequest* req=new MSRequest(this->proxyServer);
+
+    req->setRequestUrl("https://login.live.com/oauth20_token.srf");
+    req->setMethod("post");
+
+   // req->addQueryItem("redirect_uri",           "localhost");
+    req->addQueryItem("refresh_token",          this->token);
+    req->addQueryItem("client_id",              "07bcebfb-0764-450a-b9ef-e839c592a418");
+    req->addQueryItem("client_secret",          "FFWd2Pc5jbqqmTaknxMEYQ5");
+    req->addQueryItem("grant_type",          "refresh_token");
+
+    req->exec();
 
 
+    if(!req->replyOK()){
+        req->printReplyError();
+        delete(req);
+        return false;
+    }
+
+
+
+    QString content= req->replyText;//lastReply->readAll();
+
+    QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+    QJsonObject job = json.object();
+    this->access_token=job["access_token"].toString();
+
+    delete(req);
+    return true;
 }
 
 MSFSObject::ObjectState MSOneDrive::filelist_defineObjectState(MSLocalFSObject local, MSRemoteFSObject remote)
@@ -235,6 +266,321 @@ QString MSOneDrive::getReplyErrorString(QString body)
 
 }
 
+bool MSOneDrive::readRemote(QString rootPath){
+
+
+
+    MSRequest* req=new MSRequest(this->proxyServer);
+
+    if(rootPath != ""){
+        req->setRequestUrl("https://api.onedrive.com/v1.0/drive/root:"+rootPath+":/children");
+    }
+    else{
+        req->setRequestUrl("https://api.onedrive.com/v1.0/drive/root"+rootPath+"/children");
+
+    }
+    req->setMethod("get");
+
+    req->addHeader("Authorization",                     "Bearer "+this->access_token);
+   // req->addQueryItem("expand",           "children");
+
+
+    req->exec();
+
+    if(!req->replyOK()){
+        req->printReplyError();
+        delete(req);
+        return false;
+    }
+
+
+    QString content= req->replyText;
+
+    QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+    QJsonObject job = json.object();
+    QJsonArray items=job["value"].toArray();
+
+    bool hasMore=false;
+
+
+
+    do{
+
+        if(job["@odata.nextLink"].toString() != ""){
+            hasMore=true;
+        }
+        else{
+            hasMore=false;
+        }
+
+        int sz=items.size();
+
+        for(int i=0; i<sz; i++){
+
+            MSFSObject fsObject;
+            QJsonObject o=items[i].toObject();
+
+            fsObject.fileName= o["name"].toString();
+
+            if(rootPath ==""){
+                fsObject.path= "/";
+            }
+            else{
+                fsObject.path = rootPath+"/";
+            }
+
+
+            fsObject.remote.fileSize=  o["size"].toInt();
+            fsObject.remote.data=o;
+            fsObject.remote.exist=true;
+            fsObject.isDocFormat=false;
+
+            fsObject.state=MSFSObject::ObjectState::NewRemote;
+
+            if( this->isFile(o) ){
+
+                fsObject.remote.objectType=MSRemoteFSObject::Type::file;
+                fsObject.remote.modifiedDate=this->toMilliseconds(o["lastModifiedDateTime"].toString(),true);
+            }
+
+            if( this->isFolder(items[i]) ){
+
+                fsObject.remote.objectType=MSRemoteFSObject::Type::folder;
+                fsObject.remote.modifiedDate=this->toMilliseconds(o["lastModifiedDateTime"].toString(),true);
+
+                this->readRemote(fsObject.path+fsObject.fileName);
+            }
+
+
+
+            this->syncFileList.insert(fsObject.path+fsObject.fileName, fsObject);
+
+        }
+
+        if(hasMore){
+
+            MSRequest* mrq=new MSRequest();
+
+            QString nl=job["@odata.nextLink"].toString();
+            //qDebug()<<nl;
+
+           //mrq->setRequestUrl(QUrl::fromPercentEncoding(job["@odata.nextLink"].toString().toUtf8()));
+
+            //mrq->setRequestUrl("https://api.onedrive.com/v1.0/drives('me')/items('root%252F%25D0%2598%25D0%25B7%25D0%25BE%25D0%25B1%/children?$skiptoken=MjAx");
+            //mrq->setRequestUrl("https://api.onedrive.com/v1.0/me/drive/root:/Изображения:/children?$skipToken=MjAx");
+
+//            mrq->setRequestUrl("https://api.onedrive.com/v1.0/drives('me')/items('root%252F%25D0%2598%25D0%25B7%25D0%25BE%25D0%25B1%25D1%2580%25D0%25B0%25D0%25B6%25D0%25B5%25D0%25BD%25D0%25B8%25D1%258F')/children?%24skiptoken=MjAx");
+
+//            mrq->setMethod("get");
+
+            mrq->addHeader("Authorization",                     "Bearer "+this->access_token);
+//            mrq->addQueryItem("$skiptoken",           "MjAx");
+
+//            mrq->exec();
+
+            mrq->raw_exec(nl);
+
+            if(!mrq->replyOK()){
+                mrq->printReplyError();
+                delete(mrq);
+                return false;
+            }
+
+
+            content= mrq->replyText;
+
+
+            json = QJsonDocument::fromJson(content.toUtf8());
+
+            job = json.object();
+            items=job["value"].toArray();
+
+//            nl=job1["@odata.nextLink"].toString();
+//                        qDebug()<<nl;
+
+        }
+
+    }while(hasMore);
+
+
+
+}
+
+bool MSOneDrive::readLocal(QString path){
+
+    QDir dir(path);
+    QDir::Filters entryInfoList_flags=QDir::Files|QDir::Dirs |QDir::NoDotAndDotDot;
+
+    if(! this->getFlag("noHidden")){// if show hidden
+        entryInfoList_flags= entryInfoList_flags | QDir::System | QDir::Hidden;
+    }
+
+        QFileInfoList files = dir.entryInfoList(entryInfoList_flags);
+
+        foreach(const QFileInfo &fi, files){
+
+            QString Path = fi.absoluteFilePath();
+            QString relPath=fi.absoluteFilePath().replace(this->workPath,"");
+
+            if(! this->filterServiceFileNames(relPath)){// skip service files and dirs
+                continue;
+            }
+
+
+            if(fi.isDir()){
+
+                readLocal(Path);
+            }
+
+            if(this->getFlag("useInclude") && this->includeList != ""){//  --use-include
+
+            if( this->filterIncludeFileNames(relPath)){
+
+                continue;
+            }
+            }
+            else{// use exclude by default
+
+            if(this->excludeList != ""){
+                if(! this->filterExcludeFileNames(relPath)){
+
+                continue;
+                }
+            }
+            }
+
+
+
+            QHash<QString,MSFSObject>::iterator i=this->syncFileList.find(relPath);
+
+
+
+            if(i!=this->syncFileList.end()){// if object exists in Google Drive
+
+                MSFSObject* fsObject = &(i.value());
+
+
+                fsObject->local.fileSize=  fi.size();
+                //fsObject->local.md5Hash= this->fileChecksum(Path,QCryptographicHash::Md5);
+                fsObject->local.exist=true;
+                fsObject->getLocalMimeType(this->workPath);
+
+                if(fi.isDir()){
+                    fsObject->local.objectType=MSLocalFSObject::Type::folder;
+                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+                }
+                else{
+
+                    fsObject->local.objectType=MSLocalFSObject::Type::file;
+                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+
+                }
+
+
+                fsObject->isDocFormat=false;
+
+
+                fsObject->state=this->filelist_defineObjectState(fsObject->local,fsObject->remote);
+
+            }
+            else{
+
+                MSFSObject fsObject;
+
+                fsObject.state=MSFSObject::ObjectState::NewLocal;
+
+                if(relPath.lastIndexOf("/")==0){
+                    fsObject.path="/";
+                }
+                else{
+                    fsObject.path=QString(relPath).left(relPath.lastIndexOf("/"))+"/";
+                }
+
+                fsObject.fileName=fi.fileName();
+                fsObject.getLocalMimeType(this->workPath);
+
+                fsObject.local.fileSize=  fi.size();
+                //fsObject.local.md5Hash= this->fileChecksum(Path,QCryptographicHash::Md5);
+                fsObject.local.exist=true;
+
+                if(fi.isDir()){
+                    fsObject.local.objectType=MSLocalFSObject::Type::folder;
+                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+                }
+                else{
+
+                    fsObject.local.objectType=MSLocalFSObject::Type::file;
+                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+
+                }
+
+                fsObject.state=this->filelist_defineObjectState(fsObject.local,fsObject.remote);
+
+                fsObject.isDocFormat=false;
+
+
+                this->syncFileList.insert(relPath,fsObject);
+
+            }
+
+        }
+
+        return true;
+
+
+
+}
+
+
+
+bool MSOneDrive::isFolder(QJsonValue remoteObject){
+
+    QJsonValue s=remoteObject.toObject()["folder"];
+
+    if(s != QJsonValue()){
+        return true;
+    }
+
+    return false;
+}
+
+
+
+bool MSOneDrive::isFile(QJsonValue remoteObject){
+
+    QJsonValue s=remoteObject.toObject()["file"];
+
+    if(s != QJsonValue()){
+        return true;
+    }
+
+    return false;
+
+}
+
+
+
+bool MSOneDrive::filterServiceFileNames(QString path)
+{
+
+}
+
+
+
+bool MSOneDrive::filterIncludeFileNames(QString path)
+{
+
+}
+
+
+
+bool MSOneDrive::filterExcludeFileNames(QString path)
+{
+
+}
+
+
+
 bool MSOneDrive::directUpload(QString url, QString remotePath)
 {
 
@@ -268,7 +614,7 @@ bool MSOneDrive::onAuthFinished(QString html, MSCloudProvider *provider){
 
         QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
         QJsonObject job = json.object();
-        QString v=job["access_token"].toString();
+        QString v=job["refresh_token"].toString();
 
         if(v!=""){
 

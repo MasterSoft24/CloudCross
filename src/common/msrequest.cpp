@@ -117,6 +117,7 @@ void MSRequest::methodCharger(QNetworkRequest req){
     QNetworkReply* replySync=0;
 
     if(this->requestMethod=="get"){
+
         replySync=this->manager->get(req);
     }
 
@@ -137,6 +138,10 @@ void MSRequest::methodCharger(QNetworkRequest req){
         replySync=this->manager->post(req,ba);
     }
 
+#ifdef PRINT_DEBUG_INFO
+    this->printDebugInfo_request(req);
+#endif
+
 //    QEventLoop loop;
     connect(replySync, SIGNAL(finished()),this->loop, SLOT(quit()));
     this->loop->exec();
@@ -145,6 +150,66 @@ void MSRequest::methodCharger(QNetworkRequest req){
     //this->loop->exit(0);
     //loop.deleteLater();
 }
+
+
+void MSRequest::printDebugInfo_request(QNetworkRequest req){
+
+    qDebug()<<"";
+    qDebug()<<"=========== Begin Query Debug Info Block =============";
+
+    qDebug()<<"Request URL: "<< this->url->toString();
+    qDebug()<<"Request Method: "<< this->requestMethod;
+    qDebug()<<"Request Headers: ";
+
+    QList<QByteArray> hl=req.rawHeaderList();
+
+    for(int i=0; i< hl.size();i++){
+        qDebug()<<hl.at(i)<<": "<<req.rawHeader(hl.at(i));
+
+    }
+
+
+
+    qDebug()<<"";
+    qDebug()<<"Query parameters: ";
+    QList<QPair<QString, QString> >  qi=this->query->queryItems();
+
+    for(int i;i<qi.size();i++){
+
+        qDebug()<<qi.at(i).first<<": "<<qi.at(i).second;
+    }
+
+    qDebug()<<"=========== End Query Debug Info Block =============";
+    qDebug()<<"";
+}
+
+
+
+void MSRequest::printDebugInfo_response(QNetworkReply *reply){
+
+    qDebug()<<"";
+    qDebug()<<"=========== Begin Response Debug Info Block =============";
+
+
+    qDebug()<<"Response Headers: ";
+
+    QList<QByteArray> hl=reply->rawHeaderList();
+
+    for(int i=0; i< hl.size();i++){
+        qDebug()<<hl.at(i)<<": "<<reply->rawHeader(hl.at(i));
+
+    }
+
+    qDebug()<<"";
+
+    qDebug()<<"Response Body: ";
+    qDebug()<<this->replyText;
+
+    qDebug()<<"=========== End Response Debug Info Block =============";
+    qDebug()<<"";
+}
+
+
 
 
 void MSRequest::methodCharger(QNetworkRequest req,QString path){
@@ -182,9 +247,24 @@ void MSRequest::methodCharger(QNetworkRequest req,QString path){
     //loop.deleteLater();
 }
 
+void MSRequest::raw_exec(QString reqestURL){
+
+    QUrl r(reqestURL);
+
+    QString s=QUrl::toPercentEncoding(r.path().toUtf8(),"(){}/","");
+
+    QString url=r.scheme()+"://"+r.host()+""+ s;
+    this->setRequestUrl(url);\
+
+    this->query->setQuery(r.query());
+    this->setMethod("get");
+    this->exec();
+}
+
 
 
 void MSRequest::post(QByteArray data){
+
 
     QNetworkReply* replySync;
 
@@ -270,6 +350,7 @@ void MSRequest::download(QString url,QString path){
 
 
 void MSRequest::put(QByteArray data){
+
 
     QNetworkReply* replySync;
 
@@ -376,6 +457,11 @@ void MSRequest::requestFinished(QNetworkReply *reply){
     this->replyErrorText=reply->errorString();
     this->replyAttribute=reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
     this->replyURL=reply->url().toString();
+
+#ifdef PRINT_DEBUG_INFO
+    this->printDebugInfo_response(reply);
+#endif
+
 //    delete(reply);
 
 }

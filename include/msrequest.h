@@ -49,6 +49,8 @@
 #include <QJsonObject>
 #include <QNetworkProxy>
 
+//#define PRINT_DEBUG_INFO
+
 class MSRequest : public QObject , QNetworkRequest
 {
   Q_OBJECT
@@ -84,6 +86,10 @@ public:
 
     QList<QPair<QByteArray,QByteArray>> replyHeaders;
 
+    void printDebugInfo_request(QNetworkRequest req);
+    void printDebugInfo_response(QNetworkReply *reply);
+
+
     QByteArray readReplyText();
 
 
@@ -100,6 +106,7 @@ public:
     void put(QIODevice* data);
     void methodCharger(QNetworkRequest req);
     void methodCharger(QNetworkRequest req,QString path);
+    void raw_exec(QString reqestURL);
 
     void download(QString url);
     void download(QString url,QString path);
