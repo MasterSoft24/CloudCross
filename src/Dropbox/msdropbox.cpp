@@ -1531,6 +1531,8 @@ bool MSDropbox::remote_file_insert(MSFSObject *object){
 
     if(sessID==""){
         qStdOut()<< "Error when upload "+filePath+" on remote" <<endl;
+        delete(req);
+        return false;
     }
 
     delete(req);

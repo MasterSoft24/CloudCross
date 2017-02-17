@@ -38,6 +38,13 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 
+#include <sys/types.h>
+#include <utime.h>
+#include <sys/time.h>
+
+#define ONEDRIVE_MAX_FILESIZE  10000 //61865984
+
+
 
 class MSOneDrive : public MSCloudProvider
 {

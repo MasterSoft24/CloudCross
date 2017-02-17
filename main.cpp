@@ -691,9 +691,66 @@ void listOneDrive(MSProvidersPool* providers){
 
 }
 
+void syncOneDrive(MSProvidersPool* providers){
+
+    MSOneDrive* odp=new MSOneDrive();
+
+    odp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
+    providers->addProvider(odp);
+    if(! providers->loadTokenFile("OneDrive")){
+        exit(0);
+    }
+
+    if(!providers->refreshToken("OneDrive")){
+        qStdOut()<<"Unauthorized access. Aborted."<<endl;
+        exit(0);
+    }
+
+    odp->createSyncFileList();
+}
+
+
+void infoOneDrive(MSProvidersPool* providers){
+
+    MSOneDrive* dbp=new MSOneDrive();
+
+    dbp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
+    providers->addProvider(dbp,true);
+    if(!providers->loadTokenFile("OneDrive")){
+        return ;
+    }
+
+    if(! providers->refreshToken("OneDrive")){
+
+        qStdOut()<< "Unauthorized client"<<endl;
+       return;
+    }
+
+
+    QString info=dbp->getInfo();
+
+    if(info == "false"){
+
+        qStdOut()<< "Error getting cloud information " <<endl;
+        return;
+    }
+
+    QJsonDocument json = QJsonDocument::fromJson(info.toUtf8());
+    QJsonObject job = json.object();
+
+    double usage=  job["usage"].toString().toDouble();
+    double total=  job["total"].toString().toDouble();
+    double free= total - usage;
+
+    qStdOut()<< job["account"].toString()<<" at OneDrive.com"<< endl << endl << "total: "<< (uint64_t)total <<endl << "usage: "<< (uint64_t)usage << endl << "free: "<< (uint64_t)free <<endl;
+    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1048576<<" MB" <<endl << "usage: "<< (uint64_t)usage/1048576<<" MB"  << endl << "free: "<< (uint64_t)free/1048576<<" MB"  <<endl;
+    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)free/1073741824<<" GB"  <<endl;
 
 
 
+}
 
 
 
@@ -1285,6 +1342,10 @@ int main(int argc, char *argv[])
                 case ProviderType::Mailru:
                     infoMailru(providers);
                     break;
+                case ProviderType::OneDrive:
+                    infoOneDrive(providers);
+                    break;
+
                 default:
                     break;
 
@@ -1312,6 +1373,11 @@ int main(int argc, char *argv[])
                 syncMailru(providers);
 //                qStdOut()<< "sync mailru"<<endl;
                 break;
+            case ProviderType::OneDrive:
+                syncOneDrive(providers);
+//                qStdOut()<< "sync onedrive"<<endl;
+                break;
+
             default:
                 break;
             }

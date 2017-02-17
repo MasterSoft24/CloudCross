@@ -319,7 +319,12 @@ void MSRequest::download(QString url,QString path){
     this->setUrl(QUrl(url));
 
     this->outFile= new QFile(path);
-    this->outFile->open(QIODevice::WriteOnly );
+    bool e=this->outFile->open(QIODevice::WriteOnly );
+
+    if(e == false){
+        this->replyError=QNetworkReply::NetworkError::UnknownContentError;
+        return;
+    }
 
 
 
