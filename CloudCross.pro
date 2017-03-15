@@ -1,3 +1,24 @@
+android {
+    message("* Using settings for Android.")
+
+    DEFINES += PLATFORM_ANDROID
+}
+
+
+linux:!android {
+    message("* Using settings for Unix/Linux.")
+
+    DEFINES += PLATFORM_LINUX
+}
+
+win32{
+    message("* Using settings for Windows.")
+
+    DEFINES += PLATFORM_WINDOWS
+}
+
+
+
 QT += core network
 QT -= gui
 

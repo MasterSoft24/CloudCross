@@ -39,8 +39,15 @@
 #include <QFileDevice>
 
 #include <sys/types.h>
+
+#ifdef PLATFORM_WINDOWS
+#include <sys/utime.h>
+#endif
+
+#ifdef PLATFORM_LINUX
 #include <utime.h>
 #include <sys/time.h>
+#endif
 
 class MSDropbox : public MSCloudProvider
 {

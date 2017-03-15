@@ -205,7 +205,15 @@ bool MSOneDrive::remote_file_insert(MSFSObject *object){
 
         req->addHeader("Authorization",                     "Bearer "+this->access_token);
         req->addHeader("Content-Length",                    QString::number(fSize).toLocal8Bit());
-        req->addHeader("Content-Range",                     "bytes 0-"+QString::number(fSize-1).toLocal8Bit()+"/"+QString::number(fSize).toLocal8Bit());
+
+        if(fSize >0){
+            req->addHeader("Content-Range",                     "bytes 0-"+QString::number(fSize-1).toLocal8Bit()+"/"+QString::number(fSize).toLocal8Bit());
+        }
+        else{
+            qStdOut()<< "    OneDrive does not support zero-length files. Uploading skiped."<< endl;
+            delete(req);
+            return false;
+        }
 
         QByteArray* ba=new QByteArray();
 
@@ -230,7 +238,7 @@ bool MSOneDrive::remote_file_insert(MSFSObject *object){
         object->remote.exist=true;
         object->isDocFormat=false;
 
-        object->state=MSFSObject::ObjectState::NewRemote;
+        object->state=MSFSObject::ObjectState::Sync;
 
         object->remote.objectType=MSRemoteFSObject::Type::file;
         object->remote.modifiedDate=this->toMilliseconds(o["lastModifiedDateTime"].toString(),true);
@@ -320,7 +328,7 @@ bool MSOneDrive::remote_file_insert(MSFSObject *object){
         object->remote.exist=true;
         object->isDocFormat=false;
 
-        object->state=MSFSObject::ObjectState::NewRemote;
+        object->state=MSFSObject::ObjectState::Sync;
 
         object->remote.objectType=MSRemoteFSObject::Type::file;
         object->remote.modifiedDate=this->toMilliseconds(o["lastModifiedDateTime"].toString(),true);
@@ -347,7 +355,7 @@ bool MSOneDrive::remote_file_update(MSFSObject *object){
 
 
 bool MSOneDrive::remote_file_generateIDs(int count){
-
+Q_UNUSED(count);
     return true;
 }
 
@@ -400,7 +408,7 @@ bool MSOneDrive::remote_file_makeFolder(MSFSObject *object){
     object->remote.exist=true;
     object->isDocFormat=false;
 
-    object->state=MSFSObject::ObjectState::NewRemote;
+    object->state=MSFSObject::ObjectState::Sync;
 
     object->remote.objectType=MSRemoteFSObject::Type::file;
     object->remote.modifiedDate=this->toMilliseconds(o["lastModifiedDateTime"].toString(),true);
@@ -415,7 +423,8 @@ bool MSOneDrive::remote_file_makeFolder(MSFSObject *object){
 
 void MSOneDrive::remote_file_makeFolder(MSFSObject *object, QString parentID){
 
-
+Q_UNUSED(object);
+Q_UNUSED(parentID);
 
 }
 
@@ -599,7 +608,7 @@ bool MSOneDrive::auth(){
 
 
 
-
+return true;
 
 }
 
@@ -1433,7 +1442,7 @@ bool MSOneDrive::readRemote(QString rootPath){
     }while(hasMore);
 
 
-
+    return true;
 }
 
 bool MSOneDrive::readLocal(QString path){
@@ -1783,8 +1792,10 @@ bool MSOneDrive::createSyncFileList(){
 
 
 bool MSOneDrive::directUpload(QString url, QString remotePath){
+Q_UNUSED(remotePath);
+Q_UNUSED(url);
 
-
+    return true;
 }
 
 
@@ -1828,6 +1839,8 @@ QString MSOneDrive::getInfo(){
 
 
 bool MSOneDrive::onAuthFinished(QString html, MSCloudProvider *provider){
+
+    Q_UNUSED(provider);
 
         MSRequest* req=new MSRequest(this->proxyServer);
 
