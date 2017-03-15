@@ -1,7 +1,7 @@
 
 CloudCross project
 
-<http://cloudcross.mastersoft24.ru>
+<https://cloudcross.mastersoft24.ru>
 
 
 
@@ -34,11 +34,13 @@ ccross [options]
 				This option overrides --prefer option value.
 * --provider arg		Provider selecting. Can be a one of "google", "dropbox", "yandex" or "mailru"
 * --direct-upload url path	Allow upload file directly to cloud from URL. All options, except --provider and --path, are ignored.
-				Uploaded file will be stored on remote storage into location which was defined by path.		
+                                Uploaded file will be stored on remote storage into location which was defined by path.
+                                NOTE: Direct upload to OneDrive does not supported.
 * --login arg			Set login for access to cloud provider. Now it used only for Cloud Mail.ru
 * --password arg		Set password for access to cloud provider. Now it used only for Cloud Mail.ru
 * --http-proxy arg		Use http proxy server for connection to cloud provider. <arg> must be in a ip_address_or_host_name:port_number format
 * --socks5-proxy arg		Use socks5 proxy server for connection to cloud provider. <arg> must be in a ip_address_or_host_name:port_number format
+* --cloud-space                 Show total and free spase  of cloud
 
 ### Other options
 
@@ -50,10 +52,14 @@ ccross [options]
 	
 	
 For detailed usage instructions see    
-<http://cloudcross.mastersoft24.ru/#usage>
+<https://cloudcross.mastersoft24.ru/#usage>
 	
 	
 ## Change log:
+
+### v1.4.0
+- OneDrive support added.
+- Show total and free spase  of clouds
 
 ### v1.3.1
 - Fix some Mail.Ru working errors

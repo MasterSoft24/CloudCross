@@ -115,7 +115,8 @@ void printHelp(){
 
     qStdOut()<< QObject::tr("   --direct-upload url path   Allow upload file directly to cloud from URL.\n"
                             "                              All options, except --provider and --path, are ignored.\n"
-                            "                              Uploaded file will be stored on remote storage into location which was defined by path.") <<endl;
+                            "                              Uploaded file will be stored on remote storage into location which was defined by path.\n"
+                            "                              NOTE: Direct upload to OneDrive does not supported.") <<endl;
     qStdOut()<< QObject::tr("   --login arg                Set login for access to cloud provider. \n"
                             "                              Now it used only for Cloud Mail.ru") <<endl;
     qStdOut()<< QObject::tr("   --password arg             Set password for access to cloud provider. \n"
@@ -124,7 +125,7 @@ void printHelp(){
                             "                              <arg> must be in a ip_address_or_host_name:port_number format") <<endl;
     qStdOut()<< QObject::tr("   --socks5-proxy arg         Use socks5 proxy server for connection to cloud provider. \n"
                             "                              <arg> must be in a ip_address_or_host_name:port_number format") <<endl;
-    qStdOut()<< QObject::tr("   --cloud-space              Show total and free spase  of cloud \n")<<endl;
+    qStdOut()<< QObject::tr("   --cloud-space              Showing total and free space  of cloud \n")<<endl;
 }
 
 
@@ -1112,6 +1113,35 @@ int main(int argc, char *argv[])
             qStdOut() << "Uploaded file was stored in mail.ru:/"<< p[1]<<endl;
         }
             break;
+
+        case ProviderType::OneDrive:{//---------------------------------------
+
+            MSOneDrive* cp=new MSOneDrive();
+
+            cp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
+            providers->addProvider(cp);
+
+            if(! providers->loadTokenFile("OneDrive")){
+                return 1;
+            }
+
+            if(!providers->refreshToken("OneDrive")){
+                qStdOut()<<"Unauthorized access. Aborted."<<endl;
+                return 1;
+            }
+
+            QStringList p=parser->getParamByName("direct-upload");
+            if(p.size()<2){
+                qStdOut()<<"Option --direct-upload. Missing required argument"<<endl;
+                return 1;
+            }
+            cp->directUpload(p[0],p[1]);
+
+            qStdOut() << "Uploaded file was stored in OneDrive:/"<< p[1]<<endl;
+        }
+            break;
+
 
         default:
             break;

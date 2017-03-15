@@ -1790,10 +1790,43 @@ bool MSOneDrive::createSyncFileList(){
 }
 
 
-
+// TODO: Need way how does it
 bool MSOneDrive::directUpload(QString url, QString remotePath){
 Q_UNUSED(remotePath);
 Q_UNUSED(url);
+
+    MSRequest *req = new MSRequest(this->proxyServer);
+
+    req->setRequestUrl("https://api.onedrive.com/v1.0/drive/items/D7C91EBFD21F9BA0!510/children");
+    req->setMethod("post");
+
+    req->addHeader("Authorization","Bearer "+this->access_token);
+    req->addHeader("Content-Type", QString("application/json"));
+    req->addHeader("Prefer", QString("respond-async"));
+
+
+    QByteArray ba;
+
+    ba="{ \
+       \"@microsoft.graph.sourceUrl\": \"https://mastersoft24.ru/img/small-logo.png\", \
+       \"name\": \"halo-screenshot.jpg\" ,\
+        \"file\": { } \
+     }";
+
+    req->post(ba);
+
+    if(!req->replyOK()){
+        req->printReplyError();
+        delete(req);
+        //return "false";
+    }
+
+
+
+    QString content= req->replyText;//lastReply->readAll();
+
+    QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+    QJsonObject job = json.object();
 
     return true;
 }

@@ -2730,7 +2730,7 @@ QString MSGoogleDrive::getInfo(){
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject job = json.object();
 
-    int zz=job["storageQuota"].toObject().size();
+    //int zz=job["storageQuota"].toObject().size();
 
     if(job["storageQuota"].toObject().size()== 0){
         //qStdOut()<< "Error getting cloud information " <<endl;

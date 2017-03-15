@@ -1,17 +1,17 @@
 
-# CloudCross v1.3.0
+# CloudCross v1.4.0
 
 Kamensky Vladimir
 
-18.11.2016
+15.03.2017
 
 
-http://cloudcross.mastersoft24.ru
+https://cloudcross.mastersoft24.ru
 
 
 
 CloudCross it's opensource software for synchronization of local files and folders with various cloud storages.
-On this moment CloudCross supports working with Yandex Disk, Google Drive, Dropbox and Cloud Mail.ru.
+On this moment CloudCross supports working with Yandex Disk, Google Drive, Dropbox, OneDrive and Cloud Mail.ru.
 This program was written on pure Qt, without any third-party libraries.
 The program works with Qt version 5 and above. Qt version 4.x are not supported. 
 
@@ -56,10 +56,14 @@ Next,basic install sequence is:
 As a result, in build directory will be ccross file appears
 	
 	
-For detailed usage instructions see http://cloudcross.mastersoft24.ru/#usage	
+For detailed usage instructions see https://cloudcross.mastersoft24.ru/#usage
 	
 	
 ## Change log:
+
+### v1.4.0
+- OneDrive support added.
+- Showing total and free space  of clouds
 
 ### v1.3.1
 - Fix some Mail.Ru working errors
@@ -122,17 +126,17 @@ For detailed usage instructions see http://cloudcross.mastersoft24.ru/#usage
 
 
 
-# CloudCross v1.3.0
+# CloudCross v1.4.0
 
 Каменский Владимир
 
-18.11.2016
+15.03.2017
 
-http://cloudcross.mastersoft24.ru/ru
+https://cloudcross.mastersoft24.ru/ru
 
 
 CloudCross - это свободная программа для синхронизации локальных файлов и папок с различными облачными хранилищами.
-На данный момент, пока, поддерживается работа с Яндекс.Диск, Google Drive, Dropbox и Облако Mail.ru.
+На данный момент, пока, поддерживается работа с Яндекс.Диск, Google Drive, Dropbox, OneDrive и Облако Mail.ru.
 Программа написана на чистом Qt, без каких либо сторонних библиотек.
 CloudCross работает с Qt версии 5 и выше. Версии Qt 4.x не поддерживаются. 
 
@@ -174,10 +178,14 @@ CloudCross позволяет синхронизировать только ча
 В результате в папке build появится файл ccross
 
 
-Чтобы посмотреть инструкцию по использованию зайдите на http://cloudcross.mastersoft24.ru/#usage	
+Чтобы посмотреть инструкцию по использованию зайдите на https://cloudcross.mastersoft24.ru/#usage
 	
 	
 ## История изменений:
+
+### v1.4.0
+- Добавлена поддержка OneDrive
+- Добавлена возможность просмотра свободного/занятого объема в облаке.
 
 ### v1.3.1
 - Исправлены некоторые ошибки возникающие при работе с Mail.Ru
