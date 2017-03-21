@@ -155,7 +155,7 @@ void MSOptParser::parse(QStringList list){
     }
 
     this->iit=this->input.begin();
-    *this->iit++;
+    this->iit++;
 }
 
 
