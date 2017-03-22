@@ -573,12 +573,13 @@ bool MSYandexDisk::createSyncFileList(){
             QString line;
             while(!instream.atEnd()){
 
-                QString line=instream.readLine();
+                line=instream.readLine();
                 if(line.isEmpty()){
                         continue;
                 }
 
                 this->includeList=this->includeList+line+"|";
+                this->includeList.replace("*",".*");
             }
             this->includeList=this->includeList.left(this->includeList.size()-1);
 
@@ -588,7 +589,6 @@ bool MSYandexDisk::createSyncFileList(){
                 qStdOut()<<"Include filelist contains errors. Program will be terminated.";
                 return false;
             }
-
         }
     }
     else{
@@ -600,11 +600,12 @@ bool MSYandexDisk::createSyncFileList(){
             QString line;
             while(!instream.atEnd()){
 
-                QString line=instream.readLine();
+                line=instream.readLine();
                 if(line.isEmpty()){
                         continue;
                 }
                 this->excludeList=this->excludeList+line+"|";
+                this->excludeList.replace("*",".*");
             }
             this->excludeList=this->excludeList.left(this->excludeList.size()-1);
 

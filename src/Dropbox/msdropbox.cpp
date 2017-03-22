@@ -611,7 +611,7 @@ bool MSDropbox::createSyncFileList(){
             QString line;
             while(!instream.atEnd()){
 
-                QString line=instream.readLine();
+                line=instream.readLine();
                 if(line.isEmpty()){
                         continue;
                 }
@@ -619,6 +619,7 @@ bool MSDropbox::createSyncFileList(){
                 this->includeList=this->includeList+line+"|";
             }
             this->includeList=this->includeList.left(this->includeList.size()-1);
+            this->includeList.replace("*",".*");
 
             QRegularExpression regex2(this->includeList);
 
@@ -626,7 +627,6 @@ bool MSDropbox::createSyncFileList(){
                 qStdOut()<<"Include filelist contains errors. Program will be terminated.";
                 return false;
             }
-
         }
     }
     else{
@@ -638,13 +638,14 @@ bool MSDropbox::createSyncFileList(){
             QString line;
             while(!instream.atEnd()){
 
-                QString line=instream.readLine();
+                line=instream.readLine();
                 if(line.isEmpty()){
                         continue;
                 }
                 this->excludeList=this->excludeList+line+"|";
             }
             this->excludeList=this->excludeList.left(this->excludeList.size()-1);
+            this->excludeList.replace("*",".*");
 
             QRegularExpression regex2(this->excludeList);
 
