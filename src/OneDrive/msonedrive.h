@@ -112,9 +112,6 @@ public:
 
     bool isFolder(QJsonValue remoteObject);
     bool isFile(QJsonValue remoteObject);
-    bool filterServiceFileNames(QString path);
-    bool filterIncludeFileNames(QString path);
-    bool filterExcludeFileNames(QString path);
 
     bool createSyncFileList();
 

@@ -106,6 +106,11 @@ public:
 
     bool setProxyServer(QString type, QString proxy);
 
+    //Filters
+    bool filterServiceFileNames(const QString &path);
+    bool filterIncludeFileNames(const QString &path);
+    bool filterExcludeFileNames(const QString &path);
+
 
     virtual bool auth() = 0;
     virtual void saveTokenFile(QString path) =0 ;

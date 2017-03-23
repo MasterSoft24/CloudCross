@@ -401,19 +401,19 @@ bool MSDropbox::readRemote(){ //QString parentId,QString currentPath
 
                       if(this->getFlag("useInclude") && this->includeList != ""){//  --use-include
 
-                          if( this->filterIncludeFileNames(o["path_display"].toString())){
+                          if(this->filterIncludeFileNames(o["path_display"].toString())){
                               i++;
                               continue;
                           }
                       }
                       else{// use exclude by default
 
-                      if(this->excludeList != ""){
-                          if(! this->filterExcludeFileNames(o["path_display"].toString())){
-                              i++;
-                              continue;
+                          if(this->excludeList != ""){
+                              if(!this->filterExcludeFileNames(o["path_display"].toString())){
+                                  i++;
+                                  continue;
+                              }
                           }
-                      }
                       }
 
 
@@ -495,229 +495,6 @@ bool MSDropbox::isFolder(QJsonValue remoteObject){
 }
 
 //=======================================================================================
-
-bool MSDropbox::filterServiceFileNames(QString path){// return false if input path is service filename
-
-    QString reg=this->trashFileName+"*|"+this->tokenFileName+"|"+this->stateFileName+"|.include|.exclude|~";
-    QRegExp regex(reg);
-    int ind = regex.indexIn(path);
-
-    if(ind != -1){
-        return false;
-    }
-    return true;
-
-}
-
-//=======================================================================================
-
-bool MSDropbox::filterIncludeFileNames(QString path){// return false if input path contain one of include mask
-
-    if(this->includeList==""){
-        return true;
-    }
-    QString filterType = this->getOption("filter-type");
-    bool isBegin=false;
-    // catch paths with  beginning masks from include/exclude lists
-    QRegExp regex3(path);
-    if(filterType == "regexp")
-        regex3.setPatternSyntax(QRegExp::RegExp);
-    else
-        regex3.setPatternSyntax(QRegExp::Wildcard);
-    regex3.isValid();
-    int m1 = regex3.indexIn(this->includeList);
-
-    if(m1 != -1){
-        if((this->includeList.mid(m1-1,1)=="|") ||(m1==0)){
-            isBegin=true;
-        }
-    }
-    QRegExp regex2(this->includeList);
-    if(filterType == "regexp")
-        regex2.setPatternSyntax(QRegExp::RegExp);
-    else
-        regex2.setPatternSyntax(QRegExp::Wildcard);
-    regex2.isValid();
-
-    int m = regex2.indexIn(path);
-    if(m != -1){
-        return false;
-    }
-    else{
-        if(isBegin){
-            return false;
-        }
-        else{
-            return true;
-        }
-    }
-
-    /*if(filterType == "regexp"){
-        // catch paths with  beginning masks from include/exclude lists
-        bool start;
-        QRegularExpression regex3(path);
-        regex3.patternErrorOffset();
-        QRegularExpressionMatch m1= regex3.match(this->includeList);
-
-        if(m1.hasMatch()){
-            start=m1.capturedStart();
-            if((this->includeList.mid(start-1,1)=="|") ||(start==0)){
-                isBegin=true;
-            }
-        }
-        QRegularExpression regex2(this->includeList);
-        regex2.patternErrorOffset();
-        QRegularExpressionMatch m = regex2.match(path);
-
-        if(m.hasMatch()){
-            return false;
-        }
-        else{
-            if(isBegin){
-                return false;
-            }
-            else{
-                return true;
-            }
-        }
-    }
-    else{
-        // catch paths with  beginning masks from include/exclude lists
-        QRegExp regex3(path);
-        regex3.setPatternSyntax(QRegExp::Wildcard);
-        regex3.isValid();
-        int m1 = regex3.indexIn(this->includeList);
-
-        if(m1 != -1){
-            if((this->includeList.mid(m1-1,1)=="|") ||(m1==0)){
-                isBegin=true;
-            }
-        }
-        QRegExp regex2(this->includeList);
-        regex2.setPatternSyntax(QRegExp::Wildcard);
-        regex2.isValid();
-
-        int m = regex2.indexIn(path);
-        if(m != -1){
-            return false;
-        }
-        else{
-            if(isBegin){
-                return false;
-            }
-            else{
-                return true;
-            }
-        }
-    }*/
-
-}
-
-//=======================================================================================
-
-bool MSDropbox::filterExcludeFileNames(QString path){// return false if input path contain one of exclude mask
-
-    if(this->excludeList==""){
-        return true;
-    }
-    QString filterType = this->getOption("filter-type");
-    bool isBegin=false;
-
-    QRegExp regex3(path);
-    if(filterType == "regexp")
-        regex3.setPatternSyntax(QRegExp::RegExp);
-    else
-        regex3.setPatternSyntax(QRegExp::Wildcard);
-    regex3.isValid();
-    int m1 = regex3.indexIn(this->excludeList);
-
-    if(m1 != -1){
-        if((this->excludeList.mid(m1-1,1)=="|") ||(m1==0)){
-            isBegin=true;
-        }
-    }
-    QRegExp regex2(this->excludeList);
-    if(filterType == "regexp")
-        regex2.setPatternSyntax(QRegExp::RegExp);
-    else
-        regex2.setPatternSyntax(QRegExp::Wildcard);
-    regex2.isValid();
-
-    int m = regex2.indexIn(path);
-    if(m != -1){
-        return false;
-    }
-    else{
-        if(isBegin){
-            return false;
-        }
-        else{
-            return true;
-        }
-    }
-
-    /*if(filterType == "regexp"){
-        // catch paths with  beginning masks from include/exclude lists
-        bool start;
-        QRegularExpression regex3(path);
-        regex3.patternErrorOffset();
-        QRegularExpressionMatch m1= regex3.match(this->excludeList);
-
-        if(m1.hasMatch()){
-            start=m1.capturedStart();
-            if((this->excludeList.mid(start-1,1)=="|") ||(start==0)){
-                isBegin=true;
-            }
-        }
-        QRegularExpression regex2(this->excludeList);
-        regex2.patternErrorOffset();
-        QRegularExpressionMatch m = regex2.match(path);
-
-        if(m.hasMatch()){
-            return false;
-        }
-        else{
-            if(isBegin){
-                return false;
-            }
-            else{
-                return true;
-            }
-        }
-    }
-    else{
-        // catch paths with  beginning masks from include/exclude lists
-        QRegExp regex3(path);
-        regex3.setPatternSyntax(QRegExp::Wildcard);
-        regex3.isValid();
-        int m1 = regex3.indexIn(this->excludeList);
-
-        if(m1 != -1){
-            if((this->excludeList.mid(m1-1,1)=="|") ||(m1==0)){
-                isBegin=true;
-            }
-        }
-        QRegExp regex2(this->excludeList);
-        regex2.setPatternSyntax(QRegExp::Wildcard);
-        regex2.isValid();
-
-        int m = regex2.indexIn(path);
-        if(m != -1){
-            return false;
-        }
-        else{
-            if(isBegin){
-                return false;
-            }
-            else{
-                return true;
-            }
-        }
-    }*/
-}
-
-//=======================================================================================
-
 
 bool MSDropbox::createSyncFileList(){
 

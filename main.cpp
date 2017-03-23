@@ -1386,7 +1386,6 @@ int main(int argc, char *argv[])
             return 0;
             break;
         case 20: // --filter-type
-            qStdOut() << "=========================================" << parser->optarg[0] << endl;
             providers->setOption("filter-type",parser->optarg[0]);
             break;
         default: // syn execute without any params by default
