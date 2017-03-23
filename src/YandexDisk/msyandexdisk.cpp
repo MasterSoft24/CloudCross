@@ -478,29 +478,31 @@ bool MSYandexDisk::filterIncludeFileNames(QString path){// return false if input
     if(this->includeList==""){
         return true;
     }
-
-    // catch paths with  beginning masks from include/exclude lists
+    QString filterType = this->getOption("filter-type");
     bool isBegin=false;
-    bool start;
-    QRegularExpression regex3(path);
-    regex3.patternErrorOffset();
-    QRegularExpressionMatch m1= regex3.match(this->includeList);
+    // catch paths with  beginning masks from include/exclude lists
+    QRegExp regex3(path);
+    if(filterType == "regexp")
+        regex3.setPatternSyntax(QRegExp::RegExp);
+    else
+        regex3.setPatternSyntax(QRegExp::Wildcard);
+    regex3.isValid();
+    int m1 = regex3.indexIn(this->includeList);
 
-    if(m1.hasMatch()){
-        start=m1.capturedStart();
-
-        if((this->includeList.mid(start-1,1)=="|") ||(start==0)){
+    if(m1 != -1){
+        if((this->includeList.mid(m1-1,1)=="|") ||(m1==0)){
             isBegin=true;
         }
     }
+    QRegExp regex2(this->includeList);
+    if(filterType == "regexp")
+        regex2.setPatternSyntax(QRegExp::RegExp);
+    else
+        regex2.setPatternSyntax(QRegExp::Wildcard);
+    regex2.isValid();
 
-    QRegularExpression regex2(this->includeList);
-
-    regex2.patternErrorOffset();
-
-    QRegularExpressionMatch m = regex2.match(path);
-
-    if(m.hasMatch()){
+    int m = regex2.indexIn(path);
+    if(m != -1){
         return false;
     }
     else{
@@ -511,7 +513,6 @@ bool MSYandexDisk::filterIncludeFileNames(QString path){// return false if input
             return true;
         }
     }
-
 }
 
 //=======================================================================================
@@ -521,30 +522,31 @@ bool MSYandexDisk::filterExcludeFileNames(QString path){// return false if input
     if(this->excludeList==""){
         return true;
     }
-
-    // catch paths with  beginning masks from include/exclude lists
+    QString filterType = this->getOption("filter-type");
     bool isBegin=false;
-    bool start;
-    QRegularExpression regex3(path);
-    regex3.patternErrorOffset();
-    QRegularExpressionMatch m1= regex3.match(this->excludeList);
 
-    if(m1.hasMatch()){
-        start=m1.capturedStart();
+    QRegExp regex3(path);
+    if(filterType == "regexp")
+        regex3.setPatternSyntax(QRegExp::RegExp);
+    else
+        regex3.setPatternSyntax(QRegExp::Wildcard);
+    regex3.isValid();
+    int m1 = regex3.indexIn(this->excludeList);
 
-        if((this->excludeList.mid(start-1,1)=="|") ||(start==0)){
+    if(m1 != -1){
+        if((this->excludeList.mid(m1-1,1)=="|") ||(m1==0)){
             isBegin=true;
         }
     }
+    QRegExp regex2(this->excludeList);
+    if(filterType == "regexp")
+        regex2.setPatternSyntax(QRegExp::RegExp);
+    else
+        regex2.setPatternSyntax(QRegExp::Wildcard);
+    regex2.isValid();
 
-
-    QRegularExpression regex2(this->excludeList);
-
-    regex2.patternErrorOffset();
-
-    QRegularExpressionMatch m = regex2.match(path);
-
-    if(m.hasMatch()){
+    int m = regex2.indexIn(path);
+    if(m != -1){
         return false;
     }
     else{
@@ -555,8 +557,6 @@ bool MSYandexDisk::filterExcludeFileNames(QString path){// return false if input
             return true;
         }
     }
-
-
 }
 
 //=======================================================================================
@@ -573,22 +573,31 @@ bool MSYandexDisk::createSyncFileList(){
             QString line;
             while(!instream.atEnd()){
 
-                QString line=instream.readLine();
+                line=instream.readLine();
                 if(line.isEmpty()){
-                        continue;
+                    continue;
                 }
-
+                if(instream.pos() == 9 && line == "wildcard"){
+                    this->options.insert("filter-type", "wildcard");
+                    continue;
+                }
+                else if(instream.pos() == 7 && line == "regexp"){
+                    this->options.insert("filter-type", "regexp");
+                    continue;
+                }
                 this->includeList=this->includeList+line+"|";
             }
             this->includeList=this->includeList.left(this->includeList.size()-1);
 
-            QRegularExpression regex2(this->includeList);
-
-            if(regex2.patternErrorOffset()!=-1){
+            QRegExp regex2(this->excludeList);
+            if(this->getOption("filter-type") == "regexp")
+                regex2.setPatternSyntax(QRegExp::RegExp);
+            else
+                regex2.setPatternSyntax(QRegExp::Wildcard);
+            if(!regex2.isValid()){
                 qStdOut()<<"Include filelist contains errors. Program will be terminated.";
                 return false;
             }
-
         }
     }
     else{
@@ -600,23 +609,33 @@ bool MSYandexDisk::createSyncFileList(){
             QString line;
             while(!instream.atEnd()){
 
-                QString line=instream.readLine();
+                line=instream.readLine();
+                if(instream.pos() == 9 && line == "wildcard"){
+                    this->options.insert("filter-type", "wildcard");
+                    continue;
+                }
+                else if(instream.pos() == 7 && line == "regexp"){
+                    this->options.insert("filter-type", "regexp");
+                    continue;
+                }
                 if(line.isEmpty()){
-                        continue;
+                    continue;
                 }
                 this->excludeList=this->excludeList+line+"|";
             }
             this->excludeList=this->excludeList.left(this->excludeList.size()-1);
 
-            QRegularExpression regex2(this->excludeList);
-
-            if(regex2.patternErrorOffset()!=-1){
+            QRegExp regex2(this->excludeList);
+            if(this->getOption("filter-type") == "regexp")
+                regex2.setPatternSyntax(QRegExp::RegExp);
+            else
+                regex2.setPatternSyntax(QRegExp::Wildcard);
+            if(!regex2.isValid()){
                 qStdOut()<<"Exclude filelist contains errors. Program will be terminated.";
                 return false;
             }
         }
     }
-
 
     qStdOut()<< "Reading remote files"<<endl;
 

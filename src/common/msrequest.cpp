@@ -87,7 +87,7 @@ void MSRequest::addQueryItem(QString itemName, QString itemValue){
 
 
 bool MSRequest::setMethod(QString method){
-    if((method=="post")||(method=="get")|(method=="put")){
+    if((method=="post")||(method=="get")||(method=="put")){
         this->requestMethod=method;
         return true;
     }

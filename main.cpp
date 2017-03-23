@@ -126,6 +126,7 @@ void printHelp(){
     qStdOut()<< QObject::tr("   --socks5-proxy arg         Use socks5 proxy server for connection to cloud provider. \n"
                             "                              <arg> must be in a ip_address_or_host_name:port_number format") <<endl;
     qStdOut()<< QObject::tr("   --cloud-space              Showing total and free space  of cloud \n")<<endl;
+    qStdOut()<< QObject::tr("   --filter-type              Filter type for .include and .exclude files. Ignored if it set in files") <<endl;
 }
 
 
@@ -937,6 +938,7 @@ int main(int argc, char *argv[])
     parser->insertOption(18,"--socks5-proxy 1");
 
     parser->insertOption(19,"--cloud-space");
+    parser->insertOption(20,"--filter-type 1");
 
 
     //...............
@@ -1379,12 +1381,14 @@ int main(int argc, char *argv[])
                 default:
                     break;
 
-                }
+            }
 
             return 0;
             break;
-
-
+        case 20: // --filter-type
+            qStdOut() << "=========================================" << parser->optarg[0] << endl;
+            providers->setOption("filter-type",parser->optarg[0]);
+            break;
         default: // syn execute without any params by default
 
             switch(currentProvider){
