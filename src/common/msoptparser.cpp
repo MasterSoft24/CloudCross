@@ -260,7 +260,7 @@ int MSOptParser::get(){
               else{
                     this->optarg.clear();
               }
-              *this->iit++;
+              this->iit++;
               return this->opts[i].num;
           }
 
