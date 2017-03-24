@@ -82,6 +82,131 @@ bool MSCloudProvider::setProxyServer(QString type,QString proxy)
     return true;
 }
 
+bool MSCloudProvider::filterServiceFileNames(const QString &path){// return false if input path is service filename
+
+    QString reg=this->trashFileName+"*|"+this->tokenFileName+"|"+this->stateFileName+"|.include|.exclude|~";
+    QRegExp regex(reg);
+    int ind = regex.indexIn(path);
+
+    if(ind != -1){
+        return false;
+    }
+    return true;
+
+}
+
+//=======================================================================================
+
+bool MSCloudProvider::filterIncludeFileNames(const QString &path){// return false if input path contain one of include mask
+
+    if(this->includeList==""){
+        return true;
+    }
+    QString filterType = this->getOption("filter-type");
+    bool isBegin=false;
+    if(filterType == "regexp"){
+        // catch paths with  beginning masks from include/exclude lists
+        QRegExp regex3(path);
+        regex3.setPatternSyntax(QRegExp::RegExp);
+        regex3.isValid();
+        int m1 = regex3.indexIn(this->includeList);
+
+        if(m1 != -1){
+            if((this->includeList.mid(m1-1,1)=="|") ||(m1==0)){
+                isBegin=true;
+            }
+        }
+        QRegExp regex2(this->includeList);
+        regex2.setPatternSyntax(QRegExp::RegExp);
+        regex2.isValid();
+
+        int m = regex2.indexIn(path);
+        if(m != -1){
+            return false;
+        }
+        else{
+            if(isBegin){
+                return false;
+            }
+            else{
+                return true;
+            }
+        }
+    }
+    else{
+        QStringList filters = this->includeList.split('|');
+        qDebug() << filters;
+        qDebug() << path;
+        for(QString &filt : filters){
+            QRegExp regex2(filt);
+            regex2.setPatternSyntax(QRegExp::Wildcard);
+            regex2.isValid();
+            int m = regex2.indexIn(path);
+
+            if(m != -1){
+                qDebug() << path << "     match";
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
+//=======================================================================================
+
+bool MSCloudProvider::filterExcludeFileNames(const QString &path){// return false if input path contain one of exclude mask
+
+    if(this->excludeList==""){
+        return true;
+    }
+    QString filterType = this->getOption("filter-type");
+    bool isBegin=false;
+
+    if(filterType == "regexp"){
+        // catch paths with  beginning masks from include/exclude lists
+        QRegExp regex3(path);
+        regex3.setPatternSyntax(QRegExp::RegExp);
+        regex3.isValid();
+        int m1 = regex3.indexIn(this->excludeList);
+
+        if(m1 != -1){
+            if((this->excludeList.mid(m1-1,1)=="|")||(m1==0)){
+                isBegin=true;
+            }
+        }
+        QRegExp regex2(this->excludeList);
+        regex2.setPatternSyntax(QRegExp::RegExp);
+        regex2.isValid();
+
+        int m = regex2.indexIn(path);
+        if(m != -1){
+            return false;
+        }
+        else{
+            if(isBegin){
+                return false;
+            }
+            else{
+                return true;
+            }
+        }
+    }
+    else{
+        QStringList filters = this->excludeList.split('|');
+        for(QString &filt : filters){
+            QRegExp regex2(filt);
+            regex2.setPatternSyntax(QRegExp::Wildcard);
+            regex2.isValid();
+            int m = regex2.indexIn(path);
+
+            if(m != -1){
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
 void MSCloudProvider::saveTokenFile(QString path){
     // fix warning message
     path=path;
