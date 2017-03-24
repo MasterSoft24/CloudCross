@@ -55,6 +55,11 @@
 #include <QSysInfo>
 #include <sys/utsname.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <sys/un.h>
+#include <unistd.h>
 
 
 
@@ -74,6 +79,10 @@
 #endif
 
 #define APP_NAME "CloudCross"
+
+
+#define USG "ccfd-WhfNxPk-544h-gaQmZog39q" // for use in fuse
+
 
 enum ProviderType{
 
@@ -757,6 +766,65 @@ void infoOneDrive(MSProvidersPool* providers){
 
 
 
+
+// ============= FUSE =======================
+
+bool fuseMount(ProviderType prov,QString workPath,QString mountPoint){
+
+    struct sockaddr_un name;
+    char buf[1000];
+
+    memset(&name, '0', sizeof(name));
+
+    name.sun_family = AF_UNIX;
+
+    snprintf(name.sun_path, 200, "%s", "/tmp/ccfd.sock");
+
+    int s=socket(PF_UNIX,SOCK_STREAM,0);
+
+    if(s== -1){
+        return false;
+    }
+
+    int r=connect(s, (struct sockaddr *)&name, sizeof(struct sockaddr_un));
+
+    if(r<0){
+        perror ("connect");
+        return false;
+    }
+
+    int sz= read(s,&buf[0],100);
+
+    if(sz >0){
+        QString reply=&buf[0];
+
+        if(reply.contains("HELLO")){
+
+            // try to start worker
+            snprintf(&buf[0], 1000, "%s^%d^%s^%s", "new_mount",prov,workPath.toStdString().c_str(),mountPoint.toStdString().c_str());
+            write(s,&buf[0],1000);
+
+            sz= read(s,&buf[0],100);
+
+            if(sz >0){
+
+                return true;
+            }
+            else{
+                return false;
+            }
+
+        }
+    }
+
+    return false;
+}
+
+
+
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////
 
 
@@ -940,6 +1008,8 @@ int main(int argc, char *argv[])
     parser->insertOption(19,"--cloud-space");
     parser->insertOption(20,"--filter-type 1");
 
+    parser->insertOption(20,"--fuse-mount 1");
+
 
     //...............
 
@@ -995,6 +1065,18 @@ int main(int argc, char *argv[])
 
         providers->setWorkPath(wp[0]);
     }
+
+
+    //===================== FUSE SECTION ======================
+
+    if(parser->isParamExist("fuse-mount")){
+
+        fuseMount(currentProvider,providers->workPath,parser->getParamByName("fuse-mount")[0] );
+        return 0;
+    }
+
+    //=========================================================
+
 
 
     if(parser->isParamExist("direct-upload")){
