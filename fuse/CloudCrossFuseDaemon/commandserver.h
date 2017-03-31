@@ -17,15 +17,7 @@
 
 #include "ccfdcommand.h"
 
-typedef struct _fuse_worker{
 
-    QLocalServer* worker_soket;
-    QProcess* worker;
-    QString socket_name;
-
-    QLocalSocket *clientConnection;
-
-}fuse_worker;
 
 class CommandServer : public QObject
 {

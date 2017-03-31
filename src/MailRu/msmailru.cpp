@@ -576,11 +576,11 @@ bool MSMailRu::remote_file_update(MSFSObject *object)
 //=======================================================================================
 
 
-bool MSMailRu::remote_file_generateIDs(int count)
-{
-Q_UNUSED(count);
-return true;
-}
+//bool MSMailRu::remote_file_generateIDs(int count)
+//{
+//Q_UNUSED(count);
+//return true;
+//}
 
 //=======================================================================================
 

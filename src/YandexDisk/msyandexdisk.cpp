@@ -1119,12 +1119,12 @@ void MSYandexDisk::doSync(){
 }
 
 
-bool MSYandexDisk::remote_file_generateIDs(int count) {
-// absolete
-    // fix warning message
-    count++;
-    return false;
-}
+//bool MSYandexDisk::remote_file_generateIDs(int count) {
+//// absolete
+//    // fix warning message
+//    count++;
+//    return false;
+//}
 
 QHash<QString,MSFSObject>   MSYandexDisk::filelist_getFSObjectsByState(MSFSObject::ObjectState state) {
 

@@ -1164,13 +1164,13 @@ void MSDropbox::doSync(){
 }
 
 
-bool MSDropbox::remote_file_generateIDs(int count) {
-// absolete
+//bool MSDropbox::remote_file_generateIDs(int count) {
+//// absolete
 
-    // fix warning message
-    count++;
-    return false;
-}
+//    // fix warning message
+//    count++;
+//    return false;
+//}
 
 QHash<QString,MSFSObject>   MSDropbox::filelist_getFSObjectsByState(MSFSObject::ObjectState state) {
 

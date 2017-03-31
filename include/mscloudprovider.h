@@ -101,7 +101,7 @@ public:
     SyncStrategy strategy; // sync strategy
 
 
-    MSIDsList ids_list;
+    //MSIDsList ids_list;
 
 
     bool setProxyServer(QString type, QString proxy);
@@ -120,7 +120,7 @@ public:
     virtual bool refreshToken()=0;
     virtual MSFSObject::ObjectState filelist_defineObjectState(MSLocalFSObject local, MSRemoteFSObject remote)=0;
     virtual void doSync()=0;
-    virtual bool remote_file_generateIDs(int count) =0 ;
+    //virtual bool remote_file_generateIDs(int count) =0 ;
 
     virtual QHash<QString,MSFSObject>   filelist_getFSObjectsByState(MSFSObject::ObjectState state) =0;
     virtual QHash<QString,MSFSObject>   filelist_getFSObjectsByState(QHash<QString,MSFSObject> fsObjectList,MSFSObject::ObjectState state) =0;
@@ -174,6 +174,9 @@ public:
     virtual bool directUpload(QString url,QString remotePath) =0;
 
 
+    // ======= REMOTE FUNCTIONS BLOCK =======
+
+    virtual bool remote_file_get(MSFSObject *object) =0;
 
 
     QTcpServer* oauthListener;

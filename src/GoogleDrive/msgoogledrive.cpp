@@ -1542,70 +1542,70 @@ void MSGoogleDrive::doSync(){
 // ============= REMOTE FUNCTIONS BLOCK =============
 //=======================================================================================
 
-bool MSGoogleDrive::remote_file_generateIDs(int count){
+//bool MSGoogleDrive::remote_file_generateIDs(int count){
 
-    QList<QString> lst;
+//    QList<QString> lst;
 
-    while(count > 0){
-        MSRequest *req = new MSRequest(this->proxyServer);
+//    while(count > 0){
+//        MSRequest *req = new MSRequest(this->proxyServer);
 
-        req->setRequestUrl("https://www.googleapis.com/drive/v2/files/generateIds");
-        req->setMethod("get");
+//        req->setRequestUrl("https://www.googleapis.com/drive/v2/files/generateIds");
+//        req->setMethod("get");
 
-        int c=0;
+//        int c=0;
 
-        if(count<1000){
-            c=count;
-            count =0;
-        }
-        else{
-            c=1000;
-            count-=1000;
-        }
+//        if(count<1000){
+//            c=count;
+//            count =0;
+//        }
+//        else{
+//            c=1000;
+//            count-=1000;
+//        }
 
-        req->addQueryItem("maxResults",          QString::number(c));
-        req->addQueryItem("space",               "drive");
-        req->addQueryItem("access_token",           this->access_token);
+//        req->addQueryItem("maxResults",          QString::number(c));
+//        req->addQueryItem("space",               "drive");
+//        req->addQueryItem("access_token",           this->access_token);
 
-        req->exec();
-
-
-        if(!req->replyOK()){
-            req->printReplyError();
-            delete(req);
-            exit(1);
-        }
-
-        if(!this->testReplyBodyForError(req->readReplyText())){
-            qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-            exit(0);
-        }
+//        req->exec();
 
 
-        QString content= req->readReplyText();
+//        if(!req->replyOK()){
+//            req->printReplyError();
+//            delete(req);
+//            exit(1);
+//        }
 
-        QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
-        QJsonObject job = json.object();
-        QJsonArray v=job["ids"].toArray();
+//        if(!this->testReplyBodyForError(req->readReplyText())){
+//            qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+//            exit(0);
+//        }
 
-        for(int i=0;i<v.size();i++){
-            lst.append(v[i].toString());
-        }
 
-        delete(req);
+//        QString content= req->readReplyText();
 
-    }
+//        QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+//        QJsonObject job = json.object();
+//        QJsonArray v=job["ids"].toArray();
 
-    this->ids_list.setList(lst);
+//        for(int i=0;i<v.size();i++){
+//            lst.append(v[i].toString());
+//        }
 
-    if(lst.size()>0){
-       return true;
-    }
-    else{
-        return false;
-    }
+//        delete(req);
 
-}
+//    }
+
+//    this->ids_list.setList(lst);
+
+//    if(lst.size()>0){
+//       return true;
+//    }
+//    else{
+//        return false;
+//    }
+
+//}
 
 //=======================================================================================
 // download file from cloud

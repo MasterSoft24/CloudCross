@@ -7,4 +7,5 @@ SOURCES += main.cpp
 LIBS+= -lfuse
 
 HEADERS += \
-    json.hpp
+    json.hpp \
+    ccfw.h

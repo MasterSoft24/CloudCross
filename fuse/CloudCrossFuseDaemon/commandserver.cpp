@@ -76,7 +76,7 @@ void CommandServer::onNewCommandRecieved(){
 
     QStringList comm=incomingMess.split("^");
 
-    if(incomingMess.contains("{")){
+    if(incomingMess.contains("{")){// any command in JSON formated style
 
         log("DAEMON: was received command from worker");
 
@@ -86,7 +86,16 @@ void CommandServer::onNewCommandRecieved(){
 
         if(job.size() == 0){// nop. isn't JSON
 
-            //return;
+            return;
+        }
+
+        QHash<QString,fuse_worker*>::iterator i=workersList.begin();
+        for(;i != workersList.end();i++){
+
+            if(i.value()->socket_name == job["params"].toObject()["socket"].toString()){
+
+                break;
+            }
         }
 
         QThread* thread=new QThread();
@@ -94,6 +103,13 @@ void CommandServer::onNewCommandRecieved(){
 
         ccfdc->params=job;
         ccfdc->socket=sender;
+
+        if(i!= workersList.end()){
+            ccfdc->workerPtr=i.value();
+        }
+        else{
+            ccfdc->workerPtr=NULL;
+        }
 
         ccfdc->moveToThread(thread);
 

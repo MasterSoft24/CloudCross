@@ -13,7 +13,15 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     commandserver.cpp \
-    ccfdcommand.cpp
+    ccfdcommand.cpp \
+    ../../src/common/msproviderspool.cpp \
+    ../../src/common/mscloudprovider.cpp \
+    ../../src/common/msrequest.cpp \
+    ../../src/common/qstdout.cpp \
+    ../../src/common/msfsobject.cpp \
+    ../../src/common/msremotefsobject.cpp \
+    ../../src/common/mslocalfsobject.cpp \
+    ../../src/OneDrive/msonedrive.cpp
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
@@ -28,4 +36,12 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 HEADERS += \
     commandserver.h \
-    ccfdcommand.h
+    ccfdcommand.h \
+    ../../include/msproviderspool.h \
+    ../../include/mscloudprovider.h \
+    ../../include/msrequest.h \
+    ../../include/qstdout.h \
+    ../../include/msfsobject.h \
+    ../../include/msremotefsobject.h \
+    ../../include/mslocalfsobject.h \
+    ../../src/OneDrive/msonedrive.h
