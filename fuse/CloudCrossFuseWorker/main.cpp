@@ -116,6 +116,12 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
     }
     else{
 
+        string fname = string("/tmp/")+tempDirName+string(path);
+
+        struct stat buffer;
+        if(stat (fname.c_str(), &buffer) != 0){//file not cached
+
+
             map<string, MSFSObject>::iterator i= fileList.find(string(path));
 
                 if(i != fileList.end()){
@@ -142,6 +148,19 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
                 }
 
               return 0;
+        }
+        else{// file cached
+
+            int res;
+            res = lstat(fname.c_str(), stbuf);
+            if (res == -1){
+                    return -errno;
+            }
+            return 0;
+
+        }
+
+
     }
 
     return -ENOENT;
@@ -221,6 +240,11 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
 
             i->second.refCount++;
 
+            fi->fh = open (fname.c_str() ,fi->flags);
+            if(fi->fh == -1){
+                log("open for writing error");
+            }
+
         }
         else{// file is missing
 
@@ -228,9 +252,15 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
 
             system(string(string("mkdir -p \"")+ptf+string("\"")).c_str());
 
+            // create zero-size file
             fstream fs;
             fs.open(fname.c_str(), ios::out);
             fs.close();
+
+            fi->fh = open (fname.c_str() ,fi->flags);
+            if(fi->fh == -1){
+                log("open for writing error");
+            }
 
             json comm;
             comm["command"]="get_content";
@@ -343,11 +373,215 @@ return -ENOENT;
 
 // ----------------------------------------------------------------
 
+static int write_callback(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
 
-void destroy_callback(void* d){
+    log("write callback entered");
+    string fname = string("/tmp/")+tempDirName+string(path);
+
+//    ofstream of;
+//    of.open(fname.c_str());
+//    of.seekp(offset);
+//    of.write(buf,size);
+//    of.close();
+
+////    FILE* f = fopen(fname.c_str(),"wb+");
+////    fseek(f,offset,SEEK_SET);
+////    size_t cnt = fread(buf,1,size,f);
+////    fclose(f);
+
+//    return size;
+
+    int fd;
+    int res;
+    (void) fi;
+    fd = open(fname.c_str(), O_WRONLY);
+    if (fd == -1)
+            return -errno;
+    res = pwrite(fd, buf, size, offset);
+    if (res == -1){
+        log("write callback ERROR");
+        close(fd);
+
+        return -errno;
+    }
+    close(fd);
+
+    struct stat buffer;
+    stat (fname.c_str(), &buffer);
+
+    map<string, MSFSObject>::iterator i= fileList.find(string(path));
+    i->second.remote.fileSize=buffer.st_size;
+
+    log("truncated to "+to_string(buffer.st_size));
+
+    log("write callback OK");
+    return res;
+
+}
+
+
+static int ftruncate_callback(const char *path, off_t size,struct fuse_file_info *fi)
+{
+    (void)fi;
+    log("trunc callback entered");
+    string fname = string("/tmp/")+tempDirName+string(path);
+
+
+        int res;
+        res = truncate(fname.c_str(), size);
+        if (res == -1){
+                return -errno;
+        }
+
+
+        return 0;
+}
+
+
+
+static int truncate_callback(const char *path, off_t size)
+{
+
+    log("trunc callback entered");
+    string fname = string("/tmp/")+tempDirName+string(path);
+
+
+        int res;
+        res = truncate(fname.c_str(), size);
+        if (res == -1){
+                return -errno;
+        }
+
+
+        return 0;
+}
+
+
+static int xmp_readlink(const char *path, char *buf, size_t size){
+
+    log("STUB: readlink");
+    return 0;
+}
+
+
+static int xmp_mknod(const char *path, mode_t mode, dev_t rdev){
+log("STUB: mknod");
+    return 0;
+}
+
+
+static int xmp_mkdir(const char *path, mode_t mode){
+
+    log("STUB: mkdir");
+        return 0;
+}
+
+
+static int xmp_unlink(const char *path){
+
+    log("STUB: unlink");
+        return 0;
+}
+
+
+static int xmp_rmdir(const char *path){
+
+    log("STUB: rmdir");
+        return 0;
+}
+
+
+static int xmp_symlink(const char *from, const char *to){
+
+    log("STUB: symlink");
+        return 0;
+}
+
+
+static int xmp_rename(const char *from, const char *to){
+
+    log("STUB: rename");
+        return 0;
+}
+
+
+
+static int xmp_link(const char *from, const char *to){
+
+    log("STUB: link");
+        return 0;
+}
+
+
+static int xmp_chmod(const char *path, mode_t mode){
+
+    log("STUB: chmod");
+        return 0;
+}
+
+
+
+static int xmp_chown(const char *path, uid_t uid, gid_t gid){
+
+    log("STUB: chown");
+        return 0;
+}
+
+
+
+static int xmp_statfs(const char *path, struct statvfs *stbuf){
+
+    int res;
+    string fname = string("/tmp/")+tempDirName+string(path);
+
+    res = statvfs(fname.c_str(), stbuf);
+    if (res == -1)
+            return -errno;
+    return 0;
+}
+
+
+
+static int xmp_access(const char *path, int mask){
+
+    int res;
+    string fname = string("/tmp/")+tempDirName+string(path);
+
+
+    res = access(fname.c_str(), mask);
+    if (res == -1)
+            return -errno;
+    return 0;
+}
+
+
+static int xmp_release(const char *path, struct fuse_file_info *fi)
+{
+        /* Just a stub.  This method is optional and can safely be left
+           unimplemented */
+        (void) path;
+        (void) fi;
+        return 0;
+}
+static int xmp_fsync(const char *path, int isdatasync,
+                     struct fuse_file_info *fi)
+{
+        /* Just a stub.  This method is optional and can safely be left
+           unimplemented */
+        (void) path;
+        (void) isdatasync;
+        (void) fi;
+        return 0;
+}
+// ----------------------------------------------------------------
+
+
+static void destroy_callback(void* d){
+
 
     system(string("rm -rf /tmp/"+tempDirName).c_str());
 
+    close(sock_descr);
     // need send command for destroy socket and objects
 }
 
@@ -536,6 +770,26 @@ int main(int argc, char *argv[])
     fuse_op.read = read_callback;
     fuse_op.readdir = readdir_callback;
     fuse_op.destroy = destroy_callback;
+    fuse_op.write = write_callback;
+    fuse_op.ftruncate = ftruncate_callback;
+    fuse_op.truncate = truncate_callback;
+    fuse_op.release= xmp_release;
+    fuse_op.fsync = xmp_fsync;
+
+    fuse_op.readlink = xmp_readlink;
+    fuse_op.mknod = xmp_mknod;
+    fuse_op.mkdir = xmp_mkdir;
+    fuse_op.unlink = xmp_unlink;
+    fuse_op.rmdir = xmp_rmdir;
+    fuse_op.symlink= xmp_symlink;
+    fuse_op.rename = xmp_rename;
+    fuse_op.link = xmp_link;
+    fuse_op.chmod = xmp_chmod;
+    fuse_op.chown = xmp_chown;
+    fuse_op.statfs = xmp_statfs;
+
+    fuse_op.access = xmp_access;
+
 
     workSocket=argv[1];
     workProvider=argv[2];
@@ -580,7 +834,7 @@ int main(int argc, char *argv[])
 
     tempDirName="TESTING_TEMPORARY";//string(argv[1])+string("_")+getTempName();
 
-    mkdir(string("/tmp/"+tempDirName).c_str(),0755);
+    mkdir(string("/tmp/"+tempDirName).c_str(),0777);
 
     return fuse_main(2, a, &fuse_op, NULL);
 }

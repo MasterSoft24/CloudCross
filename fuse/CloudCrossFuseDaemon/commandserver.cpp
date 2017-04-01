@@ -169,7 +169,27 @@ void CommandServer::onNewCommandRecieved(){
 
 void CommandServer::onClientDisconnected(){
     QLocalSocket* sender=(QLocalSocket*)QObject::sender();
-    sender->deleteLater();
+
+    QHash<QString,fuse_worker*>::iterator i=workersList.begin();
+    for(;i != workersList.end();i++){
+
+        if(i.value()->clientConnection == sender){
+
+            delete(i.value()->clientConnection);//->deleteLater();
+            i.value()->fileList.clear();
+            delete(i.value()->worker_soket);//->deleteLater();
+
+            if(i.value()->worker->state() != QProcess::Running){
+
+                i.value()->worker->kill();
+            }
+
+            workersList.remove(i.key());
+            break;
+        }
+    }
+
+   //sender->deleteLater();
 }
 
 
@@ -178,16 +198,16 @@ void CommandServer::onThreadResult(const QString &r){
 
     CCFDCommand* sender=(CCFDCommand*)QObject::sender();
 
-    log("DAEMON: ready to send - "+r);
+    log("DAEMON: ready to send - ");
 
     if(!sender->socket->isOpen()){
-        log ("DAEMON: socket not open");
+
 
         return;
     }
     else{
 
-        log ("DAEMON: socket becomes to "+sender->socket->fullServerName());
+
     }
 
 

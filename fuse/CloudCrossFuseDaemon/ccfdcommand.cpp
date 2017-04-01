@@ -102,7 +102,7 @@ void CCFDCommand::run(){ //execute received command and send result back to call
                 }
 
 
-                log("readRemote "+QJsonDocument(col).toJson());
+                //log("readRemote "+QJsonDocument(col).toJson());
                 emit result(QJsonDocument(col).toJson());
             }
 
