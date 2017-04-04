@@ -523,7 +523,7 @@ bool MSDropbox::createSyncFileList(){
             }
             this->includeList=this->includeList.left(this->includeList.size()-1);
 
-            QRegExp regex2(this->excludeList);
+            QRegExp regex2(this->includeList);
             if(this->getOption("filter-type") == "regexp")
                 regex2.setPatternSyntax(QRegExp::RegExp);
             else
