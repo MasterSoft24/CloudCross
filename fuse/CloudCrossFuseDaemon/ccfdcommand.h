@@ -32,9 +32,16 @@ typedef struct _fuse_worker{
     QLocalServer* worker_soket;
     QProcess* worker;
     QString socket_name;
+    QString provider;
+    QString workPath;
+    QString mountPoint;
 
     QLocalSocket *clientConnection;
     QHash<QString,MSFSObject> fileList;
+
+    bool workerLocked;
+    bool updateSheduled;
+    int lastUpdateSheduled;
 
 }fuse_worker;
 

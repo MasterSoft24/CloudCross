@@ -12,7 +12,11 @@ void log(QString mes);
 
 CommandServer::CommandServer(QObject *parent) : QObject(parent)
 {
-    srv=new QLocalServer(this);
+    srv = new QLocalServer(this);
+
+    workersController = new QTimer(this);
+    workersController->setInterval(60 * 1000);
+    connect(workersController,SIGNAL(timeout()),this,SLOT(onWorkersProcessLoop()));
 
 }
 
@@ -65,16 +69,16 @@ void log(QString mes){
 
 void CommandServer::onNewCommandRecieved(){
 
-    QLocalSocket* sender=(QLocalSocket*)QObject::sender();
+    QLocalSocket* sender = (QLocalSocket*)QObject::sender();
 
 
     QStringList sndParms;
 
-    QString incomingMess=sender->readAll();
+    QString incomingMess = sender->readAll();
 
     log("DAEMON: new raw command - "+incomingMess);
 
-    QStringList comm=incomingMess.split("^");
+    QStringList comm = incomingMess.split("^");
 
     if(incomingMess.contains("{")){// any command in JSON formated style
 
@@ -98,17 +102,40 @@ void CommandServer::onNewCommandRecieved(){
             }
         }
 
-        QThread* thread=new QThread();
-        CCFDCommand* ccfdc=new CCFDCommand();
+        // <<<<<<<<<<< here is a potentially point of denied (need control a situation with no workers finded)
 
-        ccfdc->params=job;
-        ccfdc->socket=sender;
+        if(job["command"].toString() == QString("set_worker_locked")){
+            log("DAEMON: worker locked");
+            i.value()->workerLocked = true;
+            return;
+        }
+
+        if(job["command"].toString() == QString("set_worker_unlock")){
+            log("DAEMON: worker unlock");
+            i.value()->workerLocked = false;
+            return;
+        }
+
+        if(job["command"].toString() == QString("shedule_update")){
+            log("DAEMON: sedule update");
+            i.value()->updateSheduled = true;
+            i.value()->lastUpdateSheduled = QString(job["params"].toObject()["time"].toString()).toInt();
+            return;
+        }
+
+
+
+        QThread* thread = new QThread();
+        CCFDCommand* ccfdc = new CCFDCommand();
+
+        ccfdc->params = job;
+        ccfdc->socket = sender;
 
         if(i!= workersList.end()){
-            ccfdc->workerPtr=i.value();
+            ccfdc->workerPtr = i.value();
         }
         else{
-            ccfdc->workerPtr=NULL;
+            ccfdc->workerPtr = NULL;
         }
 
         ccfdc->moveToThread(thread);
@@ -125,14 +152,19 @@ void CommandServer::onNewCommandRecieved(){
 
     if(comm[0] == "new_mount"){
 
-        fuse_worker* w=new fuse_worker;
+        fuse_worker* w = new fuse_worker;
 
         //QFile("/tmp/ccfw-test.sock").remove();
 
-        w->worker=          new QProcess(this);
-        w->worker_soket=    new QLocalServer(this);
-        w->socket_name=     QString("ccfd_w_")+this->generateRandom(4)+QString(".sock");
+        w->workerLocked = false;
+        w->updateSheduled = false;
 
+        w->worker =          new QProcess(this);
+        w->worker_soket =    new QLocalServer(this);
+        w->socket_name =     QString("ccfd_w_")+this->generateRandom(4)+QString(".sock");
+        w->mountPoint = comm[3];
+        w->provider = comm[1];
+        w->workPath = comm[2];
 
 
         sndParms << w->socket_name;
@@ -217,6 +249,63 @@ void CommandServer::onThreadResult(const QString &r){
         return;
     }
     sender->socket->flush();
+}
+
+
+
+
+void CommandServer::onWorkersProcessLoop(){
+
+    QHash<QString,fuse_worker*>::iterator i = this->workersList.begin();
+
+    int ct = QDateTime::currentSecsSinceEpoch();
+
+    for(;i != this->workersList.end();i++){
+
+        fuse_worker* w = i.value();
+
+        if( (w->updateSheduled) && (!w->workerLocked) && ((w->lastUpdateSheduled - ct) > 20)  ){
+
+            // start sync for current worker
+
+            // send command to worker for block any write operation until sync ended
+
+            // perpare data for start sync thread
+
+
+            log("DAEMON: Start Sync");
+//            QThread* thread = new QThread();
+//            CCFDCommand* ccfdc = new CCFDCommand();
+
+//            QJsonObject job;
+//            job["command"] = QString("start_sync");
+
+//            QJsonObject pr;
+//            pr["socket"] =      w->socket_name;
+//            pr["path"] =        w->workPath;
+//            pr["provider"] =    w->provider;
+//            pr["mount"] =       w->mountPoint;
+
+//            job["params"] = pr;
+
+
+//            ccfdc->params = job;
+//            ccfdc->socket = w->clientConnection;
+
+//            ccfdc->workerPtr = w;
+
+//            ccfdc->moveToThread(thread);
+
+//            connect(thread,SIGNAL(started()),ccfdc,SLOT(run()));
+//            connect(ccfdc, SIGNAL(finished()), thread, SLOT(quit()));
+//            connect(ccfdc,SIGNAL(result(QString)),this,SLOT(onThreadResult(QString)));
+
+//            thread->start();
+
+            w->updateSheduled = false;
+        }
+    }
+
 }
 
 

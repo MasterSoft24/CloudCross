@@ -21,14 +21,19 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <pthread.h>
 
 #include "json.hpp"
 
-#include "ccfw.h"
+
 
 
 using namespace std;
 using json = nlohmann::json;
+
+#include "ccfw.h"
+#include "incominglistener.cpp"
+#include "fswatcher.cpp"
 
 static const char *filepath = "/file";
 static const char *filename = "file";
@@ -54,7 +59,11 @@ static string workSocket;
 static string workProvider;
 static string workPath;
 
+pthread_t listenerThread;
+lst_param listenerThreadParams;
 
+pthread_t fsWatherThread;
+fswatcher_param fsWatherThreadParams;
 
 // ----------------------------------------------------------------
 
@@ -275,6 +284,7 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
             i->second.refCount=0;
         }
 
+        log("open callback for "+string(path)+" ; ref count is "+to_string(i->second.refCount));
         return 0;
     }
 
@@ -561,8 +571,26 @@ static int xmp_release(const char *path, struct fuse_file_info *fi)
            unimplemented */
         (void) path;
         (void) fi;
+
+
+//        string fname = string("/tmp/")+tempDirName+string(path);
+
+//        map<string, MSFSObject>::iterator i= fileList.find(string(path));
+
+//        i->second.refCount--;
+//        if(i->second.refCount < 0){
+//            i->second.refCount = 0;
+//        }
+
+//        int rc=i->second.refCount;
+
+//        log("release callback; ref count is "+to_string(rc));
+
         return 0;
 }
+
+
+
 static int xmp_fsync(const char *path, int isdatasync,
                      struct fuse_file_info *fi)
 {
@@ -582,6 +610,15 @@ static void destroy_callback(void* d){
     system(string("rm -rf /tmp/"+tempDirName).c_str());
 
     close(sock_descr);
+
+    close(listenerThreadParams.incomingSocket);
+
+    close(fsWatherThreadParams.wd);
+    inotify_rm_watch(fsWatherThreadParams.wd, fsWatherThreadParams.watcher);
+
+    pthread_cancel(listenerThread);
+    pthread_cancel(fsWatherThread);
+
     // need send command for destroy socket and objects
 }
 
@@ -753,9 +790,10 @@ int main(int argc, char *argv[])
 
 
     // rebuild arguments list
-    char* a[2];
+    char* a[3];
     a[0]=argv[0];
     a[1]="/tmp/example";
+    a[2]="-f";
 
 //    log(std::string(argv[1]));
 
@@ -836,7 +874,29 @@ int main(int argc, char *argv[])
 
     mkdir(string("/tmp/"+tempDirName).c_str(),0777);
 
-    return fuse_main(2, a, &fuse_op, NULL);
+    listenerThreadParams.onIncomingCommand = NULL;
+    listenerThreadParams.state=false;
+    listenerThreadParams.socketName = string(workSocket+".incoming");
+    pthread_create(&listenerThread,NULL,incomingListener,&listenerThreadParams);
+    pthread_detach(listenerThread);
+
+    sleep(1);
+
+    if(!listenerThreadParams.state){
+
+        return -1;
+    }
+
+    fsWatherThreadParams.state = false;
+    fsWatherThreadParams.sendCommand = sendCommand;
+    fsWatherThreadParams.path = string("/tmp/"+tempDirName);
+    fsWatherThreadParams.credPath = workPath;
+    fsWatherThreadParams.provider = workProvider;
+    fsWatherThreadParams.socket = workSocket;
+    pthread_create(&fsWatherThread,NULL,fsWatcher,&fsWatherThreadParams);
+    pthread_detach(fsWatherThread);
+
+    return fuse_main(3, a, &fuse_op, NULL);
 }
 
 

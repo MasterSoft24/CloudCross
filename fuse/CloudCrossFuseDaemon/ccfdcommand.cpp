@@ -121,6 +121,36 @@ void CCFDCommand::run(){ //execute received command and send result back to call
             }
 
 
+            if(this->command == "start_sync"){//                       <<<<<----- start_sync
+
+                QString pathToCache= this->params["params"].toObject()["mount"].toString();
+
+//                QString includeList="";
+
+                p->readRemote("");
+                p->readLocal(pathToCache);
+                p->workPath = pathToCache;
+
+                QHash<QString,MSFSObject>::iterator i = p->syncFileList.begin();
+
+                for(;i != p->syncFileList.end();i++){
+
+                    if(! i.value().local.exist){
+//                        includeList += includeList + i.value().path + i.value().fileName + "|";
+                        p->syncFileList.remove(i.key());
+                    }
+
+                }
+
+//                p->includeList = includeList;
+
+//                p->setFlag("useInclude",true);
+                p->doSync();
+
+                // send unlock write operations command to worker
+
+            }
+
             break;
 
 //        case ProviderType::Dropbox:

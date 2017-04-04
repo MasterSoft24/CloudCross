@@ -13,6 +13,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QTimer>
 
 
 #include "ccfdcommand.h"
@@ -28,6 +29,7 @@ public:
 
     QLocalServer* srv;
     QHash<QString,fuse_worker*> workersList;
+    QTimer* workersController;
 
     bool start();
     QString generateRandom(int count);
@@ -39,6 +41,8 @@ public slots:
     void onNewCommandRecieved();
     void onClientDisconnected();
     void onThreadResult(const QString& r);
+
+    void onWorkersProcessLoop();
 };
 
 #endif // COMMANDSERVER_H
