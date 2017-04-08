@@ -7,8 +7,8 @@
 #define _FILE_OFFSET_BITS  64
 #define DAEMON_MSG_END "\n<---CCFD_MESSAGE_END-->"
 
-#define WAIT_FOR_FIRST_DATA 5
-#define WAIT_FOR_NEXT_DATA 4
+#define WAIT_FOR_FIRST_DATA 7
+#define WAIT_FOR_NEXT_DATA 6
 
 #include <fuse.h>
 #include <string.h>
@@ -128,7 +128,7 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
         string fname = string("/tmp/")+tempDirName+string(path);
 
         struct stat buffer;
-        if(stat (fname.c_str(), &buffer) != 0){//file not cached
+        if((stat (fname.c_str(), &buffer) != 0) ){//file not cached
 
 
             map<string, MSFSObject>::iterator i= fileList.find(string(path));
@@ -246,6 +246,7 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
 
         struct stat buffer;
         if(stat (fname.c_str(), &buffer) == 0){//file exists
+
 
             i->second.refCount++;
 
@@ -613,11 +614,13 @@ static void destroy_callback(void* d){
 
     close(listenerThreadParams.incomingSocket);
 
-    close(fsWatherThreadParams.wd);
-    inotify_rm_watch(fsWatherThreadParams.wd, fsWatherThreadParams.watcher);
+    system(string("rm -rf /tmp/"+listenerThreadParams.socketName).c_str());
+
+//    close(fsWatherThreadParams.wd);
+//    inotify_rm_watch(fsWatherThreadParams.wd, fsWatherThreadParams.watcher);
 
     pthread_cancel(listenerThread);
-    pthread_cancel(fsWatherThread);
+//    pthread_cancel(fsWatherThread);
 
     // need send command for destroy socket and objects
 }
@@ -790,10 +793,10 @@ int main(int argc, char *argv[])
 
 
     // rebuild arguments list
-    char* a[3];
+    char* a[2];
     a[0]=argv[0];
     a[1]="/tmp/example";
-    a[2]="-f";
+    //a[2]="-f";//
 
 //    log(std::string(argv[1]));
 
@@ -847,6 +850,12 @@ int main(int argc, char *argv[])
 //            i >> jsonFileList;
 //            //============================
 
+
+    tempDirName="TESTING_TEMPORARY";//string(argv[1])+string("_")+getTempName();
+
+    mkdir(string("/tmp/"+tempDirName).c_str(),0777);
+
+
     for(json::iterator i=jsonFileList.begin();i != jsonFileList.end();i++){
 
         MSFSObject obj;
@@ -866,13 +875,33 @@ int main(int argc, char *argv[])
 
         fileList.insert(std::make_pair(i.key(),obj));
 
+//        if(obj.remote.objectType == MSLocalFSObject::Type::file){
+
+//            string fname = string("/tmp/"+tempDirName) + obj.path + obj.fileName;
+//            string ptf=fname.substr(0,fname.find_last_of("/"));
+
+//            // create zero-size file
+//            fstream fs;
+//            fs.open(fname.c_str(), ios::out);
+
+//            if(!fs.is_open()){
+//                system(string(string("mkdir -p \"")+ptf+string("\"")).c_str());
+//                fs.open(fname.c_str(), ios::out);
+//            }
+
+//            fs.close();
+//        }
+//        else{
+//            string fname = string("/tmp/"+tempDirName) + obj.path + obj.fileName;
+//            string ptf=fname.substr(0,fname.find_last_of("/"));
+//            system(string(string("mkdir -p \"")+ptf+string("\"")).c_str());
+//        }
+
         //log(i.key());
         //std::cout << i.key();
     }
 
-    tempDirName="TESTING_TEMPORARY";//string(argv[1])+string("_")+getTempName();
 
-    mkdir(string("/tmp/"+tempDirName).c_str(),0777);
 
     listenerThreadParams.onIncomingCommand = NULL;
     listenerThreadParams.state=false;
@@ -887,16 +916,29 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    fsWatherThreadParams.state = false;
-    fsWatherThreadParams.sendCommand = sendCommand;
-    fsWatherThreadParams.path = string("/tmp/"+tempDirName);
-    fsWatherThreadParams.credPath = workPath;
-    fsWatherThreadParams.provider = workProvider;
-    fsWatherThreadParams.socket = workSocket;
-    pthread_create(&fsWatherThread,NULL,fsWatcher,&fsWatherThreadParams);
-    pthread_detach(fsWatherThread);
+//    pthread_attr_t attr;
+//    pthread_attr_init(&attr);
 
-    return fuse_main(3, a, &fuse_op, NULL);
+//    fsWatherThreadParams.state = false;
+//    fsWatherThreadParams.sendCommand = sendCommand;
+//    fsWatherThreadParams.path = string("/tmp/"+tempDirName);
+//    fsWatherThreadParams.credPath = workPath;
+//    fsWatherThreadParams.provider = workProvider;
+//    fsWatherThreadParams.socket = workSocket;
+//    pthread_create(&fsWatherThread,&attr,fsWatcher,&fsWatherThreadParams);
+//    pthread_detach(fsWatherThread);
+
+
+    json comm2;
+    comm2["command"]="start_watcher";
+    comm2["params"]["socket"] = argv[1];
+    comm2["params"]["provider"] = argv[2];
+    comm2["params"]["path"] = argv[3];
+    comm2["params"]["watchPath"]= string("/tmp/"+tempDirName);
+
+    sendCommand(comm2);
+
+    return fuse_main(2, a, &fuse_op, NULL);
 }
 
 

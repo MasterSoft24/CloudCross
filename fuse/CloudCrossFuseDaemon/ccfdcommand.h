@@ -1,6 +1,7 @@
 #ifndef CCFDCOMMAND_H
 #define CCFDCOMMAND_H
 
+
 #include <QObject>
 #include <QStringList>
 #include<QtNetwork/QLocalSocket>
@@ -12,11 +13,43 @@
 #include<QtNetwork/QLocalSocket>
 #include <QThread>
 #include <QProcess>
-
+#include <QFileSystemWatcher>
 
 //#include "include/mscloudprovider.h"
 #include "include/msrequest.h"
 #include "include/msproviderspool.h"
+
+
+#include <iostream>
+#include <fstream>
+#include <unistd.h>
+#include <errno.h>
+#include <stdio.h>
+#include <sys/inotify.h>
+#include <vector>
+#include <poll.h>
+
+#define EVENT_SIZE  ( sizeof (struct inotify_event) )
+#define BUF_LEN     ( 1024 * ( EVENT_SIZE + 16 ) )
+
+typedef struct _fswatcher_param{
+
+    //void (*sendCommand) (json command);
+    bool state; // state of thread (true means a thread runned)
+
+    int wd; // watcher descriptor
+    int watcher;
+
+    QString path; // path to mounted dir
+    QString socket;
+    QString provider;
+    QString credPath; // path to credentials
+
+}fswatcher_param;
+
+
+
+
 
 enum ProviderType{
 
@@ -43,7 +76,20 @@ typedef struct _fuse_worker{
     bool updateSheduled;
     int lastUpdateSheduled;
 
+    fswatcher_param* watcherStruct;
+
 }fuse_worker;
+
+
+
+
+
+
+
+
+
+
+
 
 class CCFDCommand : public QObject
 {
@@ -75,6 +121,13 @@ signals:
 public slots:
 
     void run();
+
+//    void watcherRemovedSlot();
+//    void watcherModifiedSlot();
+//    void watcherCreatedSlot();
+    void watcherOnFileChanged(QString file);
+    void watcherOnDirectoryChanged(QString dir);
+
 };
 
 #endif // CCFDCOMMAND_H

@@ -120,34 +120,214 @@ void CCFDCommand::run(){ //execute received command and send result back to call
 
             }
 
+            //...............................................................
 
             if(this->command == "start_sync"){//                       <<<<<----- start_sync
 
-                QString pathToCache= this->params["params"].toObject()["mount"].toString();
-
-//                QString includeList="";
+                QString pathToCache= this->workerPtr->watcherStruct->path;//   this->params["params"].toObject()["mount"].toString().replace("\n","");
 
                 p->readRemote("");
-                p->readLocal(pathToCache);
                 p->workPath = pathToCache;
+                p->readLocal(pathToCache);
 
+
+                QHash<QString,MSFSObject> copy;
                 QHash<QString,MSFSObject>::iterator i = p->syncFileList.begin();
 
                 for(;i != p->syncFileList.end();i++){
 
-                    if(! i.value().local.exist){
-//                        includeList += includeList + i.value().path + i.value().fileName + "|";
-                        p->syncFileList.remove(i.key());
+                    if( i.value().local.exist){
+
+                        copy.insert(i.key(),i.value());
                     }
 
                 }
 
-//                p->includeList = includeList;
+                p->syncFileList.clear();
+                p->syncFileList = copy;
+                copy.clear();
 
-//                p->setFlag("useInclude",true);
                 p->doSync();
 
                 // send unlock write operations command to worker
+
+            }
+
+
+            if(this->command == "start_watcher"){//                       <<<<<----- start_watcher
+
+
+                log("FS WATCHER STARTING");
+
+                    //static fswatcher_param* prm= (fswatcher_param*)param;
+
+                    static fswatcher_param* prm= new fswatcher_param;
+                    prm->credPath = this->params["params"].toObject()["path"].toString();
+                    prm->path = this->params["params"].toObject()["watchPath"].toString();
+
+                    static QStringList backmem;
+
+                    static char buffer[BUF_LEN];
+
+                    //sleep(3);
+
+                    prm->wd = inotify_init1(IN_NONBLOCK);
+
+                    if(prm->wd < 0){
+                        log("INOTIFY: "+QString(strerror(errno)));
+                        return ;
+                    }
+
+
+
+                    log("FS WATCHER ready for watch on "+prm->path);
+                    prm->watcher = inotify_add_watch( prm->wd, prm->path.toStdString().c_str(), IN_CLOSE_WRITE | IN_DELETE | IN_CREATE | IN_OPEN | IN_MOVE | IN_CLOSE_NOWRITE);
+
+                    if(prm->watcher < 0){
+                        log("INOTIFY: add watch error "+QString(strerror(errno)));
+                        close(prm->wd);
+                        return ;
+                    }
+
+
+                    this->workerPtr->watcherStruct = prm;
+
+                    while (true) {
+
+                        int len;
+
+                        struct pollfd pfd = { prm->wd, POLLIN, 0 };
+
+                        int ret = poll(&pfd, 1, 50);
+
+                        if(ret < 0){
+                            log("FS WATCHER error reading");
+                            close(prm->wd);
+                          return ;
+                        }
+
+                        if(ret == 0){
+
+                            //log("FS WATCHER nothing to do");
+                            continue;
+                        }
+                        else{
+
+//                            log("FS WATCHER Something read now!!!!!");
+                            len = read( prm->wd, &buffer[0], BUF_LEN );
+
+                            if (len < 0) {
+                                close(prm->wd);
+                                inotify_rm_watch(prm->wd, prm->watcher);
+                                log("FS WATCHER error reading");
+                              return ;
+                            }
+                        }
+
+
+                        int i=0;
+
+                        while(i < len) {
+                            struct inotify_event* event = (struct inotify_event*) &buffer[i];
+
+                            if(event->len) {
+
+                                if( (event->mask & IN_CREATE) ||
+                                    (event->mask & IN_OPEN) ){
+
+                                    //backmem.push_back(string(&event->name[0]));
+                                    backmem.append(QString(&event->name[0]));
+
+                                    log("WATCHER: need worker lock");
+                                    this->workerPtr->workerLocked = true;
+
+                                    i += EVENT_SIZE + event->len;
+
+                                    continue;
+                                }
+
+                                if( (event->mask & IN_DELETE) ||
+                                    (event->mask & IN_CLOSE_WRITE) ||
+                                    (event->mask & IN_MOVED_TO)||
+                                    (event->mask & IN_MOVED_FROM)){
+
+                                    if(backmem.size() == 0){
+
+                                        log("WATCHER: need shedule update");
+                                        this->workerPtr->updateSheduled = true;
+                                        this->workerPtr->lastUpdateSheduled = QDateTime::currentSecsSinceEpoch();
+                                        i += EVENT_SIZE + event->len;
+                                        continue;
+                                    }
+
+
+                                    QStringList::iterator b = backmem.begin();
+                                    for(;b != backmem.end();b++){
+
+                                        QString ename = QString(&event->name[0]);
+                                        if(*b == ename){
+                                            backmem.erase(b);
+
+                                            if(backmem.size() == 0){
+
+                                                i += EVENT_SIZE + event->len;
+                                                continue;
+                                            }
+
+
+                                            this->workerPtr->workerLocked = false;
+                                            log("WATCHER: need worker unlock");
+
+                                            b = backmem.begin();
+                                            continue;
+                                            //break;
+                                        }
+                                    }
+
+
+                                    log("WATCHER: need shedule update");
+                                    this->workerPtr->updateSheduled = true;
+                                    this->workerPtr->lastUpdateSheduled = QDateTime::currentSecsSinceEpoch();
+
+                                }
+                            }
+
+                            if( (event->mask & IN_CLOSE_NOWRITE)){
+
+                                if(backmem.size() == 0){
+
+                                    i += EVENT_SIZE + event->len;
+                                    continue;
+                                }
+
+                                QStringList::iterator b = backmem.begin();
+                                for(;b != backmem.end();b++){
+
+                                    QString ename = QString(&event->name[0]);
+                                    if(*b == ename){
+                                        backmem.erase(b);
+
+                                        if(backmem.size() == 0){
+
+                                            i += EVENT_SIZE + event->len;
+                                            continue;
+                                        }
+
+
+                                        b = backmem.begin();
+                                        log("WATCHER: need worker unlock");
+                                        this->workerPtr->workerLocked = false;
+                                        continue;
+                                        //break;
+                                    }
+                                }
+
+                            }
+
+                            i += EVENT_SIZE + event->len;
+                        }
+
+                    }
 
             }
 
@@ -170,6 +350,31 @@ void CCFDCommand::run(){ //execute received command and send result back to call
 
         emit finished();
         return;
+}
+
+//void CCFDCommand::watcherRemovedSlot()
+//{
+
+//}
+
+//void CCFDCommand::watcherModifiedSlot()
+//{
+
+//}
+
+//void CCFDCommand::watcherCreatedSlot()
+//{
+
+//}
+
+void CCFDCommand::watcherOnFileChanged(QString file)
+{
+log(" WATCHER: FILE CHANGED "+file);
+}
+
+void CCFDCommand::watcherOnDirectoryChanged(QString dir)
+{
+log(" WATCHER: DIR CHANGED "+dir);
 }
 
 

@@ -43,7 +43,7 @@ log("FS WATCHER STARTING");
 
     string dbgPath="/home/ms/1";
     log("FS WATCHER ready for watch on "+prm->path);
-    prm->watcher = inotify_add_watch( prm->wd, prm->path.c_str(), IN_CLOSE_WRITE | IN_DELETE | IN_CREATE | IN_OPEN | IN_MOVE);
+    prm->watcher = inotify_add_watch( prm->wd, prm->path.c_str(), IN_CLOSE_WRITE | IN_DELETE | IN_CREATE | IN_OPEN | IN_MOVE | IN_CLOSE_NOWRITE);
 
     if(prm->watcher < 0){
         log("INOTIFY: add watch error "+string(strerror(errno)));
@@ -132,7 +132,19 @@ log("FS WATCHER was readed");
                             comm["params"]["path"] = prm->credPath;
 
                             prm->sendCommand(comm);
-                            break;
+
+//                            json comm2;
+//                            comm2["command"]="shedule_update";
+//                            comm2["params"]["time"] = to_string(time(NULL)); // UNIX timestamp in sec
+//                            comm2["params"]["socket"] = prm->socket;
+//                            comm2["params"]["provider"] = prm->provider;
+//                            comm2["params"]["path"] = prm->credPath;
+
+//                            prm->sendCommand(comm2);
+
+                            b = backmem.begin();
+                            continue;
+                            //break;
                         }
                     }
 
@@ -146,6 +158,30 @@ log("FS WATCHER was readed");
                     prm->sendCommand(comm);
 
                 }
+            }
+
+            if( (event->mask & IN_CLOSE_NOWRITE)){
+
+                vector<string>::iterator b = backmem.begin();
+                for(;b != backmem.end();b++){
+
+                    string ename = string(&event->name[0]);
+                    if(*b == ename){
+                        backmem.erase(b);
+
+                        json comm;
+                        comm["command"]="set_worker_unlock";
+                        comm["params"]["socket"] = prm->socket;
+                        comm["params"]["provider"] = prm->provider;
+                        comm["params"]["path"] = prm->credPath;
+
+                        prm->sendCommand(comm);
+                        b = backmem.begin();
+                        continue;
+                        //break;
+                    }
+                }
+
             }
 
             i += EVENT_SIZE + event->len;

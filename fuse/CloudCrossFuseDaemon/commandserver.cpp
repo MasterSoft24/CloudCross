@@ -18,6 +18,7 @@ CommandServer::CommandServer(QObject *parent) : QObject(parent)
     workersController->setInterval(60 * 1000);
     connect(workersController,SIGNAL(timeout()),this,SLOT(onWorkersProcessLoop()));
 
+    workersController->start();
 }
 
 bool CommandServer::start(){ // start a main daemon listener
@@ -104,24 +105,25 @@ void CommandServer::onNewCommandRecieved(){
 
         // <<<<<<<<<<< here is a potentially point of denied (need control a situation with no workers finded)
 
-        if(job["command"].toString() == QString("set_worker_locked")){
-            log("DAEMON: worker locked");
-            i.value()->workerLocked = true;
-            return;
-        }
+//        if(job["command"].toString() == QString("set_worker_locked")){
+//            log("DAEMON: worker locked");
+//            i.value()->workerLocked = true;
+//            return;
+//        }
 
-        if(job["command"].toString() == QString("set_worker_unlock")){
-            log("DAEMON: worker unlock");
-            i.value()->workerLocked = false;
-            return;
-        }
+//        if(job["command"].toString() == QString("set_worker_unlock")){
+//            log("DAEMON: worker unlock");
+//            i.value()->workerLocked = false;
+//            return;
+//        }
 
-        if(job["command"].toString() == QString("shedule_update")){
-            log("DAEMON: sedule update");
-            i.value()->updateSheduled = true;
-            i.value()->lastUpdateSheduled = QString(job["params"].toObject()["time"].toString()).toInt();
-            return;
-        }
+//        if(job["command"].toString() == QString("shedule_update")){
+//            log("DAEMON: sedule update");
+//            i.value()->updateSheduled = true;
+//            i.value()->lastUpdateSheduled = QString(job["params"].toObject()["time"].toString()).toInt();
+//            return;
+//        }
+
 
 
 
@@ -256,6 +258,7 @@ void CommandServer::onThreadResult(const QString &r){
 
 void CommandServer::onWorkersProcessLoop(){
 
+    log("PROCESS LOOP");
     QHash<QString,fuse_worker*>::iterator i = this->workersList.begin();
 
     int ct = QDateTime::currentSecsSinceEpoch();
@@ -264,7 +267,7 @@ void CommandServer::onWorkersProcessLoop(){
 
         fuse_worker* w = i.value();
 
-        if( (w->updateSheduled) && (!w->workerLocked) && ((w->lastUpdateSheduled - ct) > 20)  ){
+        if( (w->updateSheduled) && (!w->workerLocked) && ((ct - w->lastUpdateSheduled) > 20)  ){
 
             // start sync for current worker
 
@@ -274,33 +277,33 @@ void CommandServer::onWorkersProcessLoop(){
 
 
             log("DAEMON: Start Sync");
-//            QThread* thread = new QThread();
-//            CCFDCommand* ccfdc = new CCFDCommand();
+            QThread* thread = new QThread();
+            CCFDCommand* ccfdc = new CCFDCommand();
 
-//            QJsonObject job;
-//            job["command"] = QString("start_sync");
+            QJsonObject job;
+            job["command"] = QString("start_sync");
 
-//            QJsonObject pr;
-//            pr["socket"] =      w->socket_name;
-//            pr["path"] =        w->workPath;
-//            pr["provider"] =    w->provider;
-//            pr["mount"] =       w->mountPoint;
+            QJsonObject pr;
+            pr["socket"] =      w->socket_name;
+            pr["path"] =        w->workPath;
+            pr["provider"] =    w->provider;
+            pr["mount"] =       w->mountPoint;
 
-//            job["params"] = pr;
+            job["params"] = pr;
 
 
-//            ccfdc->params = job;
-//            ccfdc->socket = w->clientConnection;
+            ccfdc->params = job;
+            ccfdc->socket = w->clientConnection;
 
-//            ccfdc->workerPtr = w;
+            ccfdc->workerPtr = w;
 
-//            ccfdc->moveToThread(thread);
+            ccfdc->moveToThread(thread);
 
-//            connect(thread,SIGNAL(started()),ccfdc,SLOT(run()));
-//            connect(ccfdc, SIGNAL(finished()), thread, SLOT(quit()));
-//            connect(ccfdc,SIGNAL(result(QString)),this,SLOT(onThreadResult(QString)));
+            connect(thread,SIGNAL(started()),ccfdc,SLOT(run()));
+            connect(ccfdc, SIGNAL(finished()), thread, SLOT(quit()));
+            connect(ccfdc,SIGNAL(result(QString)),this,SLOT(onThreadResult(QString)));
 
-//            thread->start();
+            thread->start();
 
             w->updateSheduled = false;
         }
