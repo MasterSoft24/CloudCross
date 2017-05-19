@@ -47,7 +47,7 @@ void sendCommand(json command);
 
 // ========= GLOBALS ==========
 
-static struct fuse_operations fuse_op;
+static  fuse_operations fuse_op;
 
 static int sock_descr;
 
@@ -113,19 +113,31 @@ map<string, MSFSObject> filterListByPath(map<string, MSFSObject> src, string pat
 }
 
 
+// ----------------------------------------------------------------
+
+static int fgetattr_callback(const char *path, struct stat *stbuf, struct fuse_file_info * fi) {
+
+log("STUB fgetattr");
+return -ENOENT;
+}
 
 // ----------------------------------------------------------------
 
 static int getattr_callback(const char *path, struct stat *stbuf) {
 
     if (strcmp(path, "/") == 0){
+        log("CALLBACK getattr for /");
+
               stbuf->st_mode = S_IFDIR | 0755;
+              stbuf->st_uid=1000;
+              stbuf->st_gid=1000;
               stbuf->st_nlink = 1;
               return 0;
     }
     else{
 
         string fname = string("/tmp/")+tempDirName+string(path);
+        log("CALLBACK getattr "+fname);
 
         struct stat buffer;
         if((stat (fname.c_str(), &buffer) != 0) ){//file not cached
@@ -133,7 +145,7 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
 
             map<string, MSFSObject>::iterator i= fileList.find(string(path));
 
-                if(i != fileList.end()){
+                if(i != fileList.end()){// file or folder exists on remote
 
                     //std::pair<string,MSFSObject> o=*i;
                     MSFSObject o= i->second;
@@ -155,16 +167,40 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
 
                     return 0;
                 }
+                else{ // this is new file or folder
+
+//                    stbuf->st_mode = S_IFREG | 0777;
+//                    stbuf->st_nlink = 1;
+//                    stbuf->st_size = 0;
+//                    stbuf->st_uid=1000;
+//                    stbuf->st_gid=1000;
+//                    stbuf->st_mtime=time(NULL);
+
+                    stat (fname.c_str(), stbuf);
+
+                    log("CALLBACK getattr NEW FILE "+to_string(stbuf->st_mode));
+//                    memset(stbuf, 0, sizeof(stbuf));
+//                    stbuf->st_mode = S_IFREG | 0777;
+//                    stbuf->st_uid = getuid();
+//                    stbuf->st_gid = getgid();
+//                    stbuf->st_atime = stbuf->st_mtime = time(NULL);
+
+                    //return -ENOENT;
+                    return 0;
+                }
 
               return 0;
         }
         else{// file cached
 
             int res;
-            res = lstat(fname.c_str(), stbuf);
+            res = stat(fname.c_str(), stbuf);
+
+
             if (res == -1){
                     return -errno;
             }
+            log("CALLBACK getattr CACHED FILE SIZE IS "+to_string(stbuf->st_size));
             return 0;
 
         }
@@ -182,6 +218,7 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
 
     (void) offset;
     (void) fi;
+    log("CALLBACK readdir "+string(path));
 
      //qDebug()<<" readdir callback"<<endl;
 
@@ -247,16 +284,19 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
         struct stat buffer;
         if(stat (fname.c_str(), &buffer) == 0){//file exists
 
+            log("CALLBACK open - File Exists "+string(path));
 
             i->second.refCount++;
 
             fi->fh = open (fname.c_str() ,fi->flags);
             if(fi->fh == -1){
-                log("open for writing error");
+                log("CALLBACK open - open for writing error");
             }
 
         }
         else{// file is missing
+
+            log("CALLBACK open - File Missing");
 
             string ptf=fname.substr(0,fname.find_last_of("/"));
 
@@ -269,7 +309,7 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
 
             fi->fh = open (fname.c_str() ,fi->flags);
             if(fi->fh == -1){
-                log("open for writing error");
+                log("CALLBACK open - open for writing error");
             }
 
             json comm;
@@ -285,7 +325,7 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
             i->second.refCount=0;
         }
 
-        log("open callback for "+string(path)+" ; ref count is "+to_string(i->second.refCount));
+        log("open callback ended for "+string(path)+" ; ref count is "+to_string(i->second.refCount));
         return 0;
     }
 
@@ -297,7 +337,8 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
 
 static int read_callback(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
 
-    log("read "+to_string(size)+" "+to_string(offset));
+//    log("read "+to_string(size)+" "+to_string(offset));
+
 
     map<string, MSFSObject>::iterator i= fileList.find(string(path));
 
@@ -306,26 +347,20 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
     string fname = string("/tmp/")+tempDirName+string(path);
 
     struct stat buffer;
-    if(stat (fname.c_str(), &buffer) == 0){//file exists
+    if(stat (fname.c_str(), &buffer) == 0){//file exists in cache
+
+//        // get real size of file
+//        FILE* r_f=fopen(fname.c_str(),"rb");
+//        fseek(r_f,0,SEEK_END);
+//        buffer.st_size = ftell(r_f);
+//        fclose(r_f);
+
 
         if(buffer.st_size == 0){// file don't cached yet
 
-            for(int i=0;i < WAIT_FOR_FIRST_DATA;i++){
-                sleep(1);
-                stat (fname.c_str(), &buffer);
-                if( (buffer.st_size == fullSize) || (buffer.st_size == size) ){
+            if(i->second.localCreated){
 
-                    return read_callback(path,buf,size,offset,fi);
-                }
-            }
-
-            return 0;
-
-        }
-        else{// fully or partialy cached
-
-            if(fullSize == buffer.st_size){// fully cached
-
+                log("CALLBACK read - file LOCAL CREATED and fully cached "+string(path));
 
                 FILE* f = fopen(fname.c_str(),"rb");
                 fseek(f,offset,SEEK_SET);
@@ -334,7 +369,120 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
 
                 return cnt;
             }
+            else{
+
+                log("CALLBACK read - file exists but don't cached "+string(path));
+
+                for(int i=0;i < WAIT_FOR_FIRST_DATA;i++){
+                    sleep(1);
+                    stat (fname.c_str(), &buffer);
+                    if( (buffer.st_size == fullSize) || (buffer.st_size == size) ){
+
+                        return read_callback(path,buf,size,offset,fi);
+                    }
+                }
+
+                return 0;
+            }
+
+        }
+        else{// fully or partialy cached
+
+            if(fullSize == buffer.st_size){// fully cached
+
+
+//                if(offset > buffer.st_size){
+//                    log("CALLBACK read - (offset > buffer.st_size) "+string(path));
+//                    return 0;
+//                }
+
+//                if(offset + size > buffer.st_size){
+
+//                    log("CALLBACK read - (offset + size > buffer.st_size) "+string(path));
+
+//                    FILE* f = fopen(fname.c_str(),"rb");
+//                    fseek(f,offset,SEEK_SET);
+//                    //size_t cnt = fread(buf,1,(buffer.st_size - offset),f);
+//                    size_t cnt = fread(buf,1,(size),f);
+//                    fclose(f);
+//                    return (int)size;//(buffer.st_size - offset);
+//                    //return 0;
+//                }
+
+
+//                log("CALLBACK read - NORM "+string(path));
+//                FILE* f = fopen(fname.c_str(),"rb");
+//                fseek(f,offset,SEEK_SET);
+//                size_t cnt = fread(buf,1,size,f);
+//                fclose(f);
+
+//                if(cnt != size){
+//                    return (int)cnt;
+//                }
+//                else{
+//                    return (int)size;
+//                }
+
+
+                    log("CALLBACK read - NEW "+to_string(fullSize)+" ("+to_string(buffer.st_size)+") "+to_string(offset)+" "+to_string(size));
+
+                    ifstream data;
+                    data.open(fname.c_str(),   ios::in | ios::binary);//ios::out |ios::trunc |
+
+                    data.seekg(static_cast<streamoff>(offset));
+                    data.read(buf, static_cast<streamoff>(size));
+                    if (data.eof()){ // read may fail if we reach eof
+
+                        data.clear(); // clear possible failbit
+                    }
+
+                    log("CALLBACK read - NEW READED "+to_string(static_cast<int>(data.gcount())));
+
+                    return static_cast<int>(data.gcount());
+
+
+
+
+//                log("CALLBACK read - file exists and fully cached "+string(path));
+
+//                FILE* f = fopen(fname.c_str(),"rb");
+//                fseek(f,offset,SEEK_SET);
+//                size_t cnt = fread(buf,1,size,f);
+//                //fclose(f);
+
+//                if(cnt < 0){
+//                    fclose(f);
+//                    return 0;
+//                }
+
+//                if(cnt != size){
+//                    int y;
+//                    if(cnt > size){
+//                        y = cnt - size;
+//                        log("CALLBACK read - ERROR OCCURED (CNT is greater) SIZE MISSMATCH IS  "+to_string(y));
+//                        fclose(f);
+//                        return size;
+//                    }
+//                    else{
+
+//                        y = size - cnt;
+//                        log("CALLBACK read - ERROR OCCURED (SIZE is greater) SIZE MISSMATCH IS  "+to_string(y));
+
+//                        fclose(f);
+//                        return cnt;
+
+//                    }
+//                    //log("CALLBACK read - ERROR OCCURED SIZE MISSMATCH IS  "+to_string(y));
+
+//                    fclose(f);
+//                }
+
+//                log("CALLBACK read - WAS READED  "+to_string(cnt));
+//                return cnt;
+            }
             else{// partialy cached
+
+                log("CALLBACK read - file exists and partially cached "+string(path));
 
                 int endPosition=size+offset-1;
 
@@ -375,6 +523,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
     }
     else{
 
+        log("CALLBACK read - file DON'T exist "+string(path));
         return open_callback(path,fi);
     }
 
@@ -386,7 +535,7 @@ return -ENOENT;
 
 static int write_callback(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
 
-    log("write callback entered");
+    log("CALLBACK write");
     string fname = string("/tmp/")+tempDirName+string(path);
 
 //    ofstream of;
@@ -434,7 +583,7 @@ static int write_callback(const char *path, const char *buf, size_t size, off_t 
 static int ftruncate_callback(const char *path, off_t size,struct fuse_file_info *fi)
 {
     (void)fi;
-    log("trunc callback entered");
+    log("CALLBACK ftruncate");
     string fname = string("/tmp/")+tempDirName+string(path);
 
 
@@ -453,7 +602,7 @@ static int ftruncate_callback(const char *path, off_t size,struct fuse_file_info
 static int truncate_callback(const char *path, off_t size)
 {
 
-    log("trunc callback entered");
+    log("CALLBACK truncate");
     string fname = string("/tmp/")+tempDirName+string(path);
 
 
@@ -476,29 +625,128 @@ static int xmp_readlink(const char *path, char *buf, size_t size){
 
 
 static int xmp_mknod(const char *path, mode_t mode, dev_t rdev){
-log("STUB: mknod");
-    return 0;
+log("CALLBACK mknod");
+
+string fname = string("/tmp/")+tempDirName+string(path);
+
+    int res = mknod(fname.c_str(), mode, rdev);
+    if(res == -1){
+        return -errno;
+    }
+    else{
+
+        MSFSObject obj;
+
+        string td = string("/tmp/")+tempDirName;
+        string ptf = fname.substr(0,fname.find_last_of("/"));
+        ptf = ptf.substr(td.length());
+
+        if(ptf.length() == 0){
+            ptf = "/";
+        }
+
+        string fnm=fname.substr(fname.find_last_of("/")+1);
+
+//        obj.state               = jo["state"];
+        obj.path                = ptf;
+        obj.fileName            = fnm;
+        obj.refCount            = 1;
+        obj.remote.exist        = true;
+        obj.remote.fileSize     = 0;
+        obj.remote.modifiedDate = time(0);
+        obj.remote.objectType   = MSRemoteFSObject::Type::file;
+        obj.localCreated        = true;
+
+        fileList.insert(std::make_pair(string(path),obj));
+
+        log("CALLBACK mknod NEW CREATED "+ ptf+string(" - ")+fnm);
+        return 0;
+    }
+
 }
 
 
 static int xmp_mkdir(const char *path, mode_t mode){
 
-    log("STUB: mkdir");
-        return 0;
+    log("CALLBACK mkdir");
+
+    string fname = string("/tmp/")+tempDirName+string(path);
+
+        int res = mkdir(fname.c_str(), mode);
+        if(res == -1){
+            return -errno;
+        }
+        else{
+
+            MSFSObject obj;
+
+            string td = string("/tmp/")+tempDirName;
+            string ptf = fname.substr(0,fname.find_last_of("/"));
+            ptf = ptf.substr(td.length());
+
+            if(ptf.length() == 0){
+                ptf = "/";
+            }
+
+            string fnm=fname.substr(fname.find_last_of("/")+1);
+
+    //        obj.state               = jo["state"];
+            obj.path                = ptf;
+            obj.fileName            = fnm;
+            obj.refCount            = 1;
+            obj.remote.exist        = true;
+            obj.remote.fileSize     = 0;
+            obj.remote.modifiedDate = time(0);
+            obj.remote.objectType   = MSRemoteFSObject::Type::folder;
+
+            fileList.insert(std::make_pair(string(path),obj));
+
+            log("CALLBACK mkdir NEW CREATED "+ ptf+string(" - ")+fnm);
+            return 0;
+        }
 }
 
 
 static int xmp_unlink(const char *path){
 
-    log("STUB: unlink");
-        return 0;
+    log("CALLBACK unlink");
+    string fname = string("/tmp/")+tempDirName+string(path);
+    map<string, MSFSObject>::iterator i= fileList.find(string(path));
+
+    if( i != fileList.end()){
+
+        int res = unlink(fname.c_str());
+        if(res == -1){
+            return -errno;
+        }
+        else{
+            fileList.erase(i);
+            return 0;
+        }
+    }
+
+    return -errno;
 }
 
 
 static int xmp_rmdir(const char *path){
 
-    log("STUB: rmdir");
+    log("CALLBACK: rmdir");
+    string fname = string("/tmp/")+tempDirName+string(path);
+    map<string, MSFSObject>::iterator i= fileList.find(string(path));
+
+    if( i != fileList.end()){
+
+        int res = rmdir(fname.c_str());
+        if(res == -1){
+            return -errno;
+        }
+
+        fileList.erase(i);
         return 0;
+    }
+
+        return -errno;
 }
 
 
@@ -511,8 +759,34 @@ static int xmp_symlink(const char *from, const char *to){
 
 static int xmp_rename(const char *from, const char *to){
 
-    log("STUB: rename");
+    log("CALLBACK rename");
+
+    string fname_from = string("/tmp/")+tempDirName+string(from);
+    string fname_to = string("/tmp/")+tempDirName+string(to);
+
+    int result= rename( fname_from.c_str() , fname_to.c_str() );
+    if(result == 0){
+
+        map<string, MSFSObject>::iterator i= fileList.find(string(from));
+
+        string td = string("/tmp/")+tempDirName;
+        string ptf = fname_to.substr(0,fname_to.find_last_of("/"));
+        ptf = ptf.substr(td.length());
+        string fnm = fname_to.substr(fname_to.find_last_of("/")+1);
+
+        if(ptf.length() == 0){
+            ptf = "/";
+        }
+
+        i->second.path = ptf;
+        i->second.fileName = fnm;
+
         return 0;
+    }
+    else{
+     return -1;
+    }
+
 }
 
 
@@ -542,13 +816,23 @@ static int xmp_chown(const char *path, uid_t uid, gid_t gid){
 
 static int xmp_statfs(const char *path, struct statvfs *stbuf){
 
-    int res;
+//    int res;
     string fname = string("/tmp/")+tempDirName+string(path);
+log("CALLBACK statfs "+fname);
+//    res = statvfs(fname.c_str(), stbuf);
+//    if (res == -1)
+//            return -errno;
+//    return 0;
 
-    res = statvfs(fname.c_str(), stbuf);
-    if (res == -1)
-            return -errno;
-    return 0;
+
+stbuf->f_fsid = {}; // ignored
+stbuf->f_bsize = 4096; // a guess!
+stbuf->f_blocks = 1000 * 256 ; // * 1024 * 1024 / f_bsize
+stbuf->f_bfree = stbuf->f_blocks - 2 * 256;
+stbuf->f_bavail = stbuf->f_bfree;
+stbuf->f_namemax = 256;
+return 0;
+
 }
 
 
@@ -557,7 +841,7 @@ static int xmp_access(const char *path, int mask){
 
     int res;
     string fname = string("/tmp/")+tempDirName+string(path);
-
+log("CALLBACK access "+fname);
 
     res = access(fname.c_str(), mask);
     if (res == -1)
@@ -573,6 +857,7 @@ static int xmp_release(const char *path, struct fuse_file_info *fi)
         (void) path;
         (void) fi;
 
+log("CALLBACK release");
 
 //        string fname = string("/tmp/")+tempDirName+string(path);
 
@@ -592,11 +877,10 @@ static int xmp_release(const char *path, struct fuse_file_info *fi)
 
 
 
-static int xmp_fsync(const char *path, int isdatasync,
-                     struct fuse_file_info *fi)
-{
+static int xmp_fsync(const char *path, int isdatasync,struct fuse_file_info *fi){
         /* Just a stub.  This method is optional and can safely be left
            unimplemented */
+log("CALLBACK fsync");
         (void) path;
         (void) isdatasync;
         (void) fi;
@@ -606,7 +890,7 @@ static int xmp_fsync(const char *path, int isdatasync,
 
 
 static void destroy_callback(void* d){
-
+log("CALLBACK destroy");
 
     system(string("rm -rf /tmp/"+tempDirName).c_str());
 
@@ -807,6 +1091,7 @@ int main(int argc, char *argv[])
 
 
     fuse_op.getattr = getattr_callback;
+    //fuse_op.fgetattr = fgetattr_callback;
     fuse_op.open = open_callback;
     fuse_op.read = read_callback;
     fuse_op.readdir = readdir_callback;
@@ -916,17 +1201,6 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-//    pthread_attr_t attr;
-//    pthread_attr_init(&attr);
-
-//    fsWatherThreadParams.state = false;
-//    fsWatherThreadParams.sendCommand = sendCommand;
-//    fsWatherThreadParams.path = string("/tmp/"+tempDirName);
-//    fsWatherThreadParams.credPath = workPath;
-//    fsWatherThreadParams.provider = workProvider;
-//    fsWatherThreadParams.socket = workSocket;
-//    pthread_create(&fsWatherThread,&attr,fsWatcher,&fsWatherThreadParams);
-//    pthread_detach(fsWatherThread);
 
 
     json comm2;

@@ -90,6 +90,7 @@ class MSFSObject
 public:
     MSFSObject(){
 
+        this->localCreated = false;
     }
 
     enum ObjectState{
@@ -121,6 +122,7 @@ public:
                     //  0= a file don't opened but cached
                     // >0= a file cached and opened
 
+    bool localCreated; //
 
 
 //    void getLocalMimeType(QString path);

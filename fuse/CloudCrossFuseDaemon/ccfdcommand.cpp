@@ -124,7 +124,7 @@ void CCFDCommand::run(){ //execute received command and send result back to call
 
             if(this->command == "start_sync"){//                       <<<<<----- start_sync
 
-                QString pathToCache= this->workerPtr->watcherStruct->path;//   this->params["params"].toObject()["mount"].toString().replace("\n","");
+                QString pathToCache= this->workerPtr->watcherStruct->path;
 
                 p->readRemote("");
                 p->workPath = pathToCache;
