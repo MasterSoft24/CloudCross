@@ -108,7 +108,7 @@ void MSProvidersPool::getCurrentPath(){
 }
 
 
-void MSProvidersPool::setWorkPath(QString path){
+void MSProvidersPool::setWorkPath(const QString &path){
 
 #ifdef Q_OS_WIN
    path=path.replace("\\","/") ;
@@ -117,7 +117,7 @@ void MSProvidersPool::setWorkPath(QString path){
 
 }
 
-MSCloudProvider* MSProvidersPool::getProvider(QString providerName){
+MSCloudProvider* MSProvidersPool::getProvider(const QString &providerName){
     for(int i=0; i< this->pool.size();i++){
 
         if(this->pool[i]->providerName==providerName){
@@ -129,7 +129,7 @@ MSCloudProvider* MSProvidersPool::getProvider(QString providerName){
 }
 
 
-void MSProvidersPool::saveTokenFile(QString providerName){
+void MSProvidersPool::saveTokenFile(const QString &providerName){
     MSCloudProvider* cp=this->getProvider(providerName);
     if(cp!=NULL){
         cp->saveTokenFile(this->workPath);
@@ -138,7 +138,7 @@ void MSProvidersPool::saveTokenFile(QString providerName){
 }
 
 
-bool MSProvidersPool::loadTokenFile(QString providerName){
+bool MSProvidersPool::loadTokenFile(const QString &providerName){
     MSCloudProvider* cp=this->getProvider(providerName);
     if(cp!=NULL){
         return cp->loadTokenFile(this->workPath);
@@ -148,7 +148,7 @@ bool MSProvidersPool::loadTokenFile(QString providerName){
 }
 
 
-bool MSProvidersPool::refreshToken(QString providerName){
+bool MSProvidersPool::refreshToken(const QString &providerName){
 
     MSCloudProvider* cp=this->getProvider(providerName);
     if(cp!=NULL){
@@ -165,14 +165,14 @@ void MSProvidersPool::setStrategy(MSCloudProvider::SyncStrategy strategy){
 }
 
 
-void MSProvidersPool::setFlag(QString flagName, bool flagVal){
+void MSProvidersPool::setFlag(const QString &flagName, bool flagVal){
 
     this->flags.insert(flagName,flagVal);
 
 }
 
 
-void MSProvidersPool::setOption(QString optionName, QString optVal){
+void MSProvidersPool::setOption(const QString &optionName, const QString &optVal){
 
     this->options.insert(optionName,optVal);
 

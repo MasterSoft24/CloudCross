@@ -58,6 +58,7 @@ static string tempDirName;
 static string workSocket;
 static string workProvider;
 static string workPath;
+static string mountPoint;
 
 pthread_t listenerThread;
 lst_param listenerThreadParams;
@@ -117,7 +118,7 @@ map<string, MSFSObject> filterListByPath(map<string, MSFSObject> src, string pat
 
 static int fgetattr_callback(const char *path, struct stat *stbuf, struct fuse_file_info * fi) {
 
-log("STUB fgetattr");
+//log("STUB fgetattr");
 return -ENOENT;
 }
 
@@ -137,22 +138,27 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
     else{
 
         string fname = string("/tmp/")+tempDirName+string(path);
+        //string findname=string(path)+"/";
         log("CALLBACK getattr "+fname);
 
         struct stat buffer;
         if((stat (fname.c_str(), &buffer) != 0) ){//file not cached
-
+        log("CALLBACK getattr:  file not cached");
 
             map<string, MSFSObject>::iterator i= fileList.find(string(path));
 
                 if(i != fileList.end()){// file or folder exists on remote
-
+                    log("CALLBACK getattr:  file or folder exists on remote");
                     //std::pair<string,MSFSObject> o=*i;
                     MSFSObject o= i->second;
+
+                    memset(stbuf,0,sizeof(struct stat));
 
                     if(o.remote.objectType == MSRemoteFSObject::Type::folder){
 
                         stbuf->st_mode = S_IFDIR | 0755;
+                        stbuf->st_nlink = 2;
+//                        stbuf->st_size = 4096;
                     }
                     else{
 
@@ -161,13 +167,14 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
                         stbuf->st_size = o.remote.fileSize;
                     }
 
-                    stbuf->st_uid=1000;
-                    stbuf->st_gid=1000;
+                    stbuf->st_uid=getuid();
+                    stbuf->st_gid=getgid();
                     stbuf->st_mtime=o.remote.modifiedDate/1000;
 
                     return 0;
                 }
                 else{ // this is new file or folder
+                    log("CALLBACK getattr:  this is new file or folder");
 
 //                    stbuf->st_mode = S_IFREG | 0777;
 //                    stbuf->st_nlink = 1;
@@ -176,23 +183,24 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
 //                    stbuf->st_gid=1000;
 //                    stbuf->st_mtime=time(NULL);
 
-                    stat (fname.c_str(), stbuf);
+                    //stat (fname.c_str(), stbuf);
 
-                    log("CALLBACK getattr NEW FILE "+to_string(stbuf->st_mode));
-//                    memset(stbuf, 0, sizeof(stbuf));
+                   // log("CALLBACK getattr NEW FILE "+to_string(stbuf->st_mode));
+                   //memset(stbuf, 0, sizeof(stbuf));
 //                    stbuf->st_mode = S_IFREG | 0777;
 //                    stbuf->st_uid = getuid();
 //                    stbuf->st_gid = getgid();
 //                    stbuf->st_atime = stbuf->st_mtime = time(NULL);
 
-                    //return -ENOENT;
-                    return 0;
+                    return -ENOENT;
+                   // return 0;
                 }
 
               return 0;
         }
         else{// file cached
 
+            log("CALLBACK getattr:  file cached");
             int res;
             res = stat(fname.c_str(), stbuf);
 
@@ -200,7 +208,7 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
             if (res == -1){
                     return -errno;
             }
-            log("CALLBACK getattr CACHED FILE SIZE IS "+to_string(stbuf->st_size));
+            //log("CALLBACK getattr CACHED FILE SIZE IS "+to_string(stbuf->st_size));
             return 0;
 
         }
@@ -218,7 +226,7 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
 
     (void) offset;
     (void) fi;
-    log("CALLBACK readdir "+string(path));
+    //log("CALLBACK readdir "+string(path));
 
      //qDebug()<<" readdir callback"<<endl;
 
@@ -284,19 +292,19 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
         struct stat buffer;
         if(stat (fname.c_str(), &buffer) == 0){//file exists
 
-            log("CALLBACK open - File Exists "+string(path));
+            //log("CALLBACK open - File Exists "+string(path)+" flags = "+to_string(fi->flags));
 
             i->second.refCount++;
 
             fi->fh = open (fname.c_str() ,fi->flags);
             if(fi->fh == -1){
-                log("CALLBACK open - open for writing error");
+                //log("CALLBACK open EXISTS - open for writing error");
             }
 
         }
         else{// file is missing
 
-            log("CALLBACK open - File Missing");
+           // log("CALLBACK open - File Missing");
 
             string ptf=fname.substr(0,fname.find_last_of("/"));
 
@@ -309,7 +317,7 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
 
             fi->fh = open (fname.c_str() ,fi->flags);
             if(fi->fh == -1){
-                log("CALLBACK open - open for writing error");
+               // log("CALLBACK open MISSING - open for writing error");
             }
 
             json comm;
@@ -325,7 +333,7 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
             i->second.refCount=0;
         }
 
-        log("open callback ended for "+string(path)+" ; ref count is "+to_string(i->second.refCount));
+        //log("open callback ended for "+string(path)+" ; ref count is "+to_string(i->second.refCount));
         return 0;
     }
 
@@ -360,7 +368,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
 
             if(i->second.localCreated){
 
-                log("CALLBACK read - file LOCAL CREATED and fully cached "+string(path));
+                //log("CALLBACK read - file LOCAL CREATED and fully cached "+string(path));
 
                 FILE* f = fopen(fname.c_str(),"rb");
                 fseek(f,offset,SEEK_SET);
@@ -371,7 +379,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
             }
             else{
 
-                log("CALLBACK read - file exists but don't cached "+string(path));
+                //log("CALLBACK read - file exists but don't cached "+string(path));
 
                 for(int i=0;i < WAIT_FOR_FIRST_DATA;i++){
                     sleep(1);
@@ -424,7 +432,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
 //                }
 
 
-                    log("CALLBACK read - NEW "+to_string(fullSize)+" ("+to_string(buffer.st_size)+") "+to_string(offset)+" "+to_string(size));
+                    //log("CALLBACK read - NEW "+to_string(fullSize)+" ("+to_string(buffer.st_size)+") "+to_string(offset)+" "+to_string(size));
 
                     ifstream data;
                     data.open(fname.c_str(),   ios::in | ios::binary);//ios::out |ios::trunc |
@@ -436,7 +444,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
                         data.clear(); // clear possible failbit
                     }
 
-                    log("CALLBACK read - NEW READED "+to_string(static_cast<int>(data.gcount())));
+                   // log("CALLBACK read - NEW READED "+to_string(static_cast<int>(data.gcount())));
 
                     return static_cast<int>(data.gcount());
 
@@ -482,7 +490,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
             }
             else{// partialy cached
 
-                log("CALLBACK read - file exists and partially cached "+string(path));
+               // log("CALLBACK read - file exists and partially cached "+string(path));
 
                 int endPosition=size+offset-1;
 
@@ -523,7 +531,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
     }
     else{
 
-        log("CALLBACK read - file DON'T exist "+string(path));
+        //log("CALLBACK read - file DON'T exist "+string(path));
         return open_callback(path,fi);
     }
 
@@ -535,7 +543,7 @@ return -ENOENT;
 
 static int write_callback(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
 
-    log("CALLBACK write");
+   // log("CALLBACK write");
     string fname = string("/tmp/")+tempDirName+string(path);
 
 //    ofstream of;
@@ -559,7 +567,7 @@ static int write_callback(const char *path, const char *buf, size_t size, off_t 
             return -errno;
     res = pwrite(fd, buf, size, offset);
     if (res == -1){
-        log("write callback ERROR");
+        //log("write callback ERROR");
         close(fd);
 
         return -errno;
@@ -572,9 +580,20 @@ static int write_callback(const char *path, const char *buf, size_t size, off_t 
     map<string, MSFSObject>::iterator i= fileList.find(string(path));
     i->second.remote.fileSize=buffer.st_size;
 
-    log("truncated to "+to_string(buffer.st_size));
+   // log("truncated to "+to_string(buffer.st_size));
 
-    log("write callback OK");
+    //log("write callback OK");
+
+    json comm;
+    comm["command"]="need_update";
+    comm["params"]["socket"]=workSocket;
+    comm["params"]["provider"]=workProvider;
+    comm["params"]["path"]=workPath;
+    comm["params"]["cachePath"]=fname;
+    comm["params"]["filePath"]=string(path);
+
+    sendCommand(comm) ;
+
     return res;
 
 }
@@ -583,7 +602,7 @@ static int write_callback(const char *path, const char *buf, size_t size, off_t 
 static int ftruncate_callback(const char *path, off_t size,struct fuse_file_info *fi)
 {
     (void)fi;
-    log("CALLBACK ftruncate");
+    //log("CALLBACK ftruncate");
     string fname = string("/tmp/")+tempDirName+string(path);
 
 
@@ -602,7 +621,7 @@ static int ftruncate_callback(const char *path, off_t size,struct fuse_file_info
 static int truncate_callback(const char *path, off_t size)
 {
 
-    log("CALLBACK truncate");
+    //log("CALLBACK truncate");
     string fname = string("/tmp/")+tempDirName+string(path);
 
 
@@ -619,15 +638,16 @@ static int truncate_callback(const char *path, off_t size)
 
 static int xmp_readlink(const char *path, char *buf, size_t size){
 
-    log("STUB: readlink");
+    //log("STUB: readlink");
     return 0;
 }
 
 
 static int xmp_mknod(const char *path, mode_t mode, dev_t rdev){
-log("CALLBACK mknod");
+//log("CALLBACK mknod");
 
-string fname = string("/tmp/")+tempDirName+string(path);
+    string fname = string("/tmp/")+tempDirName+string(path);
+    string insname=string(path)+"/";
 
     int res = mknod(fname.c_str(), mode, rdev);
     if(res == -1){
@@ -657,9 +677,20 @@ string fname = string("/tmp/")+tempDirName+string(path);
         obj.remote.objectType   = MSRemoteFSObject::Type::file;
         obj.localCreated        = true;
 
-        fileList.insert(std::make_pair(string(path),obj));
+        fileList.insert(std::make_pair(string(insname),obj));
 
-        log("CALLBACK mknod NEW CREATED "+ ptf+string(" - ")+fnm);
+        //log("CALLBACK mknod NEW CREATED "+ ptf+string(" - ")+fnm);
+
+        json comm;
+        comm["command"]="need_update";
+        comm["params"]["socket"]=workSocket;
+        comm["params"]["provider"]=workProvider;
+        comm["params"]["path"]=workPath;
+        comm["params"]["cachePath"]=fname;
+        comm["params"]["filePath"]=string(path);
+
+        sendCommand(comm) ;
+
         return 0;
     }
 
@@ -668,9 +699,10 @@ string fname = string("/tmp/")+tempDirName+string(path);
 
 static int xmp_mkdir(const char *path, mode_t mode){
 
-    log("CALLBACK mkdir");
+   // log("CALLBACK mkdir");
 
     string fname = string("/tmp/")+tempDirName+string(path);
+    string insname=string(path)+"/";
 
         int res = mkdir(fname.c_str(), mode);
         if(res == -1){
@@ -699,9 +731,22 @@ static int xmp_mkdir(const char *path, mode_t mode){
             obj.remote.modifiedDate = time(0);
             obj.remote.objectType   = MSRemoteFSObject::Type::folder;
 
-            fileList.insert(std::make_pair(string(path),obj));
+            fileList.insert(std::make_pair(string(insname),obj));
 
-            log("CALLBACK mkdir NEW CREATED "+ ptf+string(" - ")+fnm);
+            //log("CALLBACK mkdir NEW CREATED "+ ptf+string(" - ")+fnm);
+
+
+            json comm;
+            comm["command"]="need_update";
+            comm["params"]["socket"]=workSocket;
+            comm["params"]["provider"]=workProvider;
+            comm["params"]["path"]=workPath;
+            comm["params"]["cachePath"]=fname;
+            comm["params"]["filePath"]=string(path);
+
+            sendCommand(comm) ;
+
+
             return 0;
         }
 }
@@ -709,40 +754,104 @@ static int xmp_mkdir(const char *path, mode_t mode){
 
 static int xmp_unlink(const char *path){
 
-    log("CALLBACK unlink");
+   // log("CALLBACK unlink");
     string fname = string("/tmp/")+tempDirName+string(path);
     map<string, MSFSObject>::iterator i= fileList.find(string(path));
 
+    int res = unlink(fname.c_str());
+
     if( i != fileList.end()){
 
-        int res = unlink(fname.c_str());
-        if(res == -1){
-            return -errno;
-        }
-        else{
-            fileList.erase(i);
-            return 0;
-        }
+        fileList.erase(i);
+
+        json comm;
+        comm["command"]="unlink";
+        comm["params"]["socket"]=workSocket;
+        comm["params"]["provider"]=workProvider;
+        comm["params"]["path"]=workPath;
+        comm["params"]["cachePath"]=fname;
+        comm["params"]["filePath"]=string(path);
+
+        sendCommand(comm) ;
+
+        json comm2;
+        comm2["command"]="need_update";
+        comm2["params"]["socket"]=workSocket;
+        comm2["params"]["provider"]=workProvider;
+        comm2["params"]["path"]=workPath;
+        comm2["params"]["cachePath"]=fname;
+        comm2["params"]["filePath"]=string(path);
+
+        sendCommand(comm2) ;
     }
 
-    return -errno;
+    return 0;
+
+
+
+
+//    if( i != fileList.end()){
+
+//        int res = unlink(fname.c_str());
+//        if(res == -1){
+//            return -errno;
+//        }
+//        else{
+//            fileList.erase(i);
+
+//            json comm;
+//            comm["command"]="get_content";
+//            comm["params"]["socket"]=workSocket;
+//            comm["params"]["provider"]=workProvider;
+//            comm["params"]["path"]=workPath;
+//            comm["params"]["cachePath"]=fname;
+//            comm["params"]["filePath"]=string(path);
+
+//            sendCommand(comm) ;
+
+//            return 0;
+//        }
+//    }
+
+//    return -errno;
 }
 
 
 static int xmp_rmdir(const char *path){
 
-    log("CALLBACK: rmdir");
+    //log("CALLBACK: rmdir");
     string fname = string("/tmp/")+tempDirName+string(path);
     map<string, MSFSObject>::iterator i= fileList.find(string(path));
 
+    int res = rmdir(fname.c_str());
+
+
     if( i != fileList.end()){
 
-        int res = rmdir(fname.c_str());
-        if(res == -1){
-            return -errno;
-        }
+
 
         fileList.erase(i);
+
+        json comm;
+        comm["command"]="unlink";
+        comm["params"]["socket"]=workSocket;
+        comm["params"]["provider"]=workProvider;
+        comm["params"]["path"]=workPath;
+        comm["params"]["cachePath"]=fname;
+        comm["params"]["filePath"]=string(path);
+
+        sendCommand(comm) ;
+
+        json comm2;
+        comm2["command"]="need_update";
+        comm2["params"]["socket"]=workSocket;
+        comm2["params"]["provider"]=workProvider;
+        comm2["params"]["path"]=workPath;
+        comm2["params"]["cachePath"]=fname;
+        comm2["params"]["filePath"]=string(path);
+
+        sendCommand(comm2) ;
+
         return 0;
     }
 
@@ -752,7 +861,7 @@ static int xmp_rmdir(const char *path){
 
 static int xmp_symlink(const char *from, const char *to){
 
-    log("STUB: symlink");
+    //log("STUB: symlink");
         return 0;
 }
 
@@ -760,9 +869,35 @@ static int xmp_symlink(const char *from, const char *to){
 static int xmp_rename(const char *from, const char *to){
 
     log("CALLBACK rename");
+    return -1;
+//    stat buffer;
 
     string fname_from = string("/tmp/")+tempDirName+string(from);
     string fname_to = string("/tmp/")+tempDirName+string(to);
+
+
+//    int rs=stat (fname_from.c_str(), &buffer);
+
+//    if(rs >=0){
+
+//        if(buffer.st_mode == S_IFDIR){
+
+//            xmp_rmdir(from);
+
+//        }
+
+//        if(buffer.st_mode == S_IFREG){
+
+//        }
+
+//    }
+//    else{
+
+
+//    }
+
+
+
 
     int result= rename( fname_from.c_str() , fname_to.c_str() );
     if(result == 0){
@@ -781,6 +916,16 @@ static int xmp_rename(const char *from, const char *to){
         i->second.path = ptf;
         i->second.fileName = fnm;
 
+        json comm;
+        comm["command"]="need_update";
+        comm["params"]["socket"]=workSocket;
+        comm["params"]["provider"]=workProvider;
+        comm["params"]["path"]=workPath;
+        comm["params"]["cachePath"]="";//fname;
+        comm["params"]["filePath"]="";//string(path);
+
+        sendCommand(comm) ;
+
         return 0;
     }
     else{
@@ -793,14 +938,14 @@ static int xmp_rename(const char *from, const char *to){
 
 static int xmp_link(const char *from, const char *to){
 
-    log("STUB: link");
+   // log("STUB: link");
         return 0;
 }
 
 
 static int xmp_chmod(const char *path, mode_t mode){
 
-    log("STUB: chmod");
+    //log("STUB: chmod");
         return 0;
 }
 
@@ -808,7 +953,7 @@ static int xmp_chmod(const char *path, mode_t mode){
 
 static int xmp_chown(const char *path, uid_t uid, gid_t gid){
 
-    log("STUB: chown");
+    //log("STUB: chown");
         return 0;
 }
 
@@ -818,7 +963,7 @@ static int xmp_statfs(const char *path, struct statvfs *stbuf){
 
 //    int res;
     string fname = string("/tmp/")+tempDirName+string(path);
-log("CALLBACK statfs "+fname);
+//log("CALLBACK statfs "+fname);
 //    res = statvfs(fname.c_str(), stbuf);
 //    if (res == -1)
 //            return -errno;
@@ -841,7 +986,7 @@ static int xmp_access(const char *path, int mask){
 
     int res;
     string fname = string("/tmp/")+tempDirName+string(path);
-log("CALLBACK access "+fname);
+//log("CALLBACK access "+fname);
 
     res = access(fname.c_str(), mask);
     if (res == -1)
@@ -857,7 +1002,7 @@ static int xmp_release(const char *path, struct fuse_file_info *fi)
         (void) path;
         (void) fi;
 
-log("CALLBACK release");
+//log("CALLBACK release");
 
 //        string fname = string("/tmp/")+tempDirName+string(path);
 
@@ -880,7 +1025,7 @@ log("CALLBACK release");
 static int xmp_fsync(const char *path, int isdatasync,struct fuse_file_info *fi){
         /* Just a stub.  This method is optional and can safely be left
            unimplemented */
-log("CALLBACK fsync");
+//log("CALLBACK fsync");
         (void) path;
         (void) isdatasync;
         (void) fi;
@@ -890,7 +1035,16 @@ log("CALLBACK fsync");
 
 
 static void destroy_callback(void* d){
-log("CALLBACK destroy");
+    log("CALLBACK destroy");
+
+    json comm;
+    comm["command"] = "start_sync";
+    comm["params"]["socket"] = workSocket;
+    comm["params"]["provider"] = workProvider;
+    comm["params"]["path"] = workPath;
+    comm["params"]["mount"] = mountPoint;
+
+    sendCommand_sync(comm);
 
     system(string("rm -rf /tmp/"+tempDirName).c_str());
 
@@ -1076,18 +1230,18 @@ int main(int argc, char *argv[])
     // argv[4] = mount point
 
 
-    // rebuild arguments list
+    // rebuild arguments list for fuse
     char* a[2];
-    a[0]=argv[0];
-    a[1]="/tmp/example";
+    a[0] = argv[0];
+    a[1] = argv[4];
     //a[2]="-f";//
 
-//    log(std::string(argv[1]));
-
+    log("WORKER MOUNT POINT IS "+string(argv[4]));
 
     if(!connectToCommandServer(std::string(argv[1]))){//std::string(argv[1])
         return 1;
     }
+
 
 
     fuse_op.getattr = getattr_callback;
@@ -1117,17 +1271,18 @@ int main(int argc, char *argv[])
     fuse_op.access = xmp_access;
 
 
-    workSocket=argv[1];
-    workProvider=argv[2];
-    workPath=argv[3];
+    workSocket = argv[1];
+    workProvider = argv[2];
+    workPath = argv[3];
+    mountPoint = argv[4];
 
     json comm;
-    comm["command"]="get_file_list";
-    comm["params"]["socket"]=argv[1];
-    comm["params"]["provider"]=argv[2];
-    comm["params"]["path"]=argv[3];
+    comm["command"] = "get_file_list";
+    comm["params"]["socket"] = argv[1];
+    comm["params"]["provider"] = argv[2];
+    comm["params"]["path"] = argv[3];
 
-    json jsonFileList= json::parse( sendCommand_sync(comm) );
+    json jsonFileList = json::parse( sendCommand_sync(comm) );
 
 //            json jsonFileList;     // test
 //            std::ifstream i("tst.json");
@@ -1141,7 +1296,7 @@ int main(int argc, char *argv[])
     mkdir(string("/tmp/"+tempDirName).c_str(),0777);
 
 
-    for(json::iterator i=jsonFileList.begin();i != jsonFileList.end();i++){
+    for(json::iterator i = jsonFileList.begin(); i != jsonFileList.end(); i++){
 
         MSFSObject obj;
         json jo=i.value();
@@ -1189,7 +1344,7 @@ int main(int argc, char *argv[])
 
 
     listenerThreadParams.onIncomingCommand = NULL;
-    listenerThreadParams.state=false;
+    listenerThreadParams.state = false;
     listenerThreadParams.socketName = string(workSocket+".incoming");
     pthread_create(&listenerThread,NULL,incomingListener,&listenerThreadParams);
     pthread_detach(listenerThread);
@@ -1204,11 +1359,11 @@ int main(int argc, char *argv[])
 
 
     json comm2;
-    comm2["command"]="start_watcher";
+    comm2["command"] = "start_watcher";
     comm2["params"]["socket"] = argv[1];
     comm2["params"]["provider"] = argv[2];
     comm2["params"]["path"] = argv[3];
-    comm2["params"]["watchPath"]= string("/tmp/"+tempDirName);
+    comm2["params"]["watchPath"] = string("/tmp/"+tempDirName);
 
     sendCommand(comm2);
 

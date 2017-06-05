@@ -39,7 +39,7 @@ MSFSObject::MSFSObject()
 }
 
 
-void MSFSObject::getLocalMimeType(QString path){
+void MSFSObject::getLocalMimeType(const QString &path){
 
         QMimeDatabase db;
         QMimeType type = db.mimeTypeForFile(path+this->path+this->fileName);

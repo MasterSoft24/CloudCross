@@ -86,30 +86,30 @@ public:
 
     QList<QPair<QByteArray,QByteArray>> replyHeaders;
 
-    void printDebugInfo_request(QNetworkRequest req);
+    void printDebugInfo_request(const QNetworkRequest &req);
     void printDebugInfo_response(QNetworkReply *reply);
 
 
     QByteArray readReplyText();
 
 
-    bool setMethod(QString method);
-    void setRequestUrl(QString url);
-    void addQueryItem(QString itemName, QString itemValue );
+    bool setMethod(const QString &method);
+    void setRequestUrl(const QString &url);
+    void addQueryItem(const QString &itemName, const QString &itemValue );
 
-    void addHeader(QString headerName, QString headerValue);
-    void addHeader(QByteArray headerName, QByteArray headerValue);
+    void addHeader(const QString &headerName, const QString &headerValue);
+    void addHeader(const QByteArray &headerName, const QByteArray &headerValue);
 
     void exec();
-    void post(QByteArray data);
-    void put(QByteArray data);
+    void post(const QByteArray &data);
+    void put(const QByteArray &data);
     void put(QIODevice* data);
     void methodCharger(QNetworkRequest req);
-    void methodCharger(QNetworkRequest req,QString path);
-    void raw_exec(QString reqestURL);
+    void methodCharger(QNetworkRequest req, const QString &path);
+    void raw_exec(const QString &reqestURL);
 
-    void download(QString url);
-    void download(QString url,QString path);
+    void download(const QString &url);
+    void download(const QString &url, const QString &path);
     void deleteResource();
 
     bool replyOK();
@@ -126,7 +126,7 @@ public:
 
     void MSsetCookieJar(QNetworkCookieJar *cookie);
     QJsonObject cookieToJSON();
-    bool cookieFromJSON(QJsonObject cookie);
+    bool cookieFromJSON(const QJsonObject &cookie);
 
 private slots:
 

@@ -65,7 +65,7 @@ public:
     QString fileName;
     bool isDocFormat;
 
-    void getLocalMimeType(QString path);
+    void getLocalMimeType(const QString &path);
 
 };
 

@@ -421,7 +421,7 @@ bool MSOneDrive::remote_file_makeFolder(MSFSObject *object){
 
 }
 
-void MSOneDrive::remote_file_makeFolder(MSFSObject *object, QString parentID){
+void MSOneDrive::remote_file_makeFolder(MSFSObject *object, const QString &parentID){
 
 Q_UNUSED(object);
 Q_UNUSED(parentID);
@@ -473,7 +473,7 @@ bool MSOneDrive::remote_file_trash(MSFSObject *object){
 
 
 
-bool MSOneDrive::remote_createDirectory(QString path){
+bool MSOneDrive::remote_createDirectory(const QString &path){
 
     if(this->getFlag("dryRun")){
         return true;
@@ -515,7 +515,7 @@ bool MSOneDrive::remote_createDirectory(QString path){
 
 
 
-void MSOneDrive::local_createDirectory(QString path){
+void MSOneDrive::local_createDirectory(const QString &path){
 
     if(this->getFlag("dryRun")){
         return;
@@ -527,7 +527,7 @@ void MSOneDrive::local_createDirectory(QString path){
 
 
 
-void MSOneDrive::local_removeFile(QString path){
+void MSOneDrive::local_removeFile(const QString &path){
 
     if(this->getFlag("dryRun")){
         return;
@@ -555,7 +555,7 @@ void MSOneDrive::local_removeFile(QString path){
 
 
 
-void MSOneDrive::local_removeFolder(QString path){
+void MSOneDrive::local_removeFolder(const QString &path){
 
     if(this->getFlag("dryRun")){
         return;
@@ -612,7 +612,7 @@ return true;
 
 }
 
-void MSOneDrive::saveTokenFile(QString path){
+void MSOneDrive::saveTokenFile(const QString &path){
 
     QFile key(path+"/"+this->tokenFileName);
     key.open(QIODevice::WriteOnly | QIODevice::Text);
@@ -621,7 +621,7 @@ void MSOneDrive::saveTokenFile(QString path){
     key.close();
 }
 
-bool MSOneDrive::loadTokenFile(QString path){
+bool MSOneDrive::loadTokenFile(const QString &path){
 
     QFile key(path+"/"+this->tokenFileName);
 
@@ -732,7 +732,7 @@ bool MSOneDrive::refreshToken(){
     return true;
 }
 
-MSFSObject::ObjectState MSOneDrive::filelist_defineObjectState(MSLocalFSObject local, MSRemoteFSObject remote){
+MSFSObject::ObjectState MSOneDrive::filelist_defineObjectState(const MSLocalFSObject &local, const MSRemoteFSObject &remote){
 
 
 
@@ -1175,7 +1175,7 @@ QHash<QString, MSFSObject> MSOneDrive::filelist_getFSObjectsByState(MSFSObject::
 
 
 
-QHash<QString, MSFSObject> MSOneDrive::filelist_getFSObjectsByState(QHash<QString, MSFSObject> fsObjectList, MSFSObject::ObjectState state){
+QHash<QString, MSFSObject> MSOneDrive::filelist_getFSObjectsByState( QHash<QString, MSFSObject> fsObjectList, MSFSObject::ObjectState state){
 
     QHash<QString,MSFSObject> out;
 
@@ -1237,7 +1237,7 @@ QHash<QString, MSFSObject> MSOneDrive::filelist_getFSObjectsByTypeRemote(MSRemot
 
 
 
-bool MSOneDrive::filelist_FSObjectHasParent(MSFSObject fsObject){
+bool MSOneDrive::filelist_FSObjectHasParent(const MSFSObject &fsObject){
 
     if(fsObject.path=="/"){
         return false;
@@ -1258,7 +1258,7 @@ bool MSOneDrive::filelist_FSObjectHasParent(MSFSObject fsObject){
 
 
 
-MSFSObject MSOneDrive::filelist_getParentFSObject(MSFSObject fsObject){
+MSFSObject MSOneDrive::filelist_getParentFSObject(const MSFSObject &fsObject){
 
     QString parentPath;
 
@@ -1286,7 +1286,7 @@ MSFSObject MSOneDrive::filelist_getParentFSObject(MSFSObject fsObject){
 
 
 
-void MSOneDrive::filelist_populateChanges(MSFSObject changedFSObject){
+void MSOneDrive::filelist_populateChanges(const MSFSObject &changedFSObject){
 
     QHash<QString,MSFSObject>::iterator object=this->syncFileList.find(changedFSObject.path+changedFSObject.fileName);
 
@@ -1296,7 +1296,7 @@ void MSOneDrive::filelist_populateChanges(MSFSObject changedFSObject){
     }
 }
 
-bool MSOneDrive::testReplyBodyForError(QString body){
+bool MSOneDrive::testReplyBodyForError(const QString &body){
 
     if(body.contains("\"error\":")){
 
@@ -1310,7 +1310,7 @@ bool MSOneDrive::testReplyBodyForError(QString body){
 
 }
 
-QString MSOneDrive::getReplyErrorString(QString body){
+QString MSOneDrive::getReplyErrorString(const QString &body){
 
     QJsonDocument json = QJsonDocument::fromJson(body.toUtf8());
     QJsonObject job = json.object();
@@ -1320,7 +1320,7 @@ QString MSOneDrive::getReplyErrorString(QString body){
     return e.toString();
 }
 
-bool MSOneDrive::readRemote(QString rootPath){
+bool MSOneDrive::readRemote(const QString &rootPath){
 
 
 
@@ -1445,7 +1445,7 @@ bool MSOneDrive::readRemote(QString rootPath){
     return true;
 }
 
-bool MSOneDrive::readLocal(QString path){
+bool MSOneDrive::readLocal(const QString &path){
 
     QDir dir(path);
     QDir::Filters entryInfoList_flags=QDir::Files|QDir::Dirs |QDir::NoDotAndDotDot;
@@ -1572,7 +1572,7 @@ bool MSOneDrive::readLocal(QString path){
 
 
 
-bool MSOneDrive::isFolder(QJsonValue remoteObject){
+bool MSOneDrive::isFolder(const QJsonValue &remoteObject){
 
     QJsonValue s=remoteObject.toObject()["folder"];
 
@@ -1585,7 +1585,7 @@ bool MSOneDrive::isFolder(QJsonValue remoteObject){
 
 
 
-bool MSOneDrive::isFile(QJsonValue remoteObject){
+bool MSOneDrive::isFile(const QJsonValue &remoteObject){
 
     QJsonValue s=remoteObject.toObject()["file"];
 
@@ -1705,7 +1705,7 @@ bool MSOneDrive::createSyncFileList(){
 
 
 // TODO: Need way how does it
-bool MSOneDrive::directUpload(QString url, QString remotePath){
+bool MSOneDrive::directUpload(const QString &url, const QString &remotePath){
 Q_UNUSED(remotePath);
 Q_UNUSED(url);
 
@@ -1785,7 +1785,7 @@ QString MSOneDrive::getInfo(){
 
 
 
-bool MSOneDrive::onAuthFinished(QString html, MSCloudProvider *provider){
+bool MSOneDrive::onAuthFinished(const QString &html, MSCloudProvider *provider){
 
     Q_UNUSED(provider);
 

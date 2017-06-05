@@ -72,11 +72,15 @@ typedef struct _fuse_worker{
     QLocalSocket *clientConnection;
     QHash<QString,MSFSObject> fileList;
 
+
+
     bool workerLocked;
     bool updateSheduled;
     int lastUpdateSheduled;
 
     fswatcher_param* watcherStruct;
+
+    QStringList removedItems;
 
 }fuse_worker;
 
@@ -112,6 +116,7 @@ public:
     ProviderType provider;
 
     fuse_worker* workerPtr;
+
 
 
 signals:

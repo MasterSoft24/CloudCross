@@ -105,7 +105,7 @@ bool MSDropbox::auth(){
 //=======================================================================================
 
 
-bool MSDropbox::onAuthFinished(QString html, MSCloudProvider *provider){
+bool MSDropbox::onAuthFinished(const QString &html, MSCloudProvider *provider){
 
     Q_UNUSED(provider)
 
@@ -164,7 +164,7 @@ bool MSDropbox::onAuthFinished(QString html, MSCloudProvider *provider){
 
 //=======================================================================================
 
-void MSDropbox::saveTokenFile(QString path){
+void MSDropbox::saveTokenFile(const QString &path){
 
     QFile key(path+"/"+this->tokenFileName);
     key.open(QIODevice::WriteOnly | QIODevice::Text);
@@ -177,7 +177,7 @@ void MSDropbox::saveTokenFile(QString path){
 
 //=======================================================================================
 
-bool MSDropbox::loadTokenFile(QString path){
+bool MSDropbox::loadTokenFile(const QString &path){
 
     QFile key(path+"/"+this->tokenFileName);
 
@@ -478,7 +478,7 @@ bool MSDropbox::readRemote(){ //QString parentId,QString currentPath
 //=======================================================================================
 
 
-bool MSDropbox::isFile(QJsonValue remoteObject){
+bool MSDropbox::isFile(const QJsonValue &remoteObject){
     if(remoteObject.toObject()[".tag"].toString()=="file"){
         return true;
     }
@@ -487,7 +487,7 @@ bool MSDropbox::isFile(QJsonValue remoteObject){
 
 //=======================================================================================
 
-bool MSDropbox::isFolder(QJsonValue remoteObject){
+bool MSDropbox::isFolder(const QJsonValue &remoteObject){
     if(remoteObject.toObject()[".tag"].toString()=="folder"){
         return true;
     }
@@ -610,7 +610,7 @@ bool MSDropbox::createSyncFileList(){
 //=======================================================================================
 
 
-bool MSDropbox::readLocal(QString path){
+bool MSDropbox::readLocal(const QString &path){
 
 
 
@@ -739,7 +739,7 @@ bool MSDropbox::readLocal(QString path){
 //=======================================================================================
 
 
-MSFSObject::ObjectState MSDropbox::filelist_defineObjectState(MSLocalFSObject local, MSRemoteFSObject remote){
+MSFSObject::ObjectState MSDropbox::filelist_defineObjectState(const MSLocalFSObject &local, const MSRemoteFSObject &remote){
 
 
     if((local.exist)&&(remote.exist)){ //exists both files
@@ -1252,7 +1252,7 @@ QHash<QString,MSFSObject>   MSDropbox::filelist_getFSObjectsByTypeRemote(MSRemot
 
 //=======================================================================================
 
-bool MSDropbox::filelist_FSObjectHasParent(MSFSObject fsObject){
+bool MSDropbox::filelist_FSObjectHasParent(const MSFSObject &fsObject){
     if(fsObject.path=="/"){
         return false;
     }
@@ -1273,7 +1273,7 @@ bool MSDropbox::filelist_FSObjectHasParent(MSFSObject fsObject){
 
 
 
-MSFSObject MSDropbox::filelist_getParentFSObject(MSFSObject fsObject){
+MSFSObject MSDropbox::filelist_getParentFSObject(const MSFSObject &fsObject){
 
     QString parentPath;
 
@@ -1299,7 +1299,7 @@ MSFSObject MSDropbox::filelist_getParentFSObject(MSFSObject fsObject){
 }
 
 
-void MSDropbox::filelist_populateChanges(MSFSObject changedFSObject){
+void MSDropbox::filelist_populateChanges(const MSFSObject &changedFSObject){
 
     QHash<QString,MSFSObject>::iterator object=this->syncFileList.find(changedFSObject.path+changedFSObject.fileName);
 
@@ -1311,7 +1311,7 @@ void MSDropbox::filelist_populateChanges(MSFSObject changedFSObject){
 
 
 
-bool MSDropbox::testReplyBodyForError(QString body) {
+bool MSDropbox::testReplyBodyForError(const QString &body) {
 
     if(body.contains("\"error\": {")){
 
@@ -1325,7 +1325,7 @@ bool MSDropbox::testReplyBodyForError(QString body) {
 }
 
 
-QString MSDropbox::getReplyErrorString(QString body) {
+QString MSDropbox::getReplyErrorString(const QString &body) {
 
     QJsonDocument json = QJsonDocument::fromJson(body.toUtf8());
     QJsonObject job = json.object();
@@ -1877,11 +1877,11 @@ bool MSDropbox::remote_file_makeFolder(MSFSObject *object){
 
 //=======================================================================================
 
-void MSDropbox::remote_file_makeFolder(MSFSObject *object, QString parentID){
+void MSDropbox::remote_file_makeFolder(MSFSObject *object, const QString &parentID){
 // obsolete
     // fixed warning message
-    object=object;
-    parentID+="";
+    Q_UNUSED(object);
+    Q_UNUSED(parentID);
 }
 
 //=======================================================================================
@@ -1948,7 +1948,7 @@ bool MSDropbox::remote_file_trash(MSFSObject *object){
 
 //=======================================================================================
 
-bool MSDropbox::remote_createDirectory(QString path){
+bool MSDropbox::remote_createDirectory(const QString &path){
 
     if(this->getFlag("dryRun")){
         return true;
@@ -1995,7 +1995,7 @@ bool MSDropbox::remote_createDirectory(QString path){
 // ============= LOCAL FUNCTIONS BLOCK =============
 //=======================================================================================
 
-void MSDropbox::local_createDirectory(QString path){
+void MSDropbox::local_createDirectory(const QString &path){
 
     if(this->getFlag("dryRun")){
         return;
@@ -2008,7 +2008,7 @@ void MSDropbox::local_createDirectory(QString path){
 
 //=======================================================================================
 
-void MSDropbox::local_removeFile(QString path){
+void MSDropbox::local_removeFile(const QString &path){
 
     if(this->getFlag("dryRun")){
         return;
@@ -2037,7 +2037,7 @@ void MSDropbox::local_removeFile(QString path){
 
 //=======================================================================================
 
-void MSDropbox::local_removeFolder(QString path){
+void MSDropbox::local_removeFolder(const QString &path){
 
     if(this->getFlag("dryRun")){
         return;
@@ -2066,7 +2066,7 @@ void MSDropbox::local_removeFolder(QString path){
 
 
 
-bool MSDropbox::directUpload(QString url, QString remotePath){
+bool MSDropbox::directUpload(const QString &url, const QString &remotePath){
 
     // download file into temp file ---------------------------------------------------------------
 

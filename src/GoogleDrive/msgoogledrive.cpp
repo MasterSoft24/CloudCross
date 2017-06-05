@@ -112,7 +112,7 @@ bool MSGoogleDrive::auth(){
 
 //=======================================================================================
 
-bool MSGoogleDrive::onAuthFinished(QString html, MSCloudProvider *provider){
+bool MSGoogleDrive::onAuthFinished(const QString &html, MSCloudProvider *provider){
 
 Q_UNUSED(provider)
 
@@ -169,7 +169,7 @@ Q_UNUSED(provider)
 //=======================================================================================
 
 
-void MSGoogleDrive::saveTokenFile(QString path){
+void MSGoogleDrive::saveTokenFile(const QString &path){
 
         QFile key(path+"/"+this->tokenFileName);
         key.open(QIODevice::WriteOnly | QIODevice::Text);
@@ -180,7 +180,7 @@ void MSGoogleDrive::saveTokenFile(QString path){
 
 //=======================================================================================
 
-bool MSGoogleDrive::loadTokenFile(QString path){
+bool MSGoogleDrive::loadTokenFile(const QString &path){
 
     QFile key(path+"/"+this->tokenFileName);
 
@@ -437,7 +437,7 @@ QString MSGoogleDrive::getRoot(){
 
 //=======================================================================================
 
-QHash<QString,QJsonValue> MSGoogleDrive::get(QString parentId, int target){
+QHash<QString,QJsonValue> MSGoogleDrive::get(const QString &parentId, int target){
 
     bool files=target & 1;
     bool folders=target & 2;
@@ -528,7 +528,7 @@ QHash<QString,QJsonValue> MSGoogleDrive::get(QString parentId, int target){
 
 //=======================================================================================
 
-bool MSGoogleDrive::isFile(QJsonValue remoteObject){
+bool MSGoogleDrive::isFile(const QJsonValue &remoteObject){
     if(remoteObject.toObject()["mimeType"].toString()!="application/vnd.google-apps.folder"){
         return true;
     }
@@ -537,7 +537,7 @@ bool MSGoogleDrive::isFile(QJsonValue remoteObject){
 
 //=======================================================================================
 
-bool MSGoogleDrive::isFolder(QJsonValue remoteObject){
+bool MSGoogleDrive::isFolder(const QJsonValue &remoteObject){
     if(remoteObject.toObject()["mimeType"].toString()=="application/vnd.google-apps.folder"){
         return true;
     }
@@ -546,7 +546,7 @@ bool MSGoogleDrive::isFolder(QJsonValue remoteObject){
 
 //=======================================================================================
 
-bool MSGoogleDrive::readRemote(QString parentId,QString currentPath){
+bool MSGoogleDrive::readRemote(const QString &parentId, const QString &currentPath){
 
 
 
@@ -653,7 +653,7 @@ bool MSGoogleDrive::readRemote(QString parentId,QString currentPath){
 
 //=======================================================================================
 
-bool MSGoogleDrive::readLocal(QString path){
+bool MSGoogleDrive::readLocal(const QString &path){
 
 
 
@@ -791,7 +791,7 @@ bool MSGoogleDrive::readLocal(QString path){
 
 //=======================================================================================
 
-bool MSGoogleDrive::filterGoogleDocsMimeTypes(QString mime){// return true if this mime is Google document
+bool MSGoogleDrive::filterGoogleDocsMimeTypes(const QString &mime){// return true if this mime is Google document
 
     if((mime == "application/vnd.google-apps.document")||
        (mime == "application/vnd.google-apps.presentation")||
@@ -806,7 +806,7 @@ bool MSGoogleDrive::filterGoogleDocsMimeTypes(QString mime){// return true if th
 
 //=======================================================================================
 
-bool MSGoogleDrive::filterOfficeMimeTypes(QString mime){// return true if this mime is Office document
+bool MSGoogleDrive::filterOfficeMimeTypes(const QString &mime){// return true if this mime is Office document
 
     QRegularExpression regex2("word|excel|powerpoint|ppt|xls|doc|opendocument");
 
@@ -945,7 +945,7 @@ bool MSGoogleDrive::createSyncFileList(){
 
 //=======================================================================================
 
-MSFSObject::ObjectState MSGoogleDrive::filelist_defineObjectState(MSLocalFSObject local, MSRemoteFSObject remote){
+MSFSObject::ObjectState MSGoogleDrive::filelist_defineObjectState(const MSLocalFSObject &local, const MSRemoteFSObject &remote){
 
 
 
@@ -1097,7 +1097,7 @@ QHash<QString,MSFSObject> MSGoogleDrive::filelist_getFSObjectsByTypeRemote(MSRem
 
 //===================================================================================
 
-bool MSGoogleDrive::filelist_FSObjectHasParent(MSFSObject fsObject){
+bool MSGoogleDrive::filelist_FSObjectHasParent(const MSFSObject &fsObject){
 
     if(fsObject.path=="/"){
         return false;
@@ -1116,7 +1116,7 @@ bool MSGoogleDrive::filelist_FSObjectHasParent(MSFSObject fsObject){
 
 //=======================================================================================
 
-MSFSObject MSGoogleDrive::filelist_getParentFSObject(MSFSObject fsObject){
+MSFSObject MSGoogleDrive::filelist_getParentFSObject(const MSFSObject &fsObject){
 
     QString parentPath;
 
@@ -1145,7 +1145,7 @@ MSFSObject MSGoogleDrive::filelist_getParentFSObject(MSFSObject fsObject){
 //=======================================================================================
 
 
-void MSGoogleDrive::filelist_populateChanges(MSFSObject changedFSObject){
+void MSGoogleDrive::filelist_populateChanges(const MSFSObject &changedFSObject){
 
     QHash<QString,MSFSObject>::iterator object=this->syncFileList.find(changedFSObject.path+changedFSObject.fileName);
 
@@ -2083,7 +2083,7 @@ bool MSGoogleDrive::remote_file_makeFolder(MSFSObject *object){
 
 //=======================================================================================
 
-bool MSGoogleDrive::remote_file_makeFolder(MSFSObject *object, QString parentID){
+bool MSGoogleDrive::remote_file_makeFolder(MSFSObject *object, const QString &parentID){
 
     if(this->getFlag("dryRun")){
         return true;
@@ -2207,7 +2207,7 @@ bool MSGoogleDrive::remote_file_trash(MSFSObject *object){
 
 //=======================================================================================
 
-bool MSGoogleDrive::remote_createDirectory(QString path){
+bool MSGoogleDrive::remote_createDirectory(const QString &path){
 
     if(this->getFlag("dryRun")){
         return true;
@@ -2261,7 +2261,7 @@ bool MSGoogleDrive::remote_createDirectory(QString path){
 // ============= LOCAL FUNCTIONS BLOCK =============
 //=======================================================================================
 
-void MSGoogleDrive::local_createDirectory(QString path){
+void MSGoogleDrive::local_createDirectory(const QString &path){
 
     if(this->getFlag("dryRun")){
         return;
@@ -2274,7 +2274,7 @@ void MSGoogleDrive::local_createDirectory(QString path){
 
 //=======================================================================================
 
-void MSGoogleDrive::local_removeFile(QString path){
+void MSGoogleDrive::local_removeFile(const QString &path){
 
     if(this->getFlag("dryRun")){
         return;
@@ -2303,7 +2303,7 @@ void MSGoogleDrive::local_removeFile(QString path){
 
 //=======================================================================================
 
-void MSGoogleDrive::local_removeFolder(QString path){
+void MSGoogleDrive::local_removeFolder(const QString &path){
 
     if(this->getFlag("dryRun")){
         return;
@@ -2331,7 +2331,7 @@ void MSGoogleDrive::local_removeFolder(QString path){
 }
 
 
-bool MSGoogleDrive::testReplyBodyForError(QString body){// return true if reply is ok
+bool MSGoogleDrive::testReplyBodyForError(const QString &body){// return true if reply is ok
 
     if(body.contains("\"error\": {")){
         QJsonDocument json = QJsonDocument::fromJson(body.toUtf8());
@@ -2359,7 +2359,7 @@ bool MSGoogleDrive::testReplyBodyForError(QString body){// return true if reply 
 }
 
 
-QString MSGoogleDrive::getReplyErrorString(QString body){
+QString MSGoogleDrive::getReplyErrorString(const QString &body){
 
     QJsonDocument json = QJsonDocument::fromJson(body.toUtf8());
     QJsonObject job = json.object();
@@ -2373,11 +2373,11 @@ QString MSGoogleDrive::getReplyErrorString(QString body){
 
 
 
-bool MSGoogleDrive::directUpload(QString url, QString remotePath){
+bool MSGoogleDrive::directUpload(const QString &url, const QString &remotePath){
 
     // get remote filelist
 
-
+    QString remoteFilePath = remotePath;
     this->createHashFromRemote();
 
     this->readRemote(this->getRoot(),"/");// top level files and folders
@@ -2406,7 +2406,7 @@ bool MSGoogleDrive::directUpload(QString url, QString remotePath){
 
     path=QString(path).left(path.lastIndexOf("/"));
 
-    QString targetFileName=remotePath.replace(path,"").replace("/","");
+    QString targetFileName=remoteFilePath.replace(path,"").replace("/","");
 
     QString cPath="/";
 

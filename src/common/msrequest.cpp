@@ -72,21 +72,21 @@ MSRequest::~MSRequest(){
 }
 
 
-void MSRequest::setRequestUrl(QString url){
+void MSRequest::setRequestUrl(const QString &url){
 
     this->url->setUrl( url);
 
 }
 
 
-void MSRequest::addQueryItem(QString itemName, QString itemValue){
+void MSRequest::addQueryItem(const QString &itemName, const QString &itemValue){
 
         this->query->addQueryItem(itemName,itemValue);
 
 }
 
 
-bool MSRequest::setMethod(QString method){
+bool MSRequest::setMethod(const QString &method){
     if((method=="post")||(method=="get")||(method=="put")){
         this->requestMethod=method;
         return true;
@@ -97,7 +97,7 @@ bool MSRequest::setMethod(QString method){
 }
 
 
-void MSRequest::addHeader(QString headerName, QString headerValue){
+void MSRequest::addHeader(const QString &headerName, const QString &headerValue){
 
     //this->setRawHeader(QByteArray::fromStdString(headerName.toStdString())  ,QByteArray::fromStdString(headerValue.toStdString()));
     this->setRawHeader(QByteArray(headerName.toStdString().c_str()),QByteArray(headerValue.toStdString().c_str()));
@@ -105,7 +105,7 @@ void MSRequest::addHeader(QString headerName, QString headerValue){
 }
 
 
-void MSRequest::addHeader(QByteArray headerName, QByteArray headerValue){
+void MSRequest::addHeader(const QByteArray &headerName, const QByteArray &headerValue){
 
     this->setRawHeader(headerName,headerValue);
 
@@ -152,7 +152,7 @@ void MSRequest::methodCharger(QNetworkRequest req){
 }
 
 
-void MSRequest::printDebugInfo_request(QNetworkRequest req){
+void MSRequest::printDebugInfo_request(const QNetworkRequest &req){
 
     qDebug()<<"";
     qDebug()<<"=========== Begin Query Debug Info Block =============";
@@ -212,11 +212,11 @@ void MSRequest::printDebugInfo_response(QNetworkReply *reply){
 
 
 
-void MSRequest::methodCharger(QNetworkRequest req,QString path){
+void MSRequest::methodCharger(QNetworkRequest req, const QString &path){
 
     // fix warning message
 
-    path=path+"";
+    Q_UNUSED(path);
 
     QNetworkReply* replySync=0;
 
@@ -247,7 +247,7 @@ void MSRequest::methodCharger(QNetworkRequest req,QString path){
     //loop.deleteLater();
 }
 
-void MSRequest::raw_exec(QString reqestURL){
+void MSRequest::raw_exec(const QString &reqestURL){
 
     QUrl r(reqestURL);
 
@@ -263,7 +263,7 @@ void MSRequest::raw_exec(QString reqestURL){
 
 
 
-void MSRequest::post(QByteArray data){
+void MSRequest::post(const QByteArray &data){
 
 
     QNetworkReply* replySync;
@@ -283,7 +283,7 @@ void MSRequest::post(QByteArray data){
 }
 
 
-void MSRequest::download(QString url){
+void MSRequest::download(const QString &url){
 
     //this->setUrl(*this->url);
     this->setUrl(QUrl(url));
@@ -314,7 +314,7 @@ void MSRequest::download(QString url){
 
 
 
-void MSRequest::download(QString url,QString path){
+void MSRequest::download(const QString &url, const QString &path){
 
     this->setUrl(QUrl(url));
 
@@ -354,7 +354,7 @@ void MSRequest::download(QString url,QString path){
 }
 
 
-void MSRequest::put(QByteArray data){
+void MSRequest::put(const QByteArray &data){
 
 
     QNetworkReply* replySync;
@@ -548,9 +548,10 @@ QJsonObject MSRequest::cookieToJSON()
 
 
 
-bool MSRequest::cookieFromJSON(QJsonObject cookie)
+bool MSRequest::cookieFromJSON(const QJsonObject &cookie)
 {
-    cookie=QJsonObject();
+    //cookie=QJsonObject();
+    Q_UNUSED(cookie);
 return true;
 }
 

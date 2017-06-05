@@ -157,7 +157,7 @@ bool MSMailRu::auth(){
 //=======================================================================================
 
 
-void MSMailRu::saveTokenFile(QString path)
+void MSMailRu::saveTokenFile(const QString &path)
 {
     QFile key(path+"/"+this->tokenFileName);
     key.open(QIODevice::WriteOnly | QIODevice::Text);
@@ -169,7 +169,7 @@ void MSMailRu::saveTokenFile(QString path)
 //=======================================================================================
 
 
-bool MSMailRu::loadTokenFile(QString path)
+bool MSMailRu::loadTokenFile(const QString &path)
 {
     QFile key(path+"/"+this->tokenFileName);
 
@@ -264,7 +264,7 @@ bool MSMailRu::refreshToken()
 
 //=======================================================================================
 
-QString MSMailRu::remote_dispatcher(QString target){
+QString MSMailRu::remote_dispatcher(const QString &target){
 
     this->auth();
 
@@ -657,10 +657,11 @@ bool MSMailRu::remote_file_makeFolder(MSFSObject *object){
 //=======================================================================================
 
 
-void MSMailRu::remote_file_makeFolder(MSFSObject *object, QString parentID)
+void MSMailRu::remote_file_makeFolder(MSFSObject *object, const QString &parentID)
 {
-Q_UNUSED(object)
-parentID="";
+Q_UNUSED(object);
+
+Q_UNUSED(parentID);
 }
 
 //=======================================================================================
@@ -717,7 +718,7 @@ bool MSMailRu::remote_file_trash(MSFSObject *object){
 
 //=======================================================================================
 
-bool MSMailRu::remote_createDirectory(QString path){
+bool MSMailRu::remote_createDirectory(const QString &path){
 
     if(this->getFlag("dryRun")){
         return true;
@@ -759,7 +760,7 @@ bool MSMailRu::remote_createDirectory(QString path){
 //=======================================================================================
 
 
-void MSMailRu::local_createDirectory(QString path){
+void MSMailRu::local_createDirectory(const QString &path){
 
     if(this->getFlag("dryRun")){
         return;
@@ -773,7 +774,7 @@ void MSMailRu::local_createDirectory(QString path){
 //=======================================================================================
 
 
-void MSMailRu::local_removeFile(QString path){
+void MSMailRu::local_removeFile(const QString &path){
 
 
     if(this->getFlag("dryRun")){
@@ -804,7 +805,7 @@ void MSMailRu::local_removeFile(QString path){
 //=======================================================================================
 
 
-void MSMailRu::local_removeFolder(QString path){
+void MSMailRu::local_removeFolder(const QString &path){
 
 
     if(this->getFlag("dryRun")){
@@ -834,7 +835,7 @@ void MSMailRu::local_removeFolder(QString path){
 //=======================================================================================
 
 
-MSFSObject::ObjectState MSMailRu::filelist_defineObjectState(MSLocalFSObject local, MSRemoteFSObject remote){
+MSFSObject::ObjectState MSMailRu::filelist_defineObjectState(const MSLocalFSObject &local, const MSRemoteFSObject &remote){
 
 
     if((local.exist)&&(remote.exist)){ //exists both files
@@ -1283,7 +1284,7 @@ QHash<QString, MSFSObject> MSMailRu::filelist_getFSObjectsByState(MSFSObject::Ob
 //=======================================================================================
 
 
-QHash<QString, MSFSObject> MSMailRu::filelist_getFSObjectsByState(QHash<QString, MSFSObject> fsObjectList, MSFSObject::ObjectState state){
+QHash<QString, MSFSObject> MSMailRu::filelist_getFSObjectsByState( QHash<QString, MSFSObject> fsObjectList, MSFSObject::ObjectState state){
 
     QHash<QString,MSFSObject> out;
 
@@ -1349,7 +1350,7 @@ QHash<QString, MSFSObject> MSMailRu::filelist_getFSObjectsByTypeRemote(MSRemoteF
 //=======================================================================================
 
 
-bool MSMailRu::filelist_FSObjectHasParent(MSFSObject fsObject){
+bool MSMailRu::filelist_FSObjectHasParent(const MSFSObject &fsObject){
 
     if(fsObject.path=="/"){
         return false;
@@ -1369,7 +1370,7 @@ bool MSMailRu::filelist_FSObjectHasParent(MSFSObject fsObject){
 //=======================================================================================
 
 
-MSFSObject MSMailRu::filelist_getParentFSObject(MSFSObject fsObject){
+MSFSObject MSMailRu::filelist_getParentFSObject(const MSFSObject &fsObject){
 
     QString parentPath;
 
@@ -1397,7 +1398,7 @@ MSFSObject MSMailRu::filelist_getParentFSObject(MSFSObject fsObject){
 //=======================================================================================
 
 
-void MSMailRu::filelist_populateChanges(MSFSObject changedFSObject){
+void MSMailRu::filelist_populateChanges(const MSFSObject &changedFSObject){
 
     QHash<QString,MSFSObject>::iterator object=this->syncFileList.find(changedFSObject.path+changedFSObject.fileName);
 
@@ -1410,7 +1411,7 @@ void MSMailRu::filelist_populateChanges(MSFSObject changedFSObject){
 //=======================================================================================
 
 
-bool MSMailRu::testReplyBodyForError(QString body){
+bool MSMailRu::testReplyBodyForError(const QString &body){
 
     if(body.contains("Error transferring ")){
 
@@ -1425,7 +1426,7 @@ bool MSMailRu::testReplyBodyForError(QString body){
 //=======================================================================================
 
 
-QString MSMailRu::getReplyErrorString(QString body){
+QString MSMailRu::getReplyErrorString(const QString &body){
 
     return body;
 
@@ -1441,7 +1442,7 @@ bool MSMailRu::createHashFromRemote(){
 
 //=======================================================================================
 
-bool MSMailRu::readRemote(QString path,QNetworkCookieJar* cookie)
+bool MSMailRu::readRemote(const QString &path, QNetworkCookieJar* cookie)
 {
 
     if(cookie == NULL){
@@ -1580,7 +1581,7 @@ bool MSMailRu::readRemote(QString path,QNetworkCookieJar* cookie)
 //=======================================================================================
 
 
-bool MSMailRu::readLocal(QString path){
+bool MSMailRu::readLocal(const QString &path){
 
 
     QDir dir(path);
@@ -1703,7 +1704,7 @@ bool MSMailRu::readLocal(QString path){
 //=======================================================================================
 
 
-bool MSMailRu::isFolder(QJsonValue remoteObject){
+bool MSMailRu::isFolder(const QJsonValue &remoteObject){
 
     if(remoteObject.toObject()[".tag"].toString()=="folder"){
         return true;
@@ -1714,7 +1715,7 @@ bool MSMailRu::isFolder(QJsonValue remoteObject){
 //=======================================================================================
 
 
-bool MSMailRu::isFile(QJsonValue remoteObject){
+bool MSMailRu::isFile(const QJsonValue &remoteObject){
 
     if(remoteObject.toObject()[".tag"].toString()=="file"){
         return true;
@@ -1837,7 +1838,7 @@ bool MSMailRu::createSyncFileList(){
 //=======================================================================================
 
 
-bool MSMailRu::directUpload(QString url, QString remotePath){
+bool MSMailRu::directUpload(const QString &url, const QString &remotePath){
 
     // download file into temp file ---------------------------------------------------------------
 
@@ -2067,7 +2068,7 @@ QString MSMailRu::getInfo(){
 
 
 // not used
-bool MSMailRu::onAuthFinished(QString html, MSCloudProvider *provider)
+bool MSMailRu::onAuthFinished(const QString &html, MSCloudProvider *provider)
 {
 Q_UNUSED(html);
 Q_UNUSED(provider);

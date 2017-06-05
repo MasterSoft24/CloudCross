@@ -164,15 +164,16 @@ void CommandServer::onNewCommandRecieved(){
         w->worker =          new QProcess(this);
         w->worker_soket =    new QLocalServer(this);
         w->socket_name =     QString("ccfd_w_")+this->generateRandom(4)+QString(".sock");
-        w->mountPoint = comm[3];
+        w->mountPoint = QString(comm[3]).replace("\n","");
         w->provider = comm[1];
         w->workPath = comm[2];
 
+        log("DAEMON MOUNT POINT IS "+w->mountPoint);
 
         sndParms << w->socket_name;
         sndParms << comm[1];
         sndParms << comm[2];
-        sndParms << comm[3];
+        sndParms << w->mountPoint;
 
         // at this point a <comm> variable contains
         // [0]= socket name for communicate with command server

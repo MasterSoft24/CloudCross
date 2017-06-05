@@ -56,7 +56,7 @@ MSCloudProvider::MSCloudProvider(QObject *parent)
     this->proxyServer=0;
 }
 
-bool MSCloudProvider::setProxyServer(QString type,QString proxy)
+bool MSCloudProvider::setProxyServer(const QString &type, const QString &proxy)
 {
     QStringList pa=proxy.split(':');
 
@@ -207,15 +207,15 @@ bool MSCloudProvider::filterExcludeFileNames(const QString &path){// return fals
     }
 }
 
-void MSCloudProvider::saveTokenFile(QString path){
+void MSCloudProvider::saveTokenFile(const QString &path){
     // fix warning message
-    path=path;
+    Q_UNUSED(path);
     return;
 }
 
-bool MSCloudProvider::loadTokenFile(QString path){
+bool MSCloudProvider::loadTokenFile(const QString &path){
     // fix warning message
-    path=path;
+    Q_UNUSED(path);
     return false;
 }
 
@@ -224,7 +224,7 @@ bool MSCloudProvider::refreshToken(){
 }
 
 
-QString MSCloudProvider::fileChecksum(QString &fileName, QCryptographicHash::Algorithm hashAlgorithm){
+QString MSCloudProvider::fileChecksum(const QString &fileName, QCryptographicHash::Algorithm hashAlgorithm){
 
     QFile f(fileName);
 
@@ -242,7 +242,7 @@ QString MSCloudProvider::fileChecksum(QString &fileName, QCryptographicHash::Alg
 }
 
 // convert to milliseconds in UTC timezone
-qint64 MSCloudProvider::toMilliseconds(QDateTime dateTime, bool isUTC){
+qint64 MSCloudProvider::toMilliseconds( QDateTime dateTime, bool isUTC){
 
     if(!isUTC){// dateTime currently in UTC, need convert
 
@@ -268,7 +268,7 @@ qint64 MSCloudProvider::toMilliseconds(QDateTime dateTime, bool isUTC){
 
 
 // convert to milliseconds in UTC timezone
-qint64 MSCloudProvider::toMilliseconds(QString dateTimeString, bool isUTC){
+qint64 MSCloudProvider::toMilliseconds(const QString &dateTimeString, bool isUTC){
 
     if(!isUTC){
 
@@ -295,14 +295,14 @@ qint64 MSCloudProvider::toMilliseconds(QString dateTimeString, bool isUTC){
 }
 
 
-void MSCloudProvider::setFlag(QString flagName, bool flagVal){
+void MSCloudProvider::setFlag(const QString &flagName, bool flagVal){
 
     this->flags.insert(flagName,flagVal);
 
 }
 
 
-bool MSCloudProvider::getFlag(QString flagName){
+bool MSCloudProvider::getFlag(const QString &flagName){
 
     QHash<QString,bool>::iterator it=this->flags.find(flagName);
     if(it != this->flags.end()){
@@ -313,7 +313,7 @@ bool MSCloudProvider::getFlag(QString flagName){
     }
 }
 
-QString MSCloudProvider::getOption(QString optionName){
+QString MSCloudProvider::getOption(const QString &optionName){
 
     QHash<QString,QString>::iterator it=this->options.find(optionName);
     if(it != this->options.end()){
@@ -325,7 +325,7 @@ QString MSCloudProvider::getOption(QString optionName){
 }
 
 
-bool MSCloudProvider::local_writeFileContent(QString filePath, MSRequest* req){
+bool MSCloudProvider::local_writeFileContent(const QString &filePath, MSRequest* req){
 
     if(req->replyError!= QNetworkReply::NetworkError::NoError){
         qStdOut()<< "Request error. ";
@@ -363,7 +363,7 @@ bool MSCloudProvider::local_writeFileContent(QString filePath, MSRequest* req){
 
 //=======================================================================================
 
-void MSCloudProvider::local_createDirectory(QString path){
+void MSCloudProvider::local_createDirectory(const QString &path){
 
     if(this->getFlag("dryRun")){
         return;

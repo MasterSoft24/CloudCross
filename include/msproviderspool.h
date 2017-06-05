@@ -61,7 +61,7 @@ public:
 
     QList<MSCloudProvider*> pool;
 
-    MSCloudProvider* getProvider(QString providerName)    ;
+    MSCloudProvider* getProvider(const QString &providerName)    ;
 
     QString currentPath;// directory where program was run
     QString workPath;// path set with -p option
@@ -77,19 +77,19 @@ public:
     void addProvider(MSCloudProvider* provider, bool statelessMode=false);
 
     void getCurrentPath();
-    void setWorkPath(QString path);
+    void setWorkPath(const QString &path);
 
-    void saveTokenFile(QString providerName);
+    void saveTokenFile(const QString &providerName);
 
-    bool loadTokenFile(QString providerName);
+    bool loadTokenFile(const QString &providerName);
 
-    bool refreshToken(QString providerName);
+    bool refreshToken(const QString &providerName);
 
     void setStrategy(MSCloudProvider::SyncStrategy strategy);
 
-    void setFlag(QString flagName,bool flagVal);
+    void setFlag(const QString &flagName,bool flagVal);
 
-    void setOption(QString optionName,QString optVal);
+    void setOption(const QString &optionName, const QString &optVal);
 
 };
 
