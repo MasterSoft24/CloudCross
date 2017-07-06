@@ -122,6 +122,11 @@ public:
     virtual void doSync()=0;
     //virtual bool remote_file_generateIDs(int count) =0 ;
 
+    virtual bool _readRemote(const QString &rootPath) = 0;
+    virtual bool readLocal(const QString &path) = 0;
+    virtual bool readLocalSingle(const QString &path) = 0;
+
+
     virtual QHash<QString,MSFSObject>   filelist_getFSObjectsByState( MSFSObject::ObjectState state) =0;
     virtual QHash<QString,MSFSObject>   filelist_getFSObjectsByState(QHash<QString,MSFSObject> fsObjectList,  MSFSObject::ObjectState state) =0;
     virtual QHash<QString,MSFSObject>   filelist_getFSObjectsByTypeLocal( MSLocalFSObject::Type type)=0;
@@ -162,6 +167,8 @@ public:
 
     QString includeList;
     QString excludeList;
+
+    QHash<QString,MSFSObject> syncFileList;
 
     void setFlag(const QString &flagName, bool flagVal);
     bool getFlag(const QString &flagName);

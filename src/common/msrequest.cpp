@@ -174,7 +174,7 @@ void MSRequest::printDebugInfo_request(const QNetworkRequest &req){
     qDebug()<<"Query parameters: ";
     QList<QPair<QString, QString> >  qi=this->query->queryItems();
 
-    for(int i;i<qi.size();i++){
+    for(int i = 0;i<qi.size();i++){
 
         qDebug()<<qi.at(i).first<<": "<<qi.at(i).second;
     }

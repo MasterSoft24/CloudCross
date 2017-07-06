@@ -50,7 +50,7 @@ Next,basic install sequence is:
 3. Go to unpacked folder.
 4. mkdir build
 5. cd build
-6. qmake-qt5 ../CloudCross.pro
+6. qmake ../CloudCross.pro
 7. make
 
 As a result, in build directory will be ccross file appears
@@ -172,7 +172,7 @@ CloudCross позволяет синхронизировать только ча
 3. Перейдите в распакованую папку.
 4. mkdir build
 5. cd build
-6. qmake-qt5 ../CloudCross.pro
+6. qmake ../CloudCross.pro
 7. make
 
 В результате в папке build появится файл ccross

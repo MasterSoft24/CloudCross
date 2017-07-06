@@ -84,7 +84,10 @@ public:
 
 
     bool readRemote(const QString &parentId, const QString &currentPath);
+    bool _readRemote(const QString &parentId);
+
     bool readLocal(const QString &path);
+    bool readLocalSingle(const QString &path);
 
 public:
     MSGoogleDrive();
@@ -130,7 +133,7 @@ public:
      QHash<QString,QJsonValue>driveJSONFileList;
 
      // sync local and remote filesystems hash table
-     QHash<QString,MSFSObject> syncFileList;
+     //QHash<QString,MSFSObject> syncFileList;
 
      bool directUpload(const QString &url, const QString &remotePath);
 

@@ -108,6 +108,8 @@ public:
     void log(QString mes);
     QJsonObject FSObjectToJSON(const MSFSObject &obj);
 
+    void executor(MSCloudProvider* p);
+
     QJsonObject params;
     QLocalSocket* socket;
     QString command;
@@ -130,8 +132,9 @@ public slots:
 //    void watcherRemovedSlot();
 //    void watcherModifiedSlot();
 //    void watcherCreatedSlot();
-    void watcherOnFileChanged(QString file);
-    void watcherOnDirectoryChanged(QString dir);
+
+//    void watcherOnFileChanged(QString file);
+//    void watcherOnDirectoryChanged(QString dir);
 
 };
 

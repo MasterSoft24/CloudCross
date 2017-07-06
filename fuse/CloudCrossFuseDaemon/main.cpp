@@ -31,3 +31,7 @@ int main(int argc, char *argv[])
 
     return a.exec();
 }
+
+//  nc -U /tmp/ccfd.sock
+
+//  new_mount^4^/home/ms/QT/CloudCross/build/debug/TEST4^/tmp/example

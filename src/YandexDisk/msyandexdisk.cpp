@@ -435,6 +435,12 @@ bool MSYandexDisk::readRemote(const QString &currentPath){ //QString parentId,QS
 
 }
 
+bool MSYandexDisk::_readRemote(const QString &rootPath){
+
+
+    return this->readRemote(rootPath);
+}
+
 
 
 //=======================================================================================
@@ -571,7 +577,6 @@ bool MSYandexDisk::createSyncFileList(){
 
 //=======================================================================================
 
-
 bool MSYandexDisk::readLocal(const QString &path){
 
 
@@ -696,6 +701,115 @@ bool MSYandexDisk::readLocal(const QString &path){
         return true;
 }
 
+
+//=======================================================================================
+
+bool MSYandexDisk::readLocalSingle(const QString &path){
+
+    QFileInfo fi(path);
+
+            QString Path = fi.absoluteFilePath();
+            QString relPath=fi.absoluteFilePath().replace(this->workPath,"");
+
+            if(! this->filterServiceFileNames(relPath)){// skip service files and dirs
+                return false;
+            }
+
+
+
+            if(this->getFlag("useInclude") && this->includeList != ""){//  --use-include
+
+                if( this->filterIncludeFileNames(relPath)){
+
+                    return false;
+                }
+            }
+            else{// use exclude by default
+
+                if(this->excludeList != ""){
+                    if(! this->filterExcludeFileNames(relPath)){
+
+                        return false;
+                    }
+                }
+            }
+
+
+
+            QHash<QString,MSFSObject>::iterator i=this->syncFileList.find(relPath);
+
+
+
+            if(i!=this->syncFileList.end()){// if object exists in Yandex Disk
+
+                MSFSObject* fsObject = &(i.value());
+
+
+                fsObject->local.fileSize=  fi.size();
+                fsObject->local.md5Hash= this->fileChecksum(Path,QCryptographicHash::Md5);
+                fsObject->local.exist=true;
+                fsObject->getLocalMimeType(this->workPath);
+
+                if(fi.isDir()){
+                    fsObject->local.objectType=MSLocalFSObject::Type::folder;
+                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+                }
+                else{
+
+                    fsObject->local.objectType=MSLocalFSObject::Type::file;
+                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+
+                }
+
+
+                fsObject->isDocFormat=false;
+
+
+                fsObject->state=this->filelist_defineObjectState(fsObject->local,fsObject->remote);
+
+            }
+            else{
+
+                MSFSObject fsObject;
+
+                fsObject.state=MSFSObject::ObjectState::NewLocal;
+
+                if(relPath.lastIndexOf("/")==0){
+                    fsObject.path="/";
+                }
+                else{
+                    fsObject.path=QString(relPath).left(relPath.lastIndexOf("/"))+"/";
+                }
+
+                fsObject.fileName=fi.fileName();
+                fsObject.getLocalMimeType(this->workPath);
+
+                fsObject.local.fileSize=  fi.size();
+                fsObject.local.md5Hash= this->fileChecksum(Path,QCryptographicHash::Md5);
+                fsObject.local.exist=true;
+
+                if(fi.isDir()){
+                    fsObject.local.objectType=MSLocalFSObject::Type::folder;
+                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+                }
+                else{
+
+                    fsObject.local.objectType=MSLocalFSObject::Type::file;
+                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+
+                }
+
+                fsObject.state=this->filelist_defineObjectState(fsObject.local,fsObject.remote);
+
+                fsObject.isDocFormat=false;
+
+
+                this->syncFileList.insert(relPath,fsObject);
+
+            }
+
+        return true;
+}
 
 
 //=======================================================================================

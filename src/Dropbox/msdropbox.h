@@ -112,7 +112,9 @@ public:
 
      bool createHashFromRemote();
      bool readRemote();//QString parentId,QString currentPath
+     bool _readRemote(const QString &rootPath);
      bool readLocal(const QString &path);
+     bool readLocalSingle(const QString &path);
 
      bool isFolder(const QJsonValue &remoteObject);
      bool isFile(const QJsonValue &remoteObject);
@@ -120,7 +122,7 @@ public:
      bool createSyncFileList();
 
      // sync local and remote filesystems hash table
-     QHash<QString,MSFSObject> syncFileList;
+     //QHash<QString,MSFSObject> syncFileList;
 
      bool directUpload(const QString &url, const QString &remotePath);
 

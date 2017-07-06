@@ -2,6 +2,7 @@
 #include <fstream>
 
 #include <stdio.h>
+#include <wchar.h>
 
 #define FUSE_USE_VERSION 26
 #define _FILE_OFFSET_BITS  64
@@ -51,7 +52,7 @@ static  fuse_operations fuse_op;
 
 static int sock_descr;
 
-std::map<std::string,MSFSObject> fileList;
+//std::map<std::string,MSFSObject> fileList;
 
 static string tempDirName;
 
@@ -74,6 +75,30 @@ int readFileContent(char* path,char* buf,int size, int offset){
 
 }
 
+// ----------------------------------------------------------------
+
+int f_mknod(const string &path){
+
+    int r= system(string("touch \""+path+"\"").c_str());
+    if(r == 0){
+        return r;
+    }
+    else{
+        return -1;
+    }
+}
+
+
+int f_mkdir(const string &path){
+
+    int r= system(string("mkdir -p \""+path+"\"").c_str());
+    if(r == 0){
+        return r;
+    }
+    else{
+        return -1;
+    }
+}
 
 // ----------------------------------------------------------------
 
@@ -96,20 +121,140 @@ string getTempName() {
 
 // ----------------------------------------------------------------
 
-map<string, MSFSObject> filterListByPath(map<string, MSFSObject> src, string path){
+MSFSObject convertJsonToFS_remote(const json &jo){
 
-    map<string, MSFSObject>::iterator i=src.begin();
-    map<string,MSFSObject> out;
+    MSFSObject obj;
 
-    for(;i != src.end(); i++){
+    obj.state               = jo["state"];
+    obj.path                = jo["path"];
+    obj.fileName            = jo["fileName"];
+    obj.refCount            = -1;
 
-        MSFSObject o=i->second;
-        if(o.path == path){
-            out.insert(std::make_pair(i->first,i->second));
+    //obj.remote.data         = jo["remote"]["data"];
+    obj.remote.exist        = true;
+    obj.remote.fileSize     = jo["remote"]["fileSize"];
+    obj.remote.md5Hash      = jo["remote"]["md5Hash"];
+    obj.remote.modifiedDate = jo["remote"]["modifiedDate"];
+    obj.remote.objectType   = jo["remote"]["objectType"];
+
+    return obj;
+}
+
+// ----------------------------------------------------------------
+
+bool findObjectInFilelist(const string &path, MSFSObject* obj ){
+
+//    map<string, MSFSObject>::iterator i= fileList.find(string(path)); //does try find in local filelist
+
+//    if( i != fileList.end() ){// if it was finded in local filelist
+
+//        obj = &i->second;
+
+//        return true;
+//    }
+//    else{
+
+        json comm;
+        comm["command"] = "find_object";
+        comm["params"]["socket"] = workSocket;
+        comm["params"]["provider"] = workProvider;
+        comm["params"]["path"] = workPath;
+        comm["params"]["mount"] = mountPoint;
+        comm["params"]["objectPath"] = path;
+
+        json jsonFileList = json::parse( sendCommand_sync(comm) );
+
+        if(jsonFileList["code"] == 0){
+
+            if(obj == 0){
+                return true;
+            }
+
+            json jo = jsonFileList["data"];
+
+            obj->state               = jo["state"];
+            obj->path                = jo["path"];
+            obj->fileName            = jo["fileName"];
+            obj->refCount            = -1;
+
+            //obj.remote.data         = jo["remote"]["data"];
+            obj->remote.exist        = true;
+            obj->remote.fileSize     = jo["remote"]["fileSize"];
+            obj->remote.md5Hash      = jo["remote"]["md5Hash"];
+            obj->remote.modifiedDate = jo["remote"]["modifiedDate"];
+            obj->remote.objectType   = jo["remote"]["objectType"];
+
+            return true;
         }
-    }
+        else{
 
-    return out;
+
+            return false;
+        }
+
+//    }
+
+
+
+
+}
+
+// ----------------------------------------------------------------
+
+map<string, MSFSObject> filterListByPath(/*map<string, MSFSObject> src,*/ string path){
+
+    log(" filterListByPath sent "+path);
+    json comm;
+    comm["command"] = "get_dir_list";
+    comm["params"]["socket"] = workSocket;
+    comm["params"]["provider"] = workProvider;
+    comm["params"]["path"] = workPath;
+    comm["params"]["mount"] = mountPoint;
+    comm["params"]["dirPath"] = path;
+
+    string reply = sendCommand_sync(comm) ;
+    json jsonFileList = json::parse( reply );
+
+    log(" filterListByPath receive "+reply);
+
+    map<string, MSFSObject> fl;
+
+        for(json::iterator i = jsonFileList.begin(); i != jsonFileList.end(); i++){
+
+            MSFSObject obj = convertJsonToFS_remote(i.value());
+//            json jo=i.value();
+//            obj.state               = jo["state"];
+//            obj.path                = jo["path"];
+//            obj.fileName            = jo["fileName"];
+//            obj.refCount            = -1;
+
+//            //obj.remote.data         = jo["remote"]["data"];
+//            obj.remote.exist        = true;
+//            obj.remote.fileSize     = jo["remote"]["fileSize"];
+//            obj.remote.md5Hash      = jo["remote"]["md5Hash"];
+//            obj.remote.modifiedDate = jo["remote"]["modifiedDate"];
+//            obj.remote.objectType   = jo["remote"]["objectType"];
+
+
+            fl.insert(std::make_pair(i.key(),obj));
+
+
+        }
+
+    return fl;
+
+//    map<string, MSFSObject>::iterator i=src.begin();
+//    map<string,MSFSObject> out;
+
+//    for(;i != src.end(); i++){
+
+//        MSFSObject o=i->second;
+//        if(o.path == path){
+//            out.insert(std::make_pair(i->first,i->second));
+//        }
+//    }
+
+//    return out;
 
 }
 
@@ -130,8 +275,8 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
         log("CALLBACK getattr for /");
 
               stbuf->st_mode = S_IFDIR | 0755;
-              stbuf->st_uid=1000;
-              stbuf->st_gid=1000;
+              stbuf->st_uid=getuid();
+              stbuf->st_gid=getgid();
               stbuf->st_nlink = 1;
               return 0;
     }
@@ -145,12 +290,17 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
         if((stat (fname.c_str(), &buffer) != 0) ){//file not cached
         log("CALLBACK getattr:  file not cached");
 
-            map<string, MSFSObject>::iterator i= fileList.find(string(path));
+            //map<string, MSFSObject>::iterator i= fileList.find(string(path));
 
-                if(i != fileList.end()){// file or folder exists on remote
+         MSFSObject o;
+
+                if(findObjectInFilelist(path,&o)){// file or folder exists on remote
+
+                //if(i != fileList.end()){// file or folder exists on remote
+
                     log("CALLBACK getattr:  file or folder exists on remote");
-                    //std::pair<string,MSFSObject> o=*i;
-                    MSFSObject o= i->second;
+
+                    //MSFSObject o= i->second;
 
                     memset(stbuf,0,sizeof(struct stat));
 
@@ -158,7 +308,7 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
 
                         stbuf->st_mode = S_IFDIR | 0755;
                         stbuf->st_nlink = 2;
-//                        stbuf->st_size = 4096;
+                        //stbuf->st_size = 4096;
                     }
                     else{
 
@@ -226,9 +376,11 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
 
     (void) offset;
     (void) fi;
-    //log("CALLBACK readdir "+string(path));
+    log("CALLBACK readdir "+string(path));
 
-     //qDebug()<<" readdir callback"<<endl;
+
+//            filler(buf, ".", NULL, 0);
+//            filler(buf, "..", NULL, 0);
 
      string m_path;
 
@@ -240,9 +392,9 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
         m_path=string(path)+"/";
      }
 
-    map<string, MSFSObject> dl= filterListByPath( fileList, string(m_path));
+    map<string, MSFSObject> dl= filterListByPath( /*fileList,*/ string(m_path));
 
-    if(dl.size()>0){
+    if( ! dl.empty() ){
 
         map<string, MSFSObject>::iterator i=dl.begin();
 
@@ -254,7 +406,7 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
             if(i->second.remote.objectType == MSRemoteFSObject::Type::folder){
 
                 st.st_mode = S_IFDIR | 0755;
-                st.st_nlink = 1;
+                st.st_nlink = 2;
             }
             else{
 
@@ -263,8 +415,8 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
                 st.st_size = i->second.remote.fileSize;
             }
 
-            st.st_uid=1000;
-            st.st_gid=1000;
+            st.st_uid=getuid();
+            st.st_gid=getgid();
             st.st_mtime=i->second.remote.modifiedDate/1000;
 
 
@@ -275,17 +427,41 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
 
         return 0;
     }
+    else{
+        struct stat st;
+        memset(&st, 0, sizeof(struct stat));
+        st.st_mode = S_IFDIR | 0755;
+        st.st_nlink = 2;
+        st.st_uid=getuid();
+        st.st_gid=getgid();
+        filler(buf,".",&st,0);
 
-    return -1;
+        memset(&st, 0, sizeof(struct stat));
+        st.st_mode = S_IFDIR | 0755;
+        st.st_nlink = 2;
+        st.st_uid=getuid();
+        st.st_gid=getgid();
+        filler(buf,"..",&st,0);
+
+//        filler(buf, ".", NULL, 0);
+//        filler(buf, "..", NULL, 0);
+        return 0;
+    }
+
+    //return -1;
 
 
 }
 
 static int open_callback(const char *path, struct fuse_file_info *fi) {
 
-    map<string, MSFSObject>::iterator i= fileList.find(string(path));
+    //map<string, MSFSObject>::iterator i= fileList.find(string(path));
 
-    if(i != fileList.end()){
+    //MSFSObject o;
+
+    if(findObjectInFilelist(path,nullptr)){
+
+    //if(i != fileList.end()){
 
         string fname=string("/tmp/")+tempDirName+string(path);
 
@@ -294,7 +470,7 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
 
             //log("CALLBACK open - File Exists "+string(path)+" flags = "+to_string(fi->flags));
 
-            i->second.refCount++;
+            //i->second.refCount++;
 
             fi->fh = open (fname.c_str() ,fi->flags);
             if(fi->fh == -1){
@@ -330,7 +506,7 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
 
             sendCommand(comm) ;
 
-            i->second.refCount=0;
+            //i->second.refCount=0;
         }
 
         //log("open callback ended for "+string(path)+" ; ref count is "+to_string(i->second.refCount));
@@ -347,10 +523,13 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
 
 //    log("read "+to_string(size)+" "+to_string(offset));
 
+    MSFSObject o;
 
-    map<string, MSFSObject>::iterator i= fileList.find(string(path));
+    findObjectInFilelist(path,&o);
 
-    int fullSize = i->second.remote.fileSize;
+    //map<string, MSFSObject>::iterator i= fileList.find(string(path));
+
+    int fullSize = o.remote.fileSize;
 
     string fname = string("/tmp/")+tempDirName+string(path);
 
@@ -366,7 +545,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
 
         if(buffer.st_size == 0){// file don't cached yet
 
-            if(i->second.localCreated){
+            if(o.localCreated){
 
                 //log("CALLBACK read - file LOCAL CREATED and fully cached "+string(path));
 
@@ -577,8 +756,13 @@ static int write_callback(const char *path, const char *buf, size_t size, off_t 
     struct stat buffer;
     stat (fname.c_str(), &buffer);
 
-    map<string, MSFSObject>::iterator i= fileList.find(string(path));
-    i->second.remote.fileSize=buffer.st_size;
+    //map<string, MSFSObject>::iterator i= fileList.find(string(path));
+
+    MSFSObject o;
+
+    findObjectInFilelist(path,&o);
+
+    o.remote.fileSize=buffer.st_size;
 
    // log("truncated to "+to_string(buffer.st_size));
 
@@ -647,13 +831,44 @@ static int xmp_mknod(const char *path, mode_t mode, dev_t rdev){
 //log("CALLBACK mknod");
 
     string fname = string("/tmp/")+tempDirName+string(path);
-    string insname=string(path)+"/";
+    string insname=string(path);
 
-    int res = mknod(fname.c_str(), mode, rdev);
+    log("CALLBACK mknod begin"+fname);
+
+    int res = f_mknod(fname.c_str());
+
     if(res == -1){
-        return -errno;
+
+
+        string td = string("/tmp/")+tempDirName;
+        string ptf = fname.substr(0,fname.find_last_of("/"));
+        //ptf = ptf.substr(td.length());
+
+//        if(ptf.length() == 0){
+//            ptf = "/";
+//        }
+
+        log("CALLBACK mknod failed. Try create dir"+ptf);
+
+        res = f_mkdir(ptf.c_str());
+        if(res == -1){
+            log("CALLBACK mknod create dir failed. ");
+            return -errno;
+        }
+        else{
+            res = f_mknod(fname.c_str());
+            if(res == -1){
+                log("CALLBACK mknod  failed again.");
+                return -errno;
+            }
+        }
+
+
     }
-    else{
+
+
+
+    log("CALLBACK mknod OK. ");
 
         MSFSObject obj;
 
@@ -664,20 +879,34 @@ static int xmp_mknod(const char *path, mode_t mode, dev_t rdev){
         if(ptf.length() == 0){
             ptf = "/";
         }
+        else{
+            ptf = ptf
+                    +"/";
+        }
 
-        string fnm=fname.substr(fname.find_last_of("/")+1);
+        json comm1;
+        comm1["command"]="add_object";
+        comm1["params"]["socket"]=workSocket;
+        comm1["params"]["provider"]=workProvider;
+        comm1["params"]["path"]=workPath;
+        comm1["params"]["cachePath"]=fname;
+        comm1["params"]["filePath"]=fname;
 
-//        obj.state               = jo["state"];
-        obj.path                = ptf;
-        obj.fileName            = fnm;
-        obj.refCount            = 1;
-        obj.remote.exist        = true;
-        obj.remote.fileSize     = 0;
-        obj.remote.modifiedDate = time(0);
-        obj.remote.objectType   = MSRemoteFSObject::Type::file;
-        obj.localCreated        = true;
+        sendCommand(comm1) ;
 
-        fileList.insert(std::make_pair(string(insname),obj));
+//        string fnm=fname.substr(fname.find_last_of("/")+1);
+
+////        obj.state               = jo["state"];
+//        obj.path                = ptf;
+//        obj.fileName            = fnm;
+//        obj.refCount            = 1;
+//        obj.remote.exist        = true;
+//        obj.remote.fileSize     = 0;
+//        obj.remote.modifiedDate = time(0);
+//        obj.remote.objectType   = MSRemoteFSObject::Type::file;
+//        obj.localCreated        = true;
+
+//        fileList.insert(std::make_pair(string(insname),obj));
 
         //log("CALLBACK mknod NEW CREATED "+ ptf+string(" - ")+fnm);
 
@@ -692,7 +921,7 @@ static int xmp_mknod(const char *path, mode_t mode, dev_t rdev){
         sendCommand(comm) ;
 
         return 0;
-    }
+
 
 }
 
@@ -702,9 +931,9 @@ static int xmp_mkdir(const char *path, mode_t mode){
    // log("CALLBACK mkdir");
 
     string fname = string("/tmp/")+tempDirName+string(path);
-    string insname=string(path)+"/";
+    string insname=string(path);
 
-        int res = mkdir(fname.c_str(), mode);
+        int res = f_mkdir(fname.c_str());
         if(res == -1){
             return -errno;
         }
@@ -719,19 +948,33 @@ static int xmp_mkdir(const char *path, mode_t mode){
             if(ptf.length() == 0){
                 ptf = "/";
             }
+            else{
+                ptf = ptf +"/";
+            }
 
-            string fnm=fname.substr(fname.find_last_of("/")+1);
 
-    //        obj.state               = jo["state"];
-            obj.path                = ptf;
-            obj.fileName            = fnm;
-            obj.refCount            = 1;
-            obj.remote.exist        = true;
-            obj.remote.fileSize     = 0;
-            obj.remote.modifiedDate = time(0);
-            obj.remote.objectType   = MSRemoteFSObject::Type::folder;
+            json comm1;
+            comm1["command"]="add_object";
+            comm1["params"]["socket"]=workSocket;
+            comm1["params"]["provider"]=workProvider;
+            comm1["params"]["path"]=workPath;
+            comm1["params"]["cachePath"]=fname;
+            comm1["params"]["filePath"]=fname;
 
-            fileList.insert(std::make_pair(string(insname),obj));
+            sendCommand(comm1) ;
+
+//            string fnm=fname.substr(fname.find_last_of("/")+1);
+
+//    //        obj.state               = jo["state"];
+//            obj.path                = ptf;
+//            obj.fileName            = fnm;
+//            obj.refCount            = 1;
+//            obj.remote.exist        = true;
+//            obj.remote.fileSize     = 0;
+//            obj.remote.modifiedDate = time(0);
+//            obj.remote.objectType   = MSRemoteFSObject::Type::folder;
+
+//            fileList.insert(std::make_pair(string(insname),obj));
 
             //log("CALLBACK mkdir NEW CREATED "+ ptf+string(" - ")+fnm);
 
@@ -756,13 +999,24 @@ static int xmp_unlink(const char *path){
 
    // log("CALLBACK unlink");
     string fname = string("/tmp/")+tempDirName+string(path);
-    map<string, MSFSObject>::iterator i= fileList.find(string(path));
+    //map<string, MSFSObject>::iterator i= fileList.find(string(path));
 
     int res = unlink(fname.c_str());
 
-    if( i != fileList.end()){
 
-        fileList.erase(i);
+
+//        fileList.erase(i);
+
+        json comm1;
+        comm1["command"]="remove_object";
+        comm1["params"]["socket"]=workSocket;
+        comm1["params"]["provider"]=workProvider;
+        comm1["params"]["path"]=workPath;
+        comm1["params"]["cachePath"]=fname;
+        comm1["params"]["filePath"]=path;
+
+        sendCommand(comm1) ;
+
 
         json comm;
         comm["command"]="unlink";
@@ -783,7 +1037,7 @@ static int xmp_unlink(const char *path){
         comm2["params"]["filePath"]=string(path);
 
         sendCommand(comm2) ;
-    }
+
 
     return 0;
 
@@ -821,16 +1075,26 @@ static int xmp_rmdir(const char *path){
 
     //log("CALLBACK: rmdir");
     string fname = string("/tmp/")+tempDirName+string(path);
-    map<string, MSFSObject>::iterator i= fileList.find(string(path));
+    //map<string, MSFSObject>::iterator i= fileList.find(string(path));
 
     int res = rmdir(fname.c_str());
 
 
-    if( i != fileList.end()){
 
 
 
-        fileList.erase(i);
+
+//        fileList.erase(i);
+
+        json comm1;
+        comm1["command"]="remove_object";
+        comm1["params"]["socket"]=workSocket;
+        comm1["params"]["provider"]=workProvider;
+        comm1["params"]["path"]=workPath;
+        comm1["params"]["cachePath"]=fname;
+        comm1["params"]["filePath"]=path;
+
+        sendCommand(comm1) ;
 
         json comm;
         comm["command"]="unlink";
@@ -853,9 +1117,7 @@ static int xmp_rmdir(const char *path){
         sendCommand(comm2) ;
 
         return 0;
-    }
 
-        return -errno;
 }
 
 
@@ -876,33 +1138,11 @@ static int xmp_rename(const char *from, const char *to){
     string fname_to = string("/tmp/")+tempDirName+string(to);
 
 
-//    int rs=stat (fname_from.c_str(), &buffer);
-
-//    if(rs >=0){
-
-//        if(buffer.st_mode == S_IFDIR){
-
-//            xmp_rmdir(from);
-
-//        }
-
-//        if(buffer.st_mode == S_IFREG){
-
-//        }
-
-//    }
-//    else{
-
-
-//    }
-
-
-
 
     int result= rename( fname_from.c_str() , fname_to.c_str() );
     if(result == 0){
 
-        map<string, MSFSObject>::iterator i= fileList.find(string(from));
+        //map<string, MSFSObject>::iterator i= fileList.find(string(from));
 
         string td = string("/tmp/")+tempDirName;
         string ptf = fname_to.substr(0,fname_to.find_last_of("/"));
@@ -913,8 +1153,31 @@ static int xmp_rename(const char *from, const char *to){
             ptf = "/";
         }
 
-        i->second.path = ptf;
-        i->second.fileName = fnm;
+
+        json comm1;
+        comm1["command"]="add_object";
+        comm1["params"]["socket"]=workSocket;
+        comm1["params"]["provider"]=workProvider;
+        comm1["params"]["path"]=workPath;
+        comm1["params"]["cachePath"]=fname_to;
+        comm1["params"]["filePath"]=fname_to;
+
+        sendCommand(comm1) ;
+
+
+        json comm2;
+        comm2["command"]="remove_object";
+        comm2["params"]["socket"]=workSocket;
+        comm2["params"]["provider"]=workProvider;
+        comm2["params"]["path"]=workPath;
+        comm2["params"]["cachePath"]=fname_from;
+        comm2["params"]["filePath"]=from;
+
+        sendCommand(comm2) ;
+
+
+//        i->second.path = ptf;
+//        i->second.fileName = fnm;
 
         json comm;
         comm["command"]="need_update";
@@ -970,12 +1233,12 @@ static int xmp_statfs(const char *path, struct statvfs *stbuf){
 //    return 0;
 
 
-stbuf->f_fsid = {}; // ignored
-stbuf->f_bsize = 4096; // a guess!
-stbuf->f_blocks = 1000 * 256 ; // * 1024 * 1024 / f_bsize
-stbuf->f_bfree = stbuf->f_blocks - 2 * 256;
-stbuf->f_bavail = stbuf->f_bfree;
-stbuf->f_namemax = 256;
+//stbuf->f_fsid = {}; // ignored
+//stbuf->f_bsize = 4096; // a guess!
+//stbuf->f_blocks = 1000 * 256 ; // * 1024 * 1024 / f_bsize
+//stbuf->f_bfree = stbuf->f_blocks - 2 * 256;
+//stbuf->f_bavail = stbuf->f_bfree;
+//stbuf->f_namemax = 256;
 return 0;
 
 }
@@ -1208,7 +1471,16 @@ void log(string mes){
     FILE* lf=fopen("/tmp/ccfw.log","a+");
     if(lf != NULL){
 
-        mes+="\n";
+        time_t rawtime;
+        struct tm * timeinfo;
+        char buffer[80];
+
+        time (&rawtime);
+        timeinfo = localtime(&rawtime);
+
+        strftime(buffer,sizeof(buffer),"%T - ",timeinfo);
+
+        mes = string(buffer)+mes+" \n";
         fputs(mes.c_str(),lf);
         fclose(lf);
     }
@@ -1282,7 +1554,9 @@ int main(int argc, char *argv[])
     comm["params"]["provider"] = argv[2];
     comm["params"]["path"] = argv[3];
 
-    json jsonFileList = json::parse( sendCommand_sync(comm) );
+    //json jsonFileList = json::parse( sendCommand_sync(comm) );
+    sendCommand_sync(comm);
+
 
 //            json jsonFileList;     // test
 //            std::ifstream i("tst.json");
@@ -1296,50 +1570,27 @@ int main(int argc, char *argv[])
     mkdir(string("/tmp/"+tempDirName).c_str(),0777);
 
 
-    for(json::iterator i = jsonFileList.begin(); i != jsonFileList.end(); i++){
+//    for(json::iterator i = jsonFileList.begin(); i != jsonFileList.end(); i++){
 
-        MSFSObject obj;
-        json jo=i.value();
-        obj.state               = jo["state"];
-        obj.path                = jo["path"];
-        obj.fileName            = jo["fileName"];
-        obj.refCount            = -1;
+//        MSFSObject obj;
+//        json jo=i.value();
+//        obj.state               = jo["state"];
+//        obj.path                = jo["path"];
+//        obj.fileName            = jo["fileName"];
+//        obj.refCount            = -1;
 
-        obj.remote.data         = jo["remote"]["data"];
-        obj.remote.exist        = true;
-        obj.remote.fileSize     = jo["remote"]["fileSize"];
-        obj.remote.md5Hash      = jo["remote"]["md5Hash"];
-        obj.remote.modifiedDate = jo["remote"]["modifiedDate"];
-        obj.remote.objectType   = jo["remote"]["objectType"];
+//        //obj.remote.data         = jo["remote"]["data"];
+//        obj.remote.exist        = true;
+//        obj.remote.fileSize     = jo["remote"]["fileSize"];
+//        obj.remote.md5Hash      = jo["remote"]["md5Hash"];
+//        obj.remote.modifiedDate = jo["remote"]["modifiedDate"];
+//        obj.remote.objectType   = jo["remote"]["objectType"];
 
 
-        fileList.insert(std::make_pair(i.key(),obj));
+//        fileList.insert(std::make_pair(i.key(),obj));
 
-//        if(obj.remote.objectType == MSLocalFSObject::Type::file){
 
-//            string fname = string("/tmp/"+tempDirName) + obj.path + obj.fileName;
-//            string ptf=fname.substr(0,fname.find_last_of("/"));
-
-//            // create zero-size file
-//            fstream fs;
-//            fs.open(fname.c_str(), ios::out);
-
-//            if(!fs.is_open()){
-//                system(string(string("mkdir -p \"")+ptf+string("\"")).c_str());
-//                fs.open(fname.c_str(), ios::out);
-//            }
-
-//            fs.close();
-//        }
-//        else{
-//            string fname = string("/tmp/"+tempDirName) + obj.path + obj.fileName;
-//            string ptf=fname.substr(0,fname.find_last_of("/"));
-//            system(string(string("mkdir -p \"")+ptf+string("\"")).c_str());
-//        }
-
-        //log(i.key());
-        //std::cout << i.key();
-    }
+//    }
 
 
 

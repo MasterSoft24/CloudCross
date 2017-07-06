@@ -649,6 +649,28 @@ bool MSGoogleDrive::readRemote(const QString &parentId, const QString &currentPa
     return true;
 }
 
+bool MSGoogleDrive::_readRemote(const QString &parentId){
+    Q_UNUSED(parentId);
+
+    if(!this->createHashFromRemote()){
+
+        qStdOut()<<"Error occured on reading remote files" <<endl;
+        return false;
+    }
+
+    // begin create
+
+
+
+    if(!this->readRemote(this->getRoot(),"/")){ // top level files and folders
+        qStdOut()<<"Error occured on reading remote files" <<endl;
+        return false;
+    }
+
+    return true;
+
+}
+
 
 
 //=======================================================================================
@@ -788,6 +810,126 @@ bool MSGoogleDrive::readLocal(const QString &path){
         return true;
 
 }
+
+
+//=======================================================================================
+
+bool MSGoogleDrive::readLocalSingle(const QString &path){
+
+       QFileInfo fi(path);
+
+
+            QString Path = fi.absoluteFilePath();
+            QString relPath=fi.absoluteFilePath().replace(this->workPath,"");
+
+            if(! this->filterServiceFileNames(relPath)){// skip service files and dirs
+                return false;
+            }
+
+
+        if(this->getFlag("useInclude") && this->includeList != ""){//  --use-include
+
+            if( this->filterIncludeFileNames(relPath)){
+
+                return false;
+            }
+        }
+        else{// use exclude by default
+
+            if(this->excludeList != ""){
+                if(! this->filterExcludeFileNames(relPath)){
+
+                    return false;
+                }
+            }
+        }
+
+
+
+            QHash<QString,MSFSObject>::iterator i=this->syncFileList.find(relPath);
+
+
+
+            if(i!=this->syncFileList.end()){// if object exists in Google Drive
+
+                MSFSObject* fsObject = &(i.value());
+
+
+                fsObject->local.fileSize=  fi.size();
+                fsObject->local.md5Hash= this->fileChecksum(Path,QCryptographicHash::Md5);
+                fsObject->local.exist=true;
+                fsObject->getLocalMimeType(this->workPath);
+
+                if(fi.isDir()){
+                    fsObject->local.objectType=MSLocalFSObject::Type::folder;
+                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+                }
+                else{
+
+                    fsObject->local.objectType=MSLocalFSObject::Type::file;
+                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+
+                }
+
+                if(this->getFlag("convertDoc") && this->filterOfficeMimeTypes(fsObject->local.mimeType )){
+
+                    fsObject->isDocFormat=true;
+                }
+
+                fsObject->state=this->filelist_defineObjectState(fsObject->local,fsObject->remote);
+
+            }
+            else{
+
+                MSFSObject fsObject;
+
+                fsObject.state=MSFSObject::ObjectState::NewLocal;
+
+                if(relPath.lastIndexOf("/")==0){
+                    fsObject.path="/";
+                }
+                else{
+                    fsObject.path=QString(relPath).left(relPath.lastIndexOf("/"))+"/";
+                }
+
+                fsObject.fileName=fi.fileName();
+                fsObject.getLocalMimeType(this->workPath);
+
+                fsObject.local.fileSize=  fi.size();
+                fsObject.local.md5Hash= this->fileChecksum(Path,QCryptographicHash::Md5);
+                fsObject.local.exist=true;
+
+                if(fi.isDir()){
+                    fsObject.local.objectType=MSLocalFSObject::Type::folder;
+                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+                }
+                else{
+
+                    fsObject.local.objectType=MSLocalFSObject::Type::file;
+                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+
+                }
+
+                fsObject.state=this->filelist_defineObjectState(fsObject.local,fsObject.remote);
+
+                if(this->getFlag("convertDoc") && this->filterOfficeMimeTypes(fsObject.local.mimeType )){
+
+                    fsObject.isDocFormat=true;
+                }
+
+                this->syncFileList.insert(relPath,fsObject);
+
+            }
+
+
+
+
+        return true;
+
+}
+
+
+
 
 //=======================================================================================
 
