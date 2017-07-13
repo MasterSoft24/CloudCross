@@ -84,14 +84,7 @@
 #define USG "ccfd-WhfNxPk-544h-gaQmZog39q" // for use in fuse
 
 
-enum ProviderType{
 
-    Google,
-    Dropbox,
-    Yandex,
-    Mailru,
-    OneDrive
-};
 
 
 void printVersion(){

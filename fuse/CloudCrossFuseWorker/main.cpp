@@ -1,4 +1,7 @@
-﻿#include <iostream>
+﻿#include <signal.h>
+#include <QCoreApplication>
+
+#include <iostream>
 #include <fstream>
 
 #include <stdio.h>
@@ -10,6 +13,8 @@
 
 #define WAIT_FOR_FIRST_DATA 7
 #define WAIT_FOR_NEXT_DATA 6
+
+#include <unistd.h>
 
 #include <fuse.h>
 #include <string.h>
@@ -26,8 +31,9 @@
 
 #include "json.hpp"
 
-
-
+#include "../libfusecc/libfusecc.h"
+#include "../libfusecc/ccseparatethread.h"
+#include "include/msproviderspool.h"
 
 using namespace std;
 using json = nlohmann::json;
@@ -42,6 +48,7 @@ static const char *filecontent = "I'm the content of the only file available the
 
 // forward declarations
 void log(string mes);
+
 string sendCommand_sync(json command);
 void sendCommand(json command);
 
@@ -50,11 +57,21 @@ void sendCommand(json command);
 
 static  fuse_operations fuse_op;
 
+QString mountPath;
+QString tokenPath;
+ProviderType provider;
+QString providerName;
+libFuseCC* ccLib;
+MSCloudProvider* providerObject;
+
+
+
+
 static int sock_descr;
 
 //std::map<std::string,MSFSObject> fileList;
 
-static string tempDirName;
+QString tempDirName;
 
 static string workSocket;
 static string workProvider;
@@ -121,107 +138,113 @@ string getTempName() {
 
 // ----------------------------------------------------------------
 
-MSFSObject convertJsonToFS_remote(const json &jo){
+//MSFSObject convertJsonToFS_remote(const json &jo){
 
-    MSFSObject obj;
+//    MSFSObject obj;
 
-    obj.state               = jo["state"];
-    obj.path                = jo["path"];
-    obj.fileName            = jo["fileName"];
-    obj.refCount            = -1;
+//    obj.state               = jo["state"];
+//    obj.path                = jo["path"];
+//    obj.fileName            = jo["fileName"];
+//    obj.refCount            = -1;
 
-    //obj.remote.data         = jo["remote"]["data"];
-    obj.remote.exist        = true;
-    obj.remote.fileSize     = jo["remote"]["fileSize"];
-    obj.remote.md5Hash      = jo["remote"]["md5Hash"];
-    obj.remote.modifiedDate = jo["remote"]["modifiedDate"];
-    obj.remote.objectType   = jo["remote"]["objectType"];
+//    //obj.remote.data         = jo["remote"]["data"];
+//    obj.remote.exist        = true;
+//    obj.remote.fileSize     = jo["remote"]["fileSize"];
+//    obj.remote.md5Hash      = jo["remote"]["md5Hash"];
+//    obj.remote.modifiedDate = jo["remote"]["modifiedDate"];
+//    obj.remote.objectType   = jo["remote"]["objectType"];
 
-    return obj;
-}
+//    return obj;
+//}
 
 // ----------------------------------------------------------------
 
-bool findObjectInFilelist(const string &path, MSFSObject* obj ){
+//bool findObjectInFilelist(const string &path, MSFSObject* obj ){
 
-//    map<string, MSFSObject>::iterator i= fileList.find(string(path)); //does try find in local filelist
+////    map<string, MSFSObject>::iterator i= fileList.find(string(path)); //does try find in local filelist
 
-//    if( i != fileList.end() ){// if it was finded in local filelist
+////    if( i != fileList.end() ){// if it was finded in local filelist
 
-//        obj = &i->second;
+////        obj = &i->second;
 
-//        return true;
-//    }
-//    else{
+////        return true;
+////    }
+////    else{
 
-        json comm;
-        comm["command"] = "find_object";
-        comm["params"]["socket"] = workSocket;
-        comm["params"]["provider"] = workProvider;
-        comm["params"]["path"] = workPath;
-        comm["params"]["mount"] = mountPoint;
-        comm["params"]["objectPath"] = path;
+//        json comm;
+//        comm["command"] = "find_object";
+//        comm["params"]["socket"] = workSocket;
+//        comm["params"]["provider"] = workProvider;
+//        comm["params"]["path"] = workPath;
+//        comm["params"]["mount"] = mountPoint;
+//        comm["params"]["objectPath"] = path;
 
-        json jsonFileList = json::parse( sendCommand_sync(comm) );
+//        json jsonFileList = json::parse( sendCommand_sync(comm) );
 
-        if(jsonFileList["code"] == 0){
+//        if(jsonFileList["code"] == 0){
 
-            if(obj == 0){
-                return true;
+//            if(obj == 0){
+//                return true;
+//            }
+
+//            json jo = jsonFileList["data"];
+
+//            obj->state               = jo["state"];
+//            obj->path                = jo["path"];
+//            obj->fileName            = jo["fileName"];
+//            obj->refCount            = -1;
+
+//            //obj.remote.data         = jo["remote"]["data"];
+//            obj->remote.exist        = true;
+//            obj->remote.fileSize     = jo["remote"]["fileSize"];
+//            obj->remote.md5Hash      = jo["remote"]["md5Hash"];
+//            obj->remote.modifiedDate = jo["remote"]["modifiedDate"];
+//            obj->remote.objectType   = jo["remote"]["objectType"];
+
+//            return true;
+//        }
+//        else{
+
+
+//            return false;
+//        }
+
+////    }
+
+
+
+
+//}
+
+// ----------------------------------------------------------------
+
+QHash<QString, MSFSObject> filterListByPath(/*map<string, MSFSObject> src,*/ QString path){
+
+    //log(" filterListByPath sent "+path);
+//    json comm;
+//    comm["command"] = "get_dir_list";
+//    comm["params"]["socket"] = workSocket;
+//    comm["params"]["provider"] = workProvider;
+//    comm["params"]["path"] = workPath;
+//    comm["params"]["mount"] = mountPoint;
+//    comm["params"]["dirPath"] = path;
+
+//    string reply = sendCommand_sync(comm) ;
+//    json jsonFileList = json::parse( reply );
+
+//    log(" filterListByPath receive "+reply);
+
+    QHash<QString, MSFSObject> fl;
+
+        for(QHash<QString, MSFSObject>::iterator i = providerObject->syncFileList.begin(); i != providerObject->syncFileList.end(); i++){
+
+            if(path == i.value().path){
+
+                fl.insert(i.key(),i.value());
+
             }
 
-            json jo = jsonFileList["data"];
-
-            obj->state               = jo["state"];
-            obj->path                = jo["path"];
-            obj->fileName            = jo["fileName"];
-            obj->refCount            = -1;
-
-            //obj.remote.data         = jo["remote"]["data"];
-            obj->remote.exist        = true;
-            obj->remote.fileSize     = jo["remote"]["fileSize"];
-            obj->remote.md5Hash      = jo["remote"]["md5Hash"];
-            obj->remote.modifiedDate = jo["remote"]["modifiedDate"];
-            obj->remote.objectType   = jo["remote"]["objectType"];
-
-            return true;
-        }
-        else{
-
-
-            return false;
-        }
-
-//    }
-
-
-
-
-}
-
-// ----------------------------------------------------------------
-
-map<string, MSFSObject> filterListByPath(/*map<string, MSFSObject> src,*/ string path){
-
-    log(" filterListByPath sent "+path);
-    json comm;
-    comm["command"] = "get_dir_list";
-    comm["params"]["socket"] = workSocket;
-    comm["params"]["provider"] = workProvider;
-    comm["params"]["path"] = workPath;
-    comm["params"]["mount"] = mountPoint;
-    comm["params"]["dirPath"] = path;
-
-    string reply = sendCommand_sync(comm) ;
-    json jsonFileList = json::parse( reply );
-
-    log(" filterListByPath receive "+reply);
-
-    map<string, MSFSObject> fl;
-
-        for(json::iterator i = jsonFileList.begin(); i != jsonFileList.end(); i++){
-
-            MSFSObject obj = convertJsonToFS_remote(i.value());
+//            MSFSObject obj = convertJsonToFS_remote(i.value());
 //            json jo=i.value();
 //            obj.state               = jo["state"];
 //            obj.path                = jo["path"];
@@ -236,7 +259,8 @@ map<string, MSFSObject> filterListByPath(/*map<string, MSFSObject> src,*/ string
 //            obj.remote.objectType   = jo["remote"]["objectType"];
 
 
-            fl.insert(std::make_pair(i.key(),obj));
+            //fl.insert(std::make_pair(i.key(),obj));
+
 
 
         }
@@ -271,7 +295,7 @@ return -ENOENT;
 
 static int getattr_callback(const char *path, struct stat *stbuf) {
 
-    if (strcmp(path, "/") == 0){
+    if (QString(path) == QString("/")){
         log("CALLBACK getattr for /");
 
               stbuf->st_mode = S_IFDIR | 0755;
@@ -282,19 +306,22 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
     }
     else{
 
-        string fname = string("/tmp/")+tempDirName+string(path);
+        QString fname = QString("/tmp/")+tempDirName+QString(path);
         //string findname=string(path)+"/";
-        log("CALLBACK getattr "+fname);
+        log("CALLBACK getattr "+fname.toStdString());
 
         struct stat buffer;
-        if((stat (fname.c_str(), &buffer) != 0) ){//file not cached
-        log("CALLBACK getattr:  file not cached");
+        if((stat (fname.toStdString().c_str(), &buffer) != 0)  ){//file not cached
 
-            //map<string, MSFSObject>::iterator i= fileList.find(string(path));
+            log("CALLBACK getattr:  file not cached");
 
-         MSFSObject o;
+            QHash<QString, MSFSObject>::iterator i= providerObject->syncFileList.find(QString(path));
 
-                if(findObjectInFilelist(path,&o)){// file or folder exists on remote
+
+
+                if( i != providerObject->syncFileList.end() ){// file or folder exists on remote
+
+                    MSFSObject o = i.value();
 
                 //if(i != fileList.end()){// file or folder exists on remote
 
@@ -343,16 +370,18 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
 //                    stbuf->st_atime = stbuf->st_mtime = time(NULL);
 
                     return -ENOENT;
-                   // return 0;
+                    //return 0;
                 }
 
               return 0;
         }
         else{// file cached
 
+
+
             log("CALLBACK getattr:  file cached");
             int res;
-            res = stat(fname.c_str(), stbuf);
+            res = stat(fname.toStdString().c_str(), stbuf);
 
 
             if (res == -1){
@@ -376,34 +405,35 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
 
     (void) offset;
     (void) fi;
-    log("CALLBACK readdir "+string(path));
+    log("CALLBACK readdir "/*+string(path)*/);
 
 
 //            filler(buf, ".", NULL, 0);
 //            filler(buf, "..", NULL, 0);
 
-     string m_path;
+     QString m_path;
 
-     if(strcmp(path, "/") == 0){
+     if(QString(path) == "/"){
 
-         m_path=string(path);
+         m_path=QString(path);
      }
      else{
-        m_path=string(path)+"/";
+        m_path=QString(path)+"/";
      }
 
-    map<string, MSFSObject> dl= filterListByPath( /*fileList,*/ string(m_path));
 
-    if( ! dl.empty() ){
+    QHash<QString, MSFSObject> dl= filterListByPath( /*fileList,*/ QString(m_path));
 
-        map<string, MSFSObject>::iterator i=dl.begin();
+    if(  dl.size() != 0 ){
+
+        QHash<QString, MSFSObject>::iterator i=dl.begin();
 
         for(;i != dl.end();i++){
 
             struct stat st;
             memset(&st, 0, sizeof(struct stat));
 
-            if(i->second.remote.objectType == MSRemoteFSObject::Type::folder){
+            if(i.value().remote.objectType == MSRemoteFSObject::Type::folder){
 
                 st.st_mode = S_IFDIR | 0755;
                 st.st_nlink = 2;
@@ -412,15 +442,15 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
 
                 st.st_mode = S_IFREG | 0777;
                 st.st_nlink = 1;
-                st.st_size = i->second.remote.fileSize;
+                st.st_size = i.value().remote.fileSize;
             }
 
             st.st_uid=getuid();
             st.st_gid=getgid();
-            st.st_mtime=i->second.remote.modifiedDate/1000;
+            st.st_mtime=i.value().remote.modifiedDate/1000;
 
 
-            filler(buf,i->second.fileName.c_str(),&st,0);
+            filler(buf,i.value().fileName.toStdString().c_str(),&st,0);
 
         }
 
@@ -428,20 +458,20 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
         return 0;
     }
     else{
-        struct stat st;
-        memset(&st, 0, sizeof(struct stat));
-        st.st_mode = S_IFDIR | 0755;
-        st.st_nlink = 2;
-        st.st_uid=getuid();
-        st.st_gid=getgid();
-        filler(buf,".",&st,0);
+//        struct stat st;
+//        memset(&st, 0, sizeof(struct stat));
+//        st.st_mode = S_IFDIR | 0755;
+//        st.st_nlink = 2;
+//        st.st_uid=getuid();
+//        st.st_gid=getgid();
+//        filler(buf,".",&st,0);
 
-        memset(&st, 0, sizeof(struct stat));
-        st.st_mode = S_IFDIR | 0755;
-        st.st_nlink = 2;
-        st.st_uid=getuid();
-        st.st_gid=getgid();
-        filler(buf,"..",&st,0);
+//        memset(&st, 0, sizeof(struct stat));
+//        st.st_mode = S_IFDIR | 0755;
+//        st.st_nlink = 2;
+//        st.st_uid=getuid();
+//        st.st_gid=getgid();
+//        filler(buf,"..",&st,0);
 
 //        filler(buf, ".", NULL, 0);
 //        filler(buf, "..", NULL, 0);
@@ -455,56 +485,65 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
 
 static int open_callback(const char *path, struct fuse_file_info *fi) {
 
-    //map<string, MSFSObject>::iterator i= fileList.find(string(path));
+    QHash<QString, MSFSObject>::iterator i= providerObject->syncFileList.find(QString(path));
 
     //MSFSObject o;
 
-    if(findObjectInFilelist(path,nullptr)){
+    if( i != providerObject->syncFileList.end()){
 
     //if(i != fileList.end()){
 
-        string fname=string("/tmp/")+tempDirName+string(path);
+        QString fname=QString("/tmp/")+tempDirName+QString(path);
 
         struct stat buffer;
-        if(stat (fname.c_str(), &buffer) == 0){//file exists
+        if( stat(fname.toStdString().c_str(), &buffer) == 0){//file exists
 
             //log("CALLBACK open - File Exists "+string(path)+" flags = "+to_string(fi->flags));
 
             //i->second.refCount++;
 
-            fi->fh = open (fname.c_str() ,fi->flags);
-            if(fi->fh == -1){
-                //log("CALLBACK open EXISTS - open for writing error");
-            }
+//            fi->fh = open (fname.toStdString().c_str() ,fi->flags);
+//            if(fi->fh == -1){
+//                //log("CALLBACK open EXISTS - open for writing error");
+//            }
+
+            return 0;
 
         }
         else{// file is missing
 
            // log("CALLBACK open - File Missing");
 
-            string ptf=fname.substr(0,fname.find_last_of("/"));
+            QString ptf=fname.mid(0,fname.lastIndexOf("/"));
 
-            system(string(string("mkdir -p \"")+ptf+string("\"")).c_str());
+            system(QString(QString("mkdir -p \"")+ptf+QString("\"")).toStdString().c_str());
 
             // create zero-size file
             fstream fs;
-            fs.open(fname.c_str(), ios::out);
+            fs.open(fname.toStdString().c_str(), ios::out);
             fs.close();
 
-            fi->fh = open (fname.c_str() ,fi->flags);
-            if(fi->fh == -1){
-               // log("CALLBACK open MISSING - open for writing error");
-            }
+//            fi->fh = open (fname.toStdString().c_str() ,fi->flags);
+//            if(fi->fh == -1){
+//               // log("CALLBACK open MISSING - open for writing error");
+//            }
 
-            json comm;
-            comm["command"]="get_content";
-            comm["params"]["socket"]=workSocket;
-            comm["params"]["provider"]=workProvider;
-            comm["params"]["path"]=workPath;
-            comm["params"]["cachePath"]=fname;
-            comm["params"]["filePath"]=string(path);
+            QMap<QString,QVariant> p;
+            //p.insert("path",QVariant(tokenPath));
+            p.insert("cachePath",QVariant(fname));
+            p.insert("filePath",QVariant(QString(path)));
 
-            sendCommand(comm) ;
+            ccLib->runInSeparateThread(providerObject,QString("get_content"),p);
+
+//            json comm;
+//            comm["command"]="get_content";
+//            comm["params"]["socket"]=workSocket;
+//            comm["params"]["provider"]=workProvider;
+//            comm["params"]["path"]=workPath;
+//            comm["params"]["cachePath"]=fname;
+//            comm["params"]["filePath"]=string(path);
+
+//            sendCommand(comm) ;
 
             //i->second.refCount=0;
         }
@@ -523,18 +562,28 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
 
 //    log("read "+to_string(size)+" "+to_string(offset));
 
+
+
+    //findObjectInFilelist(path,&o);
+
+    QHash<QString, MSFSObject>::iterator i= providerObject->syncFileList.find(QString(path));
+
     MSFSObject o;
 
-    findObjectInFilelist(path,&o);
+    if( i != providerObject->syncFileList.end()){
 
-    //map<string, MSFSObject>::iterator i= fileList.find(string(path));
+        o = i.value();
+    }
+    else{
+        return -1;
+    }
 
     int fullSize = o.remote.fileSize;
 
-    string fname = string("/tmp/")+tempDirName+string(path);
+    QString fname = QString("/tmp/")+tempDirName+QString(path);
 
     struct stat buffer;
-    if(stat (fname.c_str(), &buffer) == 0){//file exists in cache
+    if(stat (fname.toStdString().c_str(), &buffer) == 0){//file exists in cache
 
 //        // get real size of file
 //        FILE* r_f=fopen(fname.c_str(),"rb");
@@ -545,11 +594,11 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
 
         if(buffer.st_size == 0){// file don't cached yet
 
-            if(o.localCreated){
+            if(false){
 
                 //log("CALLBACK read - file LOCAL CREATED and fully cached "+string(path));
 
-                FILE* f = fopen(fname.c_str(),"rb");
+                FILE* f = fopen(fname.toStdString().c_str(),"rb");
                 fseek(f,offset,SEEK_SET);
                 size_t cnt = fread(buf,1,size,f);
                 fclose(f);
@@ -562,8 +611,8 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
 
                 for(int i=0;i < WAIT_FOR_FIRST_DATA;i++){
                     sleep(1);
-                    stat (fname.c_str(), &buffer);
-                    if( (buffer.st_size == fullSize) || (buffer.st_size == size) ){
+                    stat (fname.toStdString().c_str(), &buffer);
+                    if( (buffer.st_size == fullSize) || (buffer.st_size >= size) ){
 
                         return read_callback(path,buf,size,offset,fi);
                     }
@@ -614,7 +663,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
                     //log("CALLBACK read - NEW "+to_string(fullSize)+" ("+to_string(buffer.st_size)+") "+to_string(offset)+" "+to_string(size));
 
                     ifstream data;
-                    data.open(fname.c_str(),   ios::in | ios::binary);//ios::out |ios::trunc |
+                    data.open(fname.toStdString().c_str(),   ios::in | ios::binary);//ios::out |ios::trunc |
 
                     data.seekg(static_cast<streamoff>(offset));
                     data.read(buf, static_cast<streamoff>(size));
@@ -679,10 +728,10 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
 
                 for(int i=0;i < WAIT_FOR_NEXT_DATA;i++){
                     sleep(1);
-                    stat (fname.c_str(), &buffer);
+                    stat (fname.toStdString().c_str(), &buffer);
                     if( (endPosition <= buffer.st_size) ){
 
-                        FILE* f = fopen(fname.c_str(),"rb");
+                        FILE* f = fopen(fname.toStdString().c_str(),"rb");
                         fseek(f,offset,SEEK_SET);
                         size_t cnt = fread(buf,1,size,f);
                         fclose(f);
@@ -711,7 +760,8 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
     else{
 
         //log("CALLBACK read - file DON'T exist "+string(path));
-        return open_callback(path,fi);
+        open_callback(path,fi);
+        return 0;
     }
 
 
@@ -723,7 +773,7 @@ return -ENOENT;
 static int write_callback(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
 
    // log("CALLBACK write");
-    string fname = string("/tmp/")+tempDirName+string(path);
+    QString fname = QString("/tmp/")+tempDirName+QString(path);
 
 //    ofstream of;
 //    of.open(fname.c_str());
@@ -741,10 +791,13 @@ static int write_callback(const char *path, const char *buf, size_t size, off_t 
     int fd;
     int res;
     (void) fi;
-    fd = open(fname.c_str(), O_WRONLY);
-    if (fd == -1)
+    fd = open(fname.toStdString().c_str(), O_WRONLY);
+    if (fd == -1){
             return -errno;
+    }
+
     res = pwrite(fd, buf, size, offset);
+
     if (res == -1){
         //log("write callback ERROR");
         close(fd);
@@ -754,29 +807,36 @@ static int write_callback(const char *path, const char *buf, size_t size, off_t 
     close(fd);
 
     struct stat buffer;
-    stat (fname.c_str(), &buffer);
+    stat (fname.toStdString().c_str(), &buffer);
 
-    //map<string, MSFSObject>::iterator i= fileList.find(string(path));
+    QHash<QString, MSFSObject>::iterator i= providerObject->syncFileList.find(QString(path));
 
-    MSFSObject o;
+    if( i != providerObject->syncFileList.end()){
 
-    findObjectInFilelist(path,&o);
+        MSFSObject o = i.value();
 
-    o.remote.fileSize=buffer.st_size;
+        o.remote.fileSize=buffer.st_size;
+    }
 
-   // log("truncated to "+to_string(buffer.st_size));
 
-    //log("write callback OK");
 
-    json comm;
-    comm["command"]="need_update";
-    comm["params"]["socket"]=workSocket;
-    comm["params"]["provider"]=workProvider;
-    comm["params"]["path"]=workPath;
-    comm["params"]["cachePath"]=fname;
-    comm["params"]["filePath"]=string(path);
+//    findObjectInFilelist(path,&o);
 
-    sendCommand(comm) ;
+
+
+//   // log("truncated to "+to_string(buffer.st_size));
+
+//    //log("write callback OK");
+
+//    json comm;
+//    comm["command"]="need_update";
+//    comm["params"]["socket"]=workSocket;
+//    comm["params"]["provider"]=workProvider;
+//    comm["params"]["path"]=workPath;
+//    comm["params"]["cachePath"]=fname;
+//    comm["params"]["filePath"]=string(path);
+
+//    sendCommand(comm) ;
 
     return res;
 
@@ -785,19 +845,19 @@ static int write_callback(const char *path, const char *buf, size_t size, off_t 
 
 static int ftruncate_callback(const char *path, off_t size,struct fuse_file_info *fi)
 {
-    (void)fi;
-    //log("CALLBACK ftruncate");
-    string fname = string("/tmp/")+tempDirName+string(path);
+//    (void)fi;
+//    //log("CALLBACK ftruncate");
+//    string fname = string("/tmp/")+tempDirName+string(path);
 
 
-        int res;
-        res = truncate(fname.c_str(), size);
-        if (res == -1){
-                return -errno;
-        }
+//        int res;
+//        res = truncate(fname.c_str(), size);
+//        if (res == -1){
+//                return -errno;
+//        }
 
 
-        return 0;
+//        return 0;
 }
 
 
@@ -805,18 +865,18 @@ static int ftruncate_callback(const char *path, off_t size,struct fuse_file_info
 static int truncate_callback(const char *path, off_t size)
 {
 
-    //log("CALLBACK truncate");
-    string fname = string("/tmp/")+tempDirName+string(path);
+//    //log("CALLBACK truncate");
+//    string fname = string("/tmp/")+tempDirName+string(path);
 
 
-        int res;
-        res = truncate(fname.c_str(), size);
-        if (res == -1){
-                return -errno;
-        }
+//        int res;
+//        res = truncate(fname.c_str(), size);
+//        if (res == -1){
+//                return -errno;
+//        }
 
 
-        return 0;
+//        return 0;
 }
 
 
@@ -828,99 +888,99 @@ static int xmp_readlink(const char *path, char *buf, size_t size){
 
 
 static int xmp_mknod(const char *path, mode_t mode, dev_t rdev){
-//log("CALLBACK mknod");
+////log("CALLBACK mknod");
 
-    string fname = string("/tmp/")+tempDirName+string(path);
-    string insname=string(path);
+//    string fname = string("/tmp/")+tempDirName+string(path);
+//    string insname=string(path);
 
-    log("CALLBACK mknod begin"+fname);
+//    log("CALLBACK mknod begin"+fname);
 
-    int res = f_mknod(fname.c_str());
+//    int res = f_mknod(fname.c_str());
 
-    if(res == -1){
+//    if(res == -1){
 
 
-        string td = string("/tmp/")+tempDirName;
-        string ptf = fname.substr(0,fname.find_last_of("/"));
-        //ptf = ptf.substr(td.length());
+//        string td = string("/tmp/")+tempDirName;
+//        string ptf = fname.substr(0,fname.find_last_of("/"));
+//        //ptf = ptf.substr(td.length());
+
+////        if(ptf.length() == 0){
+////            ptf = "/";
+////        }
+
+//        log("CALLBACK mknod failed. Try create dir"+ptf);
+
+//        res = f_mkdir(ptf.c_str());
+//        if(res == -1){
+//            log("CALLBACK mknod create dir failed. ");
+//            return -errno;
+//        }
+//        else{
+//            res = f_mknod(fname.c_str());
+//            if(res == -1){
+//                log("CALLBACK mknod  failed again.");
+//                return -errno;
+//            }
+//        }
+
+
+//    }
+
+
+
+//    log("CALLBACK mknod OK. ");
+
+//        MSFSObject obj;
+
+//        string td = string("/tmp/")+tempDirName;
+//        string ptf = fname.substr(0,fname.find_last_of("/"));
+//        ptf = ptf.substr(td.length());
 
 //        if(ptf.length() == 0){
 //            ptf = "/";
 //        }
+//        else{
+//            ptf = ptf
+//                    +"/";
+//        }
 
-        log("CALLBACK mknod failed. Try create dir"+ptf);
+//        json comm1;
+//        comm1["command"]="add_object";
+//        comm1["params"]["socket"]=workSocket;
+//        comm1["params"]["provider"]=workProvider;
+//        comm1["params"]["path"]=workPath;
+//        comm1["params"]["cachePath"]=fname;
+//        comm1["params"]["filePath"]=fname;
 
-        res = f_mkdir(ptf.c_str());
-        if(res == -1){
-            log("CALLBACK mknod create dir failed. ");
-            return -errno;
-        }
-        else{
-            res = f_mknod(fname.c_str());
-            if(res == -1){
-                log("CALLBACK mknod  failed again.");
-                return -errno;
-            }
-        }
+//        sendCommand(comm1) ;
 
+////        string fnm=fname.substr(fname.find_last_of("/")+1);
 
-    }
+//////        obj.state               = jo["state"];
+////        obj.path                = ptf;
+////        obj.fileName            = fnm;
+////        obj.refCount            = 1;
+////        obj.remote.exist        = true;
+////        obj.remote.fileSize     = 0;
+////        obj.remote.modifiedDate = time(0);
+////        obj.remote.objectType   = MSRemoteFSObject::Type::file;
+////        obj.localCreated        = true;
 
+////        fileList.insert(std::make_pair(string(insname),obj));
 
+//        //log("CALLBACK mknod NEW CREATED "+ ptf+string(" - ")+fnm);
 
-    log("CALLBACK mknod OK. ");
+//        json comm;
+//        comm["command"]="need_update";
+//        comm["params"]["socket"]=workSocket;
+//        comm["params"]["provider"]=workProvider;
+//        comm["params"]["path"]=workPath;
+//        comm["params"]["cachePath"]=fname;
+//        comm["params"]["filePath"]=string(path);
 
-        MSFSObject obj;
+//        sendCommand(comm) ;
 
-        string td = string("/tmp/")+tempDirName;
-        string ptf = fname.substr(0,fname.find_last_of("/"));
-        ptf = ptf.substr(td.length());
-
-        if(ptf.length() == 0){
-            ptf = "/";
-        }
-        else{
-            ptf = ptf
-                    +"/";
-        }
-
-        json comm1;
-        comm1["command"]="add_object";
-        comm1["params"]["socket"]=workSocket;
-        comm1["params"]["provider"]=workProvider;
-        comm1["params"]["path"]=workPath;
-        comm1["params"]["cachePath"]=fname;
-        comm1["params"]["filePath"]=fname;
-
-        sendCommand(comm1) ;
-
-//        string fnm=fname.substr(fname.find_last_of("/")+1);
-
-////        obj.state               = jo["state"];
-//        obj.path                = ptf;
-//        obj.fileName            = fnm;
-//        obj.refCount            = 1;
-//        obj.remote.exist        = true;
-//        obj.remote.fileSize     = 0;
-//        obj.remote.modifiedDate = time(0);
-//        obj.remote.objectType   = MSRemoteFSObject::Type::file;
-//        obj.localCreated        = true;
-
-//        fileList.insert(std::make_pair(string(insname),obj));
-
-        //log("CALLBACK mknod NEW CREATED "+ ptf+string(" - ")+fnm);
-
-        json comm;
-        comm["command"]="need_update";
-        comm["params"]["socket"]=workSocket;
-        comm["params"]["provider"]=workProvider;
-        comm["params"]["path"]=workPath;
-        comm["params"]["cachePath"]=fname;
-        comm["params"]["filePath"]=string(path);
-
-        sendCommand(comm) ;
-
-        return 0;
+//        return 0;
 
 
 }
@@ -928,133 +988,59 @@ static int xmp_mknod(const char *path, mode_t mode, dev_t rdev){
 
 static int xmp_mkdir(const char *path, mode_t mode){
 
-   // log("CALLBACK mkdir");
+//   // log("CALLBACK mkdir");
 
-    string fname = string("/tmp/")+tempDirName+string(path);
-    string insname=string(path);
+//    string fname = string("/tmp/")+tempDirName+string(path);
+//    string insname=string(path);
 
-        int res = f_mkdir(fname.c_str());
-        if(res == -1){
-            return -errno;
-        }
-        else{
-
-            MSFSObject obj;
-
-            string td = string("/tmp/")+tempDirName;
-            string ptf = fname.substr(0,fname.find_last_of("/"));
-            ptf = ptf.substr(td.length());
-
-            if(ptf.length() == 0){
-                ptf = "/";
-            }
-            else{
-                ptf = ptf +"/";
-            }
-
-
-            json comm1;
-            comm1["command"]="add_object";
-            comm1["params"]["socket"]=workSocket;
-            comm1["params"]["provider"]=workProvider;
-            comm1["params"]["path"]=workPath;
-            comm1["params"]["cachePath"]=fname;
-            comm1["params"]["filePath"]=fname;
-
-            sendCommand(comm1) ;
-
-//            string fnm=fname.substr(fname.find_last_of("/")+1);
-
-//    //        obj.state               = jo["state"];
-//            obj.path                = ptf;
-//            obj.fileName            = fnm;
-//            obj.refCount            = 1;
-//            obj.remote.exist        = true;
-//            obj.remote.fileSize     = 0;
-//            obj.remote.modifiedDate = time(0);
-//            obj.remote.objectType   = MSRemoteFSObject::Type::folder;
-
-//            fileList.insert(std::make_pair(string(insname),obj));
-
-            //log("CALLBACK mkdir NEW CREATED "+ ptf+string(" - ")+fnm);
-
-
-            json comm;
-            comm["command"]="need_update";
-            comm["params"]["socket"]=workSocket;
-            comm["params"]["provider"]=workProvider;
-            comm["params"]["path"]=workPath;
-            comm["params"]["cachePath"]=fname;
-            comm["params"]["filePath"]=string(path);
-
-            sendCommand(comm) ;
-
-
-            return 0;
-        }
-}
-
-
-static int xmp_unlink(const char *path){
-
-   // log("CALLBACK unlink");
-    string fname = string("/tmp/")+tempDirName+string(path);
-    //map<string, MSFSObject>::iterator i= fileList.find(string(path));
-
-    int res = unlink(fname.c_str());
-
-
-
-//        fileList.erase(i);
-
-        json comm1;
-        comm1["command"]="remove_object";
-        comm1["params"]["socket"]=workSocket;
-        comm1["params"]["provider"]=workProvider;
-        comm1["params"]["path"]=workPath;
-        comm1["params"]["cachePath"]=fname;
-        comm1["params"]["filePath"]=path;
-
-        sendCommand(comm1) ;
-
-
-        json comm;
-        comm["command"]="unlink";
-        comm["params"]["socket"]=workSocket;
-        comm["params"]["provider"]=workProvider;
-        comm["params"]["path"]=workPath;
-        comm["params"]["cachePath"]=fname;
-        comm["params"]["filePath"]=string(path);
-
-        sendCommand(comm) ;
-
-        json comm2;
-        comm2["command"]="need_update";
-        comm2["params"]["socket"]=workSocket;
-        comm2["params"]["provider"]=workProvider;
-        comm2["params"]["path"]=workPath;
-        comm2["params"]["cachePath"]=fname;
-        comm2["params"]["filePath"]=string(path);
-
-        sendCommand(comm2) ;
-
-
-    return 0;
-
-
-
-
-//    if( i != fileList.end()){
-
-//        int res = unlink(fname.c_str());
+//        int res = f_mkdir(fname.c_str());
 //        if(res == -1){
 //            return -errno;
 //        }
 //        else{
-//            fileList.erase(i);
+
+//            MSFSObject obj;
+
+//            string td = string("/tmp/")+tempDirName;
+//            string ptf = fname.substr(0,fname.find_last_of("/"));
+//            ptf = ptf.substr(td.length());
+
+//            if(ptf.length() == 0){
+//                ptf = "/";
+//            }
+//            else{
+//                ptf = ptf +"/";
+//            }
+
+
+//            json comm1;
+//            comm1["command"]="add_object";
+//            comm1["params"]["socket"]=workSocket;
+//            comm1["params"]["provider"]=workProvider;
+//            comm1["params"]["path"]=workPath;
+//            comm1["params"]["cachePath"]=fname;
+//            comm1["params"]["filePath"]=fname;
+
+//            sendCommand(comm1) ;
+
+////            string fnm=fname.substr(fname.find_last_of("/")+1);
+
+////    //        obj.state               = jo["state"];
+////            obj.path                = ptf;
+////            obj.fileName            = fnm;
+////            obj.refCount            = 1;
+////            obj.remote.exist        = true;
+////            obj.remote.fileSize     = 0;
+////            obj.remote.modifiedDate = time(0);
+////            obj.remote.objectType   = MSRemoteFSObject::Type::folder;
+
+////            fileList.insert(std::make_pair(string(insname),obj));
+
+//            //log("CALLBACK mkdir NEW CREATED "+ ptf+string(" - ")+fnm);
+
 
 //            json comm;
-//            comm["command"]="get_content";
+//            comm["command"]="need_update";
 //            comm["params"]["socket"]=workSocket;
 //            comm["params"]["provider"]=workProvider;
 //            comm["params"]["path"]=workPath;
@@ -1063,60 +1049,134 @@ static int xmp_unlink(const char *path){
 
 //            sendCommand(comm) ;
 
+
 //            return 0;
 //        }
-//    }
+}
 
-//    return -errno;
+
+static int xmp_unlink(const char *path){
+
+//   // log("CALLBACK unlink");
+//    string fname = string("/tmp/")+tempDirName+string(path);
+//    //map<string, MSFSObject>::iterator i= fileList.find(string(path));
+
+//    int res = unlink(fname.c_str());
+
+
+
+////        fileList.erase(i);
+
+//        json comm1;
+//        comm1["command"]="remove_object";
+//        comm1["params"]["socket"]=workSocket;
+//        comm1["params"]["provider"]=workProvider;
+//        comm1["params"]["path"]=workPath;
+//        comm1["params"]["cachePath"]=fname;
+//        comm1["params"]["filePath"]=path;
+
+//        sendCommand(comm1) ;
+
+
+//        json comm;
+//        comm["command"]="unlink";
+//        comm["params"]["socket"]=workSocket;
+//        comm["params"]["provider"]=workProvider;
+//        comm["params"]["path"]=workPath;
+//        comm["params"]["cachePath"]=fname;
+//        comm["params"]["filePath"]=string(path);
+
+//        sendCommand(comm) ;
+
+//        json comm2;
+//        comm2["command"]="need_update";
+//        comm2["params"]["socket"]=workSocket;
+//        comm2["params"]["provider"]=workProvider;
+//        comm2["params"]["path"]=workPath;
+//        comm2["params"]["cachePath"]=fname;
+//        comm2["params"]["filePath"]=string(path);
+
+//        sendCommand(comm2) ;
+
+
+//    return 0;
+
+
+
+
+////    if( i != fileList.end()){
+
+////        int res = unlink(fname.c_str());
+////        if(res == -1){
+////            return -errno;
+////        }
+////        else{
+////            fileList.erase(i);
+
+////            json comm;
+////            comm["command"]="get_content";
+////            comm["params"]["socket"]=workSocket;
+////            comm["params"]["provider"]=workProvider;
+////            comm["params"]["path"]=workPath;
+////            comm["params"]["cachePath"]=fname;
+////            comm["params"]["filePath"]=string(path);
+
+////            sendCommand(comm) ;
+
+////            return 0;
+////        }
+////    }
+
+////    return -errno;
 }
 
 
 static int xmp_rmdir(const char *path){
 
-    //log("CALLBACK: rmdir");
-    string fname = string("/tmp/")+tempDirName+string(path);
-    //map<string, MSFSObject>::iterator i= fileList.find(string(path));
+//    //log("CALLBACK: rmdir");
+//    string fname = string("/tmp/")+tempDirName+string(path);
+//    //map<string, MSFSObject>::iterator i= fileList.find(string(path));
 
-    int res = rmdir(fname.c_str());
-
-
+//    int res = rmdir(fname.c_str());
 
 
 
 
-//        fileList.erase(i);
 
-        json comm1;
-        comm1["command"]="remove_object";
-        comm1["params"]["socket"]=workSocket;
-        comm1["params"]["provider"]=workProvider;
-        comm1["params"]["path"]=workPath;
-        comm1["params"]["cachePath"]=fname;
-        comm1["params"]["filePath"]=path;
 
-        sendCommand(comm1) ;
+////        fileList.erase(i);
 
-        json comm;
-        comm["command"]="unlink";
-        comm["params"]["socket"]=workSocket;
-        comm["params"]["provider"]=workProvider;
-        comm["params"]["path"]=workPath;
-        comm["params"]["cachePath"]=fname;
-        comm["params"]["filePath"]=string(path);
+//        json comm1;
+//        comm1["command"]="remove_object";
+//        comm1["params"]["socket"]=workSocket;
+//        comm1["params"]["provider"]=workProvider;
+//        comm1["params"]["path"]=workPath;
+//        comm1["params"]["cachePath"]=fname;
+//        comm1["params"]["filePath"]=path;
 
-        sendCommand(comm) ;
+//        sendCommand(comm1) ;
 
-        json comm2;
-        comm2["command"]="need_update";
-        comm2["params"]["socket"]=workSocket;
-        comm2["params"]["provider"]=workProvider;
-        comm2["params"]["path"]=workPath;
-        comm2["params"]["cachePath"]=fname;
-        comm2["params"]["filePath"]=string(path);
+//        json comm;
+//        comm["command"]="unlink";
+//        comm["params"]["socket"]=workSocket;
+//        comm["params"]["provider"]=workProvider;
+//        comm["params"]["path"]=workPath;
+//        comm["params"]["cachePath"]=fname;
+//        comm["params"]["filePath"]=string(path);
 
-        sendCommand(comm2) ;
+//        sendCommand(comm) ;
 
-        return 0;
+//        json comm2;
+//        comm2["command"]="need_update";
+//        comm2["params"]["socket"]=workSocket;
+//        comm2["params"]["provider"]=workProvider;
+//        comm2["params"]["path"]=workPath;
+//        comm2["params"]["cachePath"]=fname;
+//        comm2["params"]["filePath"]=string(path);
+
+//        sendCommand(comm2) ;
+
+//        return 0;
 
 }
 
@@ -1130,70 +1190,70 @@ static int xmp_symlink(const char *from, const char *to){
 
 static int xmp_rename(const char *from, const char *to){
 
-    log("CALLBACK rename");
-    return -1;
-//    stat buffer;
+//    log("CALLBACK rename");
+//    return -1;
+////    stat buffer;
 
-    string fname_from = string("/tmp/")+tempDirName+string(from);
-    string fname_to = string("/tmp/")+tempDirName+string(to);
-
-
-
-    int result= rename( fname_from.c_str() , fname_to.c_str() );
-    if(result == 0){
-
-        //map<string, MSFSObject>::iterator i= fileList.find(string(from));
-
-        string td = string("/tmp/")+tempDirName;
-        string ptf = fname_to.substr(0,fname_to.find_last_of("/"));
-        ptf = ptf.substr(td.length());
-        string fnm = fname_to.substr(fname_to.find_last_of("/")+1);
-
-        if(ptf.length() == 0){
-            ptf = "/";
-        }
+//    string fname_from = string("/tmp/")+tempDirName+string(from);
+//    string fname_to = string("/tmp/")+tempDirName+string(to);
 
 
-        json comm1;
-        comm1["command"]="add_object";
-        comm1["params"]["socket"]=workSocket;
-        comm1["params"]["provider"]=workProvider;
-        comm1["params"]["path"]=workPath;
-        comm1["params"]["cachePath"]=fname_to;
-        comm1["params"]["filePath"]=fname_to;
 
-        sendCommand(comm1) ;
+//    int result= rename( fname_from.c_str() , fname_to.c_str() );
+//    if(result == 0){
 
+//        //map<string, MSFSObject>::iterator i= fileList.find(string(from));
 
-        json comm2;
-        comm2["command"]="remove_object";
-        comm2["params"]["socket"]=workSocket;
-        comm2["params"]["provider"]=workProvider;
-        comm2["params"]["path"]=workPath;
-        comm2["params"]["cachePath"]=fname_from;
-        comm2["params"]["filePath"]=from;
+//        string td = string("/tmp/")+tempDirName;
+//        string ptf = fname_to.substr(0,fname_to.find_last_of("/"));
+//        ptf = ptf.substr(td.length());
+//        string fnm = fname_to.substr(fname_to.find_last_of("/")+1);
 
-        sendCommand(comm2) ;
+//        if(ptf.length() == 0){
+//            ptf = "/";
+//        }
 
 
-//        i->second.path = ptf;
-//        i->second.fileName = fnm;
+//        json comm1;
+//        comm1["command"]="add_object";
+//        comm1["params"]["socket"]=workSocket;
+//        comm1["params"]["provider"]=workProvider;
+//        comm1["params"]["path"]=workPath;
+//        comm1["params"]["cachePath"]=fname_to;
+//        comm1["params"]["filePath"]=fname_to;
 
-        json comm;
-        comm["command"]="need_update";
-        comm["params"]["socket"]=workSocket;
-        comm["params"]["provider"]=workProvider;
-        comm["params"]["path"]=workPath;
-        comm["params"]["cachePath"]="";//fname;
-        comm["params"]["filePath"]="";//string(path);
+//        sendCommand(comm1) ;
 
-        sendCommand(comm) ;
 
-        return 0;
-    }
-    else{
-     return -1;
-    }
+//        json comm2;
+//        comm2["command"]="remove_object";
+//        comm2["params"]["socket"]=workSocket;
+//        comm2["params"]["provider"]=workProvider;
+//        comm2["params"]["path"]=workPath;
+//        comm2["params"]["cachePath"]=fname_from;
+//        comm2["params"]["filePath"]=from;
+
+//        sendCommand(comm2) ;
+
+
+////        i->second.path = ptf;
+////        i->second.fileName = fnm;
+
+//        json comm;
+//        comm["command"]="need_update";
+//        comm["params"]["socket"]=workSocket;
+//        comm["params"]["provider"]=workProvider;
+//        comm["params"]["path"]=workPath;
+//        comm["params"]["cachePath"]="";//fname;
+//        comm["params"]["filePath"]="";//string(path);
+
+//        sendCommand(comm) ;
+
+//        return 0;
+//    }
+//    else{
+//     return -1;
+//    }
 
 }
 
@@ -1225,7 +1285,7 @@ static int xmp_chown(const char *path, uid_t uid, gid_t gid){
 static int xmp_statfs(const char *path, struct statvfs *stbuf){
 
 //    int res;
-    string fname = string("/tmp/")+tempDirName+string(path);
+    QString fname = QString("/tmp/")+tempDirName+QString(path);
 //log("CALLBACK statfs "+fname);
 //    res = statvfs(fname.c_str(), stbuf);
 //    if (res == -1)
@@ -1247,14 +1307,14 @@ return 0;
 
 static int xmp_access(const char *path, int mask){
 
-    int res;
-    string fname = string("/tmp/")+tempDirName+string(path);
-//log("CALLBACK access "+fname);
+//    int res;
+//    string fname = string("/tmp/")+tempDirName+string(path);
+////log("CALLBACK access "+fname);
 
-    res = access(fname.c_str(), mask);
-    if (res == -1)
-            return -errno;
-    return 0;
+//    res = access(fname.c_str(), mask);
+//    if (res == -1)
+//            return -errno;
+//    return 0;
 }
 
 
@@ -1300,30 +1360,33 @@ static int xmp_fsync(const char *path, int isdatasync,struct fuse_file_info *fi)
 static void destroy_callback(void* d){
     log("CALLBACK destroy");
 
-    json comm;
-    comm["command"] = "start_sync";
-    comm["params"]["socket"] = workSocket;
-    comm["params"]["provider"] = workProvider;
-    comm["params"]["path"] = workPath;
-    comm["params"]["mount"] = mountPoint;
+//    json comm;
+//    comm["command"] = "start_sync";
+//    comm["params"]["socket"] = workSocket;
+//    comm["params"]["provider"] = workProvider;
+//    comm["params"]["path"] = workPath;
+//    comm["params"]["mount"] = mountPoint;
 
-    sendCommand_sync(comm);
+//    sendCommand_sync(comm);
 
-    system(string("rm -rf /tmp/"+tempDirName).c_str());
+    system(QString("rm -rf /tmp/"+tempDirName).toStdString().c_str());
 
-    close(sock_descr);
+//    close(sock_descr);
 
-    close(listenerThreadParams.incomingSocket);
+//    close(listenerThreadParams.incomingSocket);
 
-    system(string("rm -rf /tmp/"+listenerThreadParams.socketName).c_str());
+//    system(string("rm -rf /tmp/"+listenerThreadParams.socketName).c_str());
 
-//    close(fsWatherThreadParams.wd);
-//    inotify_rm_watch(fsWatherThreadParams.wd, fsWatherThreadParams.watcher);
+////    close(fsWatherThreadParams.wd);
+////    inotify_rm_watch(fsWatherThreadParams.wd, fsWatherThreadParams.watcher);
 
-    pthread_cancel(listenerThread);
-//    pthread_cancel(fsWatherThread);
+//    pthread_cancel(listenerThread);
+////    pthread_cancel(fsWatherThread);
 
-    // need send command for destroy socket and objects
+//    // need send command for destroy socket and objects
+
+    kill(getpid(), SIGTERM);
+
 }
 
 
@@ -1331,44 +1394,44 @@ static void destroy_callback(void* d){
 
 bool connectToCommandServer(const string &socketName){
 
-    struct sockaddr_un name;
-    char buf[1000];
-    int iMode=1;
+//    struct sockaddr_un name;
+//    char buf[1000];
+//    int iMode=1;
 
-    sock_descr=-1;
+//    sock_descr=-1;
 
-    memset(&name, '0', sizeof(name));
+//    memset(&name, '0', sizeof(name));
 
-    name.sun_family = AF_UNIX;
+//    name.sun_family = AF_UNIX;
 
-    snprintf(name.sun_path, 200, "/tmp/%s", socketName.c_str());
+//    snprintf(name.sun_path, 200, "/tmp/%s", socketName.c_str());
 
-    int s=socket(PF_UNIX,SOCK_STREAM,0);
+//    int s=socket(PF_UNIX,SOCK_STREAM,0);
 
-    if(s== -1){
-        return false;
-    }
+//    if(s== -1){
+//        return false;
+//    }
 
-    int r=connect(s, (struct sockaddr *)&name, sizeof(struct sockaddr_un));
+//    int r=connect(s, (struct sockaddr *)&name, sizeof(struct sockaddr_un));
 
-    if(r<0){
-        perror ("connect");
-        return false;
-    }
+//    if(r<0){
+//        perror ("connect");
+//        return false;
+//    }
 
-    int sz= read(s,&buf[0],100);
+//    int sz= read(s,&buf[0],100);
 
-    if(sz >0){
-        string reply=&buf[0];
+//    if(sz >0){
+//        string reply=&buf[0];
 
-        if(reply.find("HELLO") != string::npos){
+//        if(reply.find("HELLO") != string::npos){
 
-            //ioctl(s, FIONBIO, &iMode);
-            fcntl(s,F_SETFD,O_NONBLOCK);
-            sock_descr=s; // storing socket descriptor globaly
-            return true;
-        }
-    }
+//            //ioctl(s, FIONBIO, &iMode);
+//            fcntl(s,F_SETFD,O_NONBLOCK);
+//            sock_descr=s; // storing socket descriptor globaly
+//            return true;
+//        }
+//    }
 
     return false;
 }
@@ -1377,35 +1440,35 @@ bool connectToCommandServer(const string &socketName){
 
 string readReplyFromCommandServer(){
 
-    typedef std::vector<char> replyBuffer;
-    replyBuffer data;
-    int bytesRead ;
+//    typedef std::vector<char> replyBuffer;
+//    replyBuffer data;
+//    int bytesRead ;
 
-    log("ready for receiving data from daemon");
+//    log("ready for receiving data from daemon");
 
-    do
-    {
-        static const int bufferSize = 1024;
+//    do
+//    {
+//        static const int bufferSize = 1024;
 
-        const size_t oldSize = data.size();
-        data.resize(data.size() + bufferSize);
+//        const size_t oldSize = data.size();
+//        data.resize(data.size() + bufferSize);
 
-        bytesRead=recv(sock_descr,&data[oldSize],bufferSize,0);//bufferSize
+//        bytesRead=recv(sock_descr,&data[oldSize],bufferSize,0);//bufferSize
 
-        //log("read portion "+string(data.begin(), data.end()));
+//        //log("read portion "+string(data.begin(), data.end()));
 
-        data.resize(oldSize + bytesRead);
+//        data.resize(oldSize + bytesRead);
 
-        string t=string(data.begin(), data.end());
+//        string t=string(data.begin(), data.end());
 
-        if(t.find(DAEMON_MSG_END) != string::npos){
-            return t.substr(0,t.find(DAEMON_MSG_END));
-        }
+//        if(t.find(DAEMON_MSG_END) != string::npos){
+//            return t.substr(0,t.find(DAEMON_MSG_END));
+//        }
 
-    } while (bytesRead > 0);
+//    } while (bytesRead > 0);
 
 
-    return string (data.begin(), data.end());;
+//    return string (data.begin(), data.end());;
 }
 
 // ----------------------------------------------------------------
@@ -1413,45 +1476,18 @@ string readReplyFromCommandServer(){
 
 string sendCommand_sync(json command){
 
-    string j=command.dump();
+//    string j=command.dump();
 
-    log("command to send is - "+j);
+//    log("command to send is - "+j);
 
-    int wsz=write(sock_descr,j.c_str(),j.size());
-    if(wsz == -1){
-        log("command sending error");
-        return "";
-    }
+//    int wsz=write(sock_descr,j.c_str(),j.size());
+//    if(wsz == -1){
+//        log("command sending error");
+//        return "";
+//    }
 
-    fsync(sock_descr);
-    log("command was sended");
-
-    string out= readReplyFromCommandServer();
-
-    log("reply was received");
-
-    //cout << out.c_str();
-    //log(out);
-    return out;
-}
-
-
-// ----------------------------------------------------------------
-
-void sendCommand(json command){
-
-    string j=command.dump();
-
-    log("command to send is - "+j);
-
-    int wsz=write(sock_descr,j.c_str(),j.size());
-    if(wsz == -1){
-        log("command sending error");
-        return;
-    }
-
-    fsync(sock_descr);
-    log("command was sended");
+//    fsync(sock_descr);
+//    log("command was sended");
 
 //    string out= readReplyFromCommandServer();
 
@@ -1463,31 +1499,58 @@ void sendCommand(json command){
 }
 
 
+// ----------------------------------------------------------------
+
+void sendCommand(json command){
+
+//    string j=command.dump();
+
+//    log("command to send is - "+j);
+
+//    int wsz=write(sock_descr,j.c_str(),j.size());
+//    if(wsz == -1){
+//        log("command sending error");
+//        return;
+//    }
+
+//    fsync(sock_descr);
+//    log("command was sended");
+
+////    string out= readReplyFromCommandServer();
+
+////    log("reply was received");
+
+////    //cout << out.c_str();
+////    //log(out);
+////    return out;
+}
+
+
 
 // ----------------------------------------------------------------
 
 void log(string mes){
 
-    FILE* lf=fopen("/tmp/ccfw.log","a+");
-    if(lf != NULL){
+//    FILE* lf=fopen("/tmp/ccfw.log","a+");
+//    if(lf != NULL){
 
-        time_t rawtime;
-        struct tm * timeinfo;
-        char buffer[80];
+//        time_t rawtime;
+//        struct tm * timeinfo;
+//        char buffer[80];
 
-        time (&rawtime);
-        timeinfo = localtime(&rawtime);
+//        time (&rawtime);
+//        timeinfo = localtime(&rawtime);
 
-        strftime(buffer,sizeof(buffer),"%T - ",timeinfo);
+//        strftime(buffer,sizeof(buffer),"%T - ",timeinfo);
 
-        mes = string(buffer)+mes+" \n";
-        fputs(mes.c_str(),lf);
-        fclose(lf);
-    }
+//        mes = string(buffer)+mes+" \n";
+//        fputs(mes.c_str(),lf);
+//        fclose(lf);
+//    }
 
-//    string ns="echo "+mes+" >> /tmp/ccfw.log ";
-//    system(ns.c_str());
-    return;
+////    string ns="echo "+mes+" >> /tmp/ccfw.log ";
+////    system(ns.c_str());
+//    return;
 }
 
 // ----------------------------------------------------------------
@@ -1501,24 +1564,82 @@ int main(int argc, char *argv[])
     // argv[3] = path to credentials
     // argv[4] = mount point
 
+    QCoreApplication ca(argc, argv);
+
+    tokenPath = "/home/ms/QT/CloudCross/build/debug/TEST4";  // argv[3]
+    mountPath = "/tmp/example"; // argv[4]
+
+    provider = (ProviderType) QString("4").toInt(); //QString::number(argv[2])
+
+    ccLib = new libFuseCC();
+
+
+    bool lf_r = ccLib->getProviderInstance(provider, (MSCloudProvider**)&providerObject, tokenPath);
+
+//    CCSeparateThread* st;
+
+//    ccLib->getSeparateThreadInstance(&st);
+//    st->lpFuseCC = ccLib;
+//    st->lpProviderObject = providerObject;
+//    st->commandToExecute = "get_remote_file_list";
+
+//    providerObject->currentPath ="fuck";
+
+//    CCSeparateThread* thread;
+//    this->getSeparateThreadInstance(&thread);
+
+//    thread->commandToExecute = command;
+//    thread->commandParameters = parms;
+//    thread->lpFuseCC = this;
+//    thread->lpProviderObject = providerInstance;
+
+    //qDebug() << QString::number((qlonglong)providerObject);
+
+//    QThread* thr = new QThread();
+
+//    st->moveToThread(thr);
+
+//    QObject::connect(thr,SIGNAL(started()),st,SLOT(run()));
+//    QObject::connect(st,SIGNAL(finished()),thr,SLOT(quit()));
+
+//    thr->start();
+
+//    sleep(10);
+
+
+//    QMap<QString,QVariant> p;
+
+//    ccLib->runInSeparateThread(providerObject,"get_remote_file_list",p);
+
+//    sleep(1);
+
+    lf_r = ccLib->readRemoteFileList(providerObject);
+
+
+
+
+    //lf_r = ccLib->readLocalFileList(providerObject);
+
+
+
 
     // rebuild arguments list for fuse
     char* a[2];
     a[0] = argv[0];
-    a[1] = argv[4];
+    a[1] = (char*)mountPath.toStdString().c_str(); //argv[4];
     //a[2]="-f";//
 
-    log("WORKER MOUNT POINT IS "+string(argv[4]));
+//    log("WORKER MOUNT POINT IS "+string(argv[4]));
 
-    if(!connectToCommandServer(std::string(argv[1]))){//std::string(argv[1])
-        return 1;
-    }
+//    if(!connectToCommandServer(std::string(argv[1]))){//std::string(argv[1])
+//        return 1;
+//    }
 
 
 
     fuse_op.getattr = getattr_callback;
     //fuse_op.fgetattr = fgetattr_callback;
-    fuse_op.open = open_callback;
+    //fuse_op.open = open_callback;
     fuse_op.read = read_callback;
     fuse_op.readdir = readdir_callback;
     fuse_op.destroy = destroy_callback;
@@ -1543,31 +1664,25 @@ int main(int argc, char *argv[])
     fuse_op.access = xmp_access;
 
 
-    workSocket = argv[1];
-    workProvider = argv[2];
-    workPath = argv[3];
-    mountPoint = argv[4];
+//    workSocket = argv[1];
+//    workProvider = argv[2];
+//    workPath = argv[3];
+//    mountPoint = argv[4];
 
-    json comm;
-    comm["command"] = "get_file_list";
-    comm["params"]["socket"] = argv[1];
-    comm["params"]["provider"] = argv[2];
-    comm["params"]["path"] = argv[3];
+//    json comm;
+//    comm["command"] = "get_file_list";
+//    comm["params"]["socket"] = argv[1];
+//    comm["params"]["provider"] = argv[2];
+//    comm["params"]["path"] = argv[3];
 
-    //json jsonFileList = json::parse( sendCommand_sync(comm) );
-    sendCommand_sync(comm);
+//    //json jsonFileList = json::parse( sendCommand_sync(comm) );
+//    sendCommand_sync(comm);
 
-
-//            json jsonFileList;     // test
-//            std::ifstream i("tst.json");
-
-//            i >> jsonFileList;
-//            //============================
 
 
     tempDirName="TESTING_TEMPORARY";//string(argv[1])+string("_")+getTempName();
 
-    mkdir(string("/tmp/"+tempDirName).c_str(),0777);
+    mkdir(QString("/tmp/"+tempDirName).toStdString().c_str(),0777);
 
 
 //    for(json::iterator i = jsonFileList.begin(); i != jsonFileList.end(); i++){
@@ -1594,29 +1709,29 @@ int main(int argc, char *argv[])
 
 
 
-    listenerThreadParams.onIncomingCommand = NULL;
-    listenerThreadParams.state = false;
-    listenerThreadParams.socketName = string(workSocket+".incoming");
-    pthread_create(&listenerThread,NULL,incomingListener,&listenerThreadParams);
-    pthread_detach(listenerThread);
+//    listenerThreadParams.onIncomingCommand = NULL;
+//    listenerThreadParams.state = false;
+//    listenerThreadParams.socketName = string(workSocket+".incoming");
+//    pthread_create(&listenerThread,NULL,incomingListener,&listenerThreadParams);
+//    pthread_detach(listenerThread);
 
-    sleep(1);
+//    sleep(1);
 
-    if(!listenerThreadParams.state){
+//    if(!listenerThreadParams.state){
 
-        return -1;
-    }
+//        return -1;
+//    }
 
 
 
-    json comm2;
-    comm2["command"] = "start_watcher";
-    comm2["params"]["socket"] = argv[1];
-    comm2["params"]["provider"] = argv[2];
-    comm2["params"]["path"] = argv[3];
-    comm2["params"]["watchPath"] = string("/tmp/"+tempDirName);
+//    json comm2;
+//    comm2["command"] = "start_watcher";
+//    comm2["params"]["socket"] = argv[1];
+//    comm2["params"]["provider"] = argv[2];
+//    comm2["params"]["path"] = argv[3];
+//    comm2["params"]["watchPath"] = string("/tmp/"+tempDirName);
 
-    sendCommand(comm2);
+//    sendCommand(comm2);
 
     return fuse_main(2, a, &fuse_op, NULL);
 }

@@ -46,6 +46,17 @@
 
 
 
+enum ProviderType{
+
+    Google,
+    Dropbox,
+    Yandex,
+    Mailru,
+    OneDrive
+};
+
+
+
 class MSProvidersPool
 {
 
