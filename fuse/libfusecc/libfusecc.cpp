@@ -182,6 +182,18 @@ bool libFuseCC::readSingleLocalFile(MSCloudProvider *p,const QString &path){
 //-----------------------------------------------------------------------------------------------
 
 
+bool libFuseCC::readFileContent(MSCloudProvider *p, const QString &destPath,  MSFSObject obj){
+
+            QString b =p->workPath;
+            p->workPath = destPath;
+            p->remote_file_get(&obj);
+            p->workPath = b;
+
+}
+
+//-----------------------------------------------------------------------------------------------
+
+
 void libFuseCC::getSeparateThreadInstance(CCSeparateThread **lpThread){
 
     *lpThread = new CCSeparateThread();
@@ -211,6 +223,25 @@ void libFuseCC::runInSeparateThread(MSCloudProvider *providerInstance, const QSt
     thr->start();
 
     int y=86;
+}
+
+
+//-----------------------------------------------------------------------------------------------
+
+
+void libFuseCC::run(MSCloudProvider *providerInstance, const QString command, const QMap<QString, QVariant> parms){
+
+    CCSeparateThread* thread;
+    this->getSeparateThreadInstance(&thread);
+
+    thread->commandToExecute = command;
+    thread->commandParameters = parms;
+    thread->lpFuseCC = this;
+    thread->lpProviderObject = providerInstance;
+
+
+    thread->run();
+    delete(thread);
 }
 
 

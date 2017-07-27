@@ -26,12 +26,13 @@ public:
     bool readLocalFileList(MSCloudProvider* p);
     bool readSingleLocalFile(MSCloudProvider* p, const QString &path);
 
+    bool readFileContent(MSCloudProvider* p, const QString &destPath, MSFSObject obj);
 
 
     void getSeparateThreadInstance(CCSeparateThread** lpThread);
 
     void runInSeparateThread(MSCloudProvider* providerInstance,const QString command, const QMap<QString,QVariant> parms);
-
+    void run(MSCloudProvider* providerInstance,const QString command, const QMap<QString,QVariant> parms);
 
 };
 

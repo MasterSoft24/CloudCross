@@ -27,6 +27,8 @@ private:
     bool command_getRemoteFileList();
     bool command_getFileContent();
 
+    void log(QString mes);
+
 signals:
 
     void finished();

@@ -238,7 +238,7 @@ void MSRequest::methodCharger(QNetworkRequest req, const QString &path){
     connect(replySync,SIGNAL(downloadProgress(qint64,qint64)),this,SLOT(doDownloadProgress(qint64,qint64)));
     connect(replySync,SIGNAL(readyRead()),this,SLOT(doReadyRead()));
 
-//    QEventLoop loop;
+    //QEventLoop loop;
     connect(replySync, SIGNAL(finished()),this->loop, SLOT(quit()));
     this->loop->exec();
 
@@ -254,7 +254,7 @@ void MSRequest::raw_exec(const QString &reqestURL){
     QString s=QUrl::toPercentEncoding(r.path().toUtf8(),"(){}/","");
 
     QString url=r.scheme()+"://"+r.host()+""+ s;
-    this->setRequestUrl(url);\
+    this->setRequestUrl(url);
 
     this->query->setQuery(r.query());
     this->setMethod("get");

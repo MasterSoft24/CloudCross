@@ -39,15 +39,15 @@ using namespace std;
 using json = nlohmann::json;
 
 #include "ccfw.h"
-#include "incominglistener.cpp"
-#include "fswatcher.cpp"
+//#include "incominglistener.cpp"
+//#include "fswatcher.cpp"
 
 static const char *filepath = "/file";
 static const char *filename = "file";
 static const char *filecontent = "I'm the content of the only file available there\n";
 
 // forward declarations
-void log(string mes);
+void log(QString mes);
 
 string sendCommand_sync(json command);
 void sendCommand(json command);
@@ -79,10 +79,10 @@ static string workPath;
 static string mountPoint;
 
 pthread_t listenerThread;
-lst_param listenerThreadParams;
+//lst_param listenerThreadParams;
 
 pthread_t fsWatherThread;
-fswatcher_param fsWatherThreadParams;
+//fswatcher_param fsWatherThreadParams;
 
 // ----------------------------------------------------------------
 
@@ -306,16 +306,77 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
     }
     else{
 
+
+
         QString fname = QString("/tmp/")+tempDirName+QString(path);
+
+        QHash<QString, MSFSObject>::iterator i= providerObject->syncFileList.find(QString(path));
+
+        if( i != providerObject->syncFileList.end()){
+
+            MSFSObject o = i.value();
+
+            if( i.value().state == MSFSObject::ObjectState::NewRemote){ // not cached
+
+                memset(stbuf,0,sizeof(struct stat));
+
+                if(o.remote.objectType == MSRemoteFSObject::Type::folder){
+
+                    stbuf->st_mode = S_IFDIR | 0755;
+                    stbuf->st_nlink = 2;
+                    //stbuf->st_size = 4096;
+                }
+                else{
+
+                    stbuf->st_mode = S_IFREG | 0777;
+                    stbuf->st_nlink = 1;
+                    stbuf->st_size = o.remote.fileSize;
+                }
+
+                stbuf->st_uid=getuid();
+                stbuf->st_gid=getgid();
+                stbuf->st_mtime=o.remote.modifiedDate/1000;
+
+                return 0;
+
+
+            }
+
+            if( (i.value().state == MSFSObject::ObjectState::NewLocal) || (i.value().state == MSFSObject::ObjectState::ChangedLocal)){
+
+                int res;
+                res = stat(fname.toStdString().c_str(), stbuf);
+
+
+                if (res == -1){
+                        return -errno;
+                }
+
+                return 0;
+            }
+        }
+        else{
+
+        }
+
+
+        return -ENOENT;
+
+
+
+
+
+
+
         //string findname=string(path)+"/";
-        log("CALLBACK getattr "+fname.toStdString());
+        log("CALLBACK getattr "+fname);
 
         struct stat buffer;
         if((stat (fname.toStdString().c_str(), &buffer) != 0)  ){//file not cached
 
             log("CALLBACK getattr:  file not cached");
 
-            QHash<QString, MSFSObject>::iterator i= providerObject->syncFileList.find(QString(path));
+
 
 
 
@@ -485,6 +546,8 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
 
 static int open_callback(const char *path, struct fuse_file_info *fi) {
 
+log("OPEN_CALLBACK for "+QString(path));
+
     QHash<QString, MSFSObject>::iterator i= providerObject->syncFileList.find(QString(path));
 
     //MSFSObject o;
@@ -507,12 +570,13 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
 //                //log("CALLBACK open EXISTS - open for writing error");
 //            }
 
+            log("OPEN_CALLBACK File Exists "+fname);
             return 0;
 
         }
         else{// file is missing
 
-           // log("CALLBACK open - File Missing");
+           log("OPEN_CALLBACK File Missing "+fname);
 
             QString ptf=fname.mid(0,fname.lastIndexOf("/"));
 
@@ -533,7 +597,10 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
             p.insert("cachePath",QVariant(fname));
             p.insert("filePath",QVariant(QString(path)));
 
-            ccLib->runInSeparateThread(providerObject,QString("get_content"),p);
+            //ccLib->runInSeparateThread(providerObject,QString("get_content"),p);
+            ccLib->run(providerObject,QString("get_content"),p);
+
+            log("OPEN_CALLBACK File Will Be Downloaded "+fname);
 
 //            json comm;
 //            comm["command"]="get_content";
@@ -552,6 +619,7 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
         return 0;
     }
 
+    log("OPEN_CALLBACK This File Don't Exists On Remote "+QString(path));
   return -1;
 }
 
@@ -581,6 +649,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
     int fullSize = o.remote.fileSize;
 
     QString fname = QString("/tmp/")+tempDirName+QString(path);
+    log("READ_CALLACK for "+fname);
 
     struct stat buffer;
     if(stat (fname.toStdString().c_str(), &buffer) == 0){//file exists in cache
@@ -1529,28 +1598,28 @@ void sendCommand(json command){
 
 // ----------------------------------------------------------------
 
-void log(string mes){
+void log(QString mes){
 
-//    FILE* lf=fopen("/tmp/ccfw.log","a+");
-//    if(lf != NULL){
+    FILE* lf=fopen("/tmp/ccfw.log","a+");
+    if(lf != NULL){
 
-//        time_t rawtime;
-//        struct tm * timeinfo;
-//        char buffer[80];
+        time_t rawtime;
+        struct tm * timeinfo;
+        char buffer[80];
 
-//        time (&rawtime);
-//        timeinfo = localtime(&rawtime);
+        time (&rawtime);
+        timeinfo = localtime(&rawtime);
 
-//        strftime(buffer,sizeof(buffer),"%T - ",timeinfo);
+        strftime(buffer,sizeof(buffer),"%T - ",timeinfo);
 
-//        mes = string(buffer)+mes+" \n";
-//        fputs(mes.c_str(),lf);
-//        fclose(lf);
-//    }
+        mes = QString(buffer)+mes+" \n";
+        fputs(mes.toStdString().c_str(),lf);
+        fclose(lf);
+    }
 
-////    string ns="echo "+mes+" >> /tmp/ccfw.log ";
-////    system(ns.c_str());
-//    return;
+//    string ns="echo "+mes+" >> /tmp/ccfw.log ";
+//    system(ns.c_str());
+    return;
 }
 
 // ----------------------------------------------------------------
@@ -1639,7 +1708,7 @@ int main(int argc, char *argv[])
 
     fuse_op.getattr = getattr_callback;
     //fuse_op.fgetattr = fgetattr_callback;
-    //fuse_op.open = open_callback;
+    fuse_op.open = open_callback;
     fuse_op.read = read_callback;
     fuse_op.readdir = readdir_callback;
     fuse_op.destroy = destroy_callback;
