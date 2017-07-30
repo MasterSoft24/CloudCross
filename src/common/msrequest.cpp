@@ -1,8 +1,8 @@
 /*
     CloudCross: Opensource program for syncronization of local files and folders with clouds
 
-    Copyright (C) 2016  Vladimir Kamensky
-    Copyright (C) 2016  Master Soft LLC.
+    Copyright (C) 2016-2017  Vladimir Kamensky
+    Copyright (C) 2016-2017  Master Soft LLC.
     All rights reserved.
 
 
@@ -41,6 +41,7 @@ MSRequest::MSRequest(QNetworkProxy *proxy)
 {
     // init members on create object
 
+
     this->url=new QUrl();
     this->manager=new QNetworkAccessManager();
     this->query=new QUrlQuery();
@@ -49,6 +50,8 @@ MSRequest::MSRequest(QNetworkProxy *proxy)
 
     this->lastReply=0;
     this->outFile=0;
+
+    this->requesProcessed = false;
 
     this->replyError= QNetworkReply::NetworkError::NoError;
 
@@ -142,6 +145,10 @@ void MSRequest::methodCharger(QNetworkRequest req){
     this->printDebugInfo_request(req);
 #endif
 
+//    connect(replySync,SIGNAL(downloadProgress(qint64,qint64)),this,SLOT(doDownloadProgress(qint64,qint64)));
+//    connect(replySync,SIGNAL(readyRead()),this,SLOT(doReadyRead()));
+
+
 //    QEventLoop loop;
     connect(replySync, SIGNAL(finished()),this->loop, SLOT(quit()));
     this->loop->exec();
@@ -218,6 +225,76 @@ void MSRequest::methodCharger(QNetworkRequest req, const QString &path){
 
     Q_UNUSED(path);
 
+#ifdef CCROSS_LIB
+
+    QtCUrl cUrl;
+    //cUrl.setTextCodec("cp-1251");
+
+    QUrl url("https://ya.ru");
+    //url.addQueryItem("id", "42");
+
+    QStringList headers;
+
+    QtCUrl::Options opt;
+    opt[CURLOPT_URL] = req.url();//QUrl("https://mastersoft24.ru/img/applications.png");// //(QUrl) *(this->url); //this->query->toString();;
+
+
+    if(this->requestMethod == "get"){
+
+        opt[CURLOPT_HTTPGET] = true;
+        // possibly may be needed add query params to url string
+    }
+
+    if(this->requestMethod == "post"){
+
+        opt[CURLOPT_POST] = true;
+
+        opt[CURLOPT_POSTFIELDS] = this->query->toString() ;
+
+        headers << "Content-Type    application/x-www-form-urlencoded";
+    }
+
+    opt[CURLOPT_FOLLOWLOCATION] = 1;
+    opt[CURLOPT_FAILONERROR] = true;
+
+    if(req.rawHeaderList().size() > 0){
+
+        for(QList<QByteArray>::iterator i = req.rawHeaderList().begin(); i != req.rawHeaderList().end(); i++){
+
+            headers << *i;
+        }
+
+    }
+
+    opt[CURLOPT_HTTPHEADER] = headers;
+
+//    opt[CURLOPT_SSL_VERIFYPEER] = 0;
+//    opt[CURLOPT_SSL_VERIFYHOST] = 0;
+
+
+    cUrl.exec(opt);
+
+//    log(this->query->toString());
+
+
+//    log(QString::number(cUrl.buffer().size()));
+
+    if (cUrl.lastError().isOk()) {
+
+        this->outFile->write(cUrl.buffer(), cUrl.buffer().size());
+        this->outFile->close();
+    }
+    else {
+        qDebug() << (QString("Error: %1\nBuffer: %2").arg(cUrl.lastError().text()).arg(cUrl.errorBuffer()));
+    }
+
+
+    return;
+
+#endif
+
+#ifndef CCROSS_LIB
+
     QNetworkReply* replySync=0;
 
     if(this->requestMethod=="get"){
@@ -235,9 +312,11 @@ void MSRequest::methodCharger(QNetworkRequest req, const QString &path){
 
     this->currentReply=replySync;
 
-    connect(replySync,SIGNAL(downloadProgress(qint64,qint64)),this,SLOT(doDownloadProgress(qint64,qint64)));
-    connect(replySync,SIGNAL(readyRead()),this,SLOT(doReadyRead()));
+//    connect(replySync,SIGNAL(downloadProgress(qint64,qint64)),this,SLOT(doDownloadProgress(qint64,qint64)));
+//    connect(replySync,SIGNAL(readyRead()),this,SLOT(doReadyRead()));
+//    connect(replySync,SIGNAL(finished()),this,SLOT(doRequestFinished()));
 
+    //this->requesProcessed =true;
     //QEventLoop loop;
     connect(replySync, SIGNAL(finished()),this->loop, SLOT(quit()));
     this->loop->exec();
@@ -245,7 +324,11 @@ void MSRequest::methodCharger(QNetworkRequest req, const QString &path){
     delete(replySync);
     //this->loop->exit(0);
     //loop.deleteLater();
+
+#endif
 }
+
+
 
 void MSRequest::raw_exec(const QString &reqestURL){
 
@@ -322,7 +405,7 @@ void MSRequest::download(const QString &url, const QString &path){
     bool e=this->outFile->open(QIODevice::WriteOnly );
 
     if(e == false){
-        this->replyError=QNetworkReply::NetworkError::UnknownContentError;
+        this->replyError = QNetworkReply::NetworkError::UnknownContentError;
         return;
     }
 
@@ -330,6 +413,8 @@ void MSRequest::download(const QString &url, const QString &path){
 
 
     methodCharger(*this,path);
+
+#ifndef CCROSS_LIB
 
     // 301 redirect handling
     while(true){
@@ -350,6 +435,7 @@ void MSRequest::download(const QString &url, const QString &path){
             break;
         }
     }
+#endif
 
 }
 
@@ -447,6 +533,9 @@ void MSRequest::exec(){
 
 void MSRequest::requestFinished(QNetworkReply *reply){
 
+
+    //log("REQUEST FINISHED SLOT ");
+
     if(this->outFile!=0){
 
         this->outFile->write(this->currentReply->readAll());
@@ -480,13 +569,33 @@ void MSRequest::doDownloadProgress(qint64 avail, qint64 total){
         return;
     }
 
+    log("doDownloadProgress was entered");
+
 }
 
 
 void MSRequest::doReadyRead(){
 
     this->outFile->write(this->currentReply->readAll());
+
+    //this->loop->exit(0);
+
+    log("doReadyRead was entered");
 }
+
+
+
+
+void MSRequest::doRequestFinished(){
+
+//    QProcess process;
+//    process.start("echo -e \"\a\" ");
+
+    this->requesProcessed = false;
+    this->loop->quit();
+    log("Request finished");
+}
+
 
 
 QByteArray MSRequest::readReplyText(){
@@ -563,4 +672,26 @@ void MSRequest::setProxy(QNetworkProxy *proxy){
 }
 
 
+void MSRequest::log(QString mes){
 
+    FILE* lf=fopen("/tmp/ccfw.log","a+");
+    if(lf != NULL){
+
+        time_t rawtime;
+        struct tm * timeinfo;
+        char buffer[80];
+
+        time (&rawtime);
+        timeinfo = localtime(&rawtime);
+
+        strftime(buffer,sizeof(buffer),"%T - ",timeinfo);
+
+        mes = QString(buffer)+"MSRequest : "+mes+" \n";
+        fputs(mes.toStdString().c_str(),lf);
+        fclose(lf);
+    }
+
+//    string ns="echo "+mes+" >> /tmp/ccfw.log ";
+//    system(ns.c_str());
+    return;
+}

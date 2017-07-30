@@ -5,6 +5,7 @@
 #include <QMap>
 #include <QVariant>
 #include <QDebug>
+#include <QCoreApplication>
 #include "include/msproviderspool.h"
 
 class libFuseCC;
@@ -28,6 +29,10 @@ private:
     bool command_getFileContent();
 
     void log(QString mes);
+
+    static QCoreApplication* a;
+    static int argc;
+    static char * argv[];
 
 signals:
 

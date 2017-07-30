@@ -57,6 +57,7 @@ bool MSOneDrive::remote_file_get(MSFSObject *object){
 
     req->addHeader("Authorization","Bearer "+this->access_token);
 
+
     req->download(object->remote.data["@content.downloadUrl"].toString(),this->workPath+object->path+object->fileName);
 
     QString c=req->readReplyText();

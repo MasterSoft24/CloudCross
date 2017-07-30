@@ -48,6 +48,13 @@
 #include <QNetworkCookie>
 #include <QJsonObject>
 #include <QNetworkProxy>
+#include <QCoreApplication>
+#include <QProcess>
+
+#ifdef CCROSS_LIB
+#include "QtCUrl.h"
+#endif
+
 
 //#define PRINT_DEBUG_INFO
 
@@ -70,6 +77,9 @@ public:
 
     QFile* outFile;
     QDataStream* outFileStream;
+
+
+    bool requesProcessed;
 
 public:
 
@@ -128,6 +138,8 @@ public:
     QJsonObject cookieToJSON();
     bool cookieFromJSON(const QJsonObject &cookie);
 
+    void log(QString mes);
+
 private slots:
 
     void requestFinished(QNetworkReply *reply);
@@ -135,6 +147,8 @@ private slots:
     void doDownloadProgress(qint64 avail,qint64 total);
 
     void doReadyRead();
+
+    void doRequestFinished();
 
 };
 

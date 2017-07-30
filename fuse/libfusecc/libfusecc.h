@@ -4,6 +4,8 @@
 #include "libfusecc_global.h"
 #include <QDebug>
 #include <QThread>
+#include <QCoreApplication>
+
 
 
 #include "include/msrequest.h"
@@ -13,8 +15,12 @@
 #include "ccseparatethread.h"
 
 
-class LIBFUSECCSHARED_EXPORT libFuseCC
+
+
+class LIBFUSECCSHARED_EXPORT libFuseCC : public QObject
 {
+
+    Q_OBJECT
 
 public:
     libFuseCC(); // constructor
@@ -34,6 +40,16 @@ public:
     void runInSeparateThread(MSCloudProvider* providerInstance,const QString command, const QMap<QString,QVariant> parms);
     void run(MSCloudProvider* providerInstance,const QString command, const QMap<QString,QVariant> parms);
 
+private:
+
+    static int argc ;
+    static char * argv[];
+    static QCoreApplication * app ;
+    static QThread * thread ;
+
+private slots:
+
+    void onStarted();
 };
 
 #include "ccseparatethread.h"

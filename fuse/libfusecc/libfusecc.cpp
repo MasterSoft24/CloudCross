@@ -1,9 +1,23 @@
 #include "libfusecc.h"
 
 
+ int libFuseCC::argc = 1;
+ char * libFuseCC::argv[] = {"libFuseCC", NULL};
+ QCoreApplication * libFuseCC::app = NULL;
+ QThread * libFuseCC::thread = NULL;
+
+
+
 libFuseCC::libFuseCC()
 {
-    qDebug()<< "fuseCC created";
+
+    if (thread == NULL)
+     {
+         thread = new QThread();
+         connect(thread, SIGNAL(started()), this, SLOT(onStarted()), Qt::DirectConnection);
+         thread->start();
+         qDebug()<< "DONE fuseCC created";
+     }
 }
 
 
@@ -242,6 +256,21 @@ void libFuseCC::run(MSCloudProvider *providerInstance, const QString command, co
 
     thread->run();
     delete(thread);
+}
+
+
+
+void libFuseCC::onStarted(){
+
+    if (QCoreApplication::instance() == NULL){
+           app = new QCoreApplication(argc, argv);
+           app->exec();
+    }
+    else{
+//        app = QCoreApplication::instance();
+//        app->exec();
+    }
+
 }
 
 

@@ -1,6 +1,9 @@
 #include "ccseparatethread.h"
 #include "libfusecc.h"
 
+QCoreApplication* CCSeparateThread::a=NULL;
+int CCSeparateThread::argc = 1;
+char * CCSeparateThread::argv[] = {"SharedLibrary", NULL};
 
 CCSeparateThread::CCSeparateThread(QObject *parent) : QObject(parent){
 

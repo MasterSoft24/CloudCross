@@ -24,7 +24,7 @@ win32{
 }
 
 
-
+DEFINES +=CCROSS_LIB
 
 
 QT       += network
@@ -51,13 +51,42 @@ DEFINES += QT_DEPRECATED_WARNINGS
 include(../../CloudCross.pri)
 
 SOURCES += libfusecc.cpp \
-    ccseparatethread.cpp
+    ccseparatethread.cpp \
+    QtCUrl.cpp \
+    ../../src/common/msproviderspool.cpp \
+    ../../src/common/mscloudprovider.cpp \
+    ../../src/common/msrequest.cpp \
+    ../../src/common/qstdout.cpp \
+    ../../src/common/msfsobject.cpp \
+    ../../src/common/msremotefsobject.cpp \
+    ../../src/common/mslocalfsobject.cpp \
+    ../../src/OneDrive/msonedrive.cpp \
+    ../../src/GoogleDrive/msgoogledrive.cpp \
+    ../../src/Dropbox/msdropbox.cpp \
+    ../../src/YandexDisk/msyandexdisk.cpp \
+    ../../src/MailRu/msmailru.cpp \
 
 HEADERS += libfusecc.h\
         libfusecc_global.h \
-    ccseparatethread.h
+    QtCUrl.h \
+    ccseparatethread.h \
+    ../../include/msproviderspool.h \
+    ../../include/mscloudprovider.h \
+    ../../include/msrequest.h \
+    ../../include/qstdout.h \
+    ../../include/msfsobject.h \
+    ../../include/msremotefsobject.h \
+    ../../include/mslocalfsobject.h \
+    ../../src/OneDrive/msonedrive.h \
+    ../../src/GoogleDrive/msgoogledrive.h \
+    ../../src/Dropbox/msdropbox.h \
+    ../../src/YandexDisk/msyandexdisk.h \
+    ../../src/MailRu/msmailru.h \
 
 unix {
     target.path = /usr/lib
     INSTALLS += target
 }
+
+
+LIBS +=  -lcurl

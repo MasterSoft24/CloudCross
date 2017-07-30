@@ -31,20 +31,22 @@ CONFIG -= app_bundle
 include(../../CloudCross.pri)
 
 SOURCES += main.cpp \
-    incominglistener.cpp \
-    fswatcher.cpp \
-    ../../src/common/msproviderspool.cpp \
-    ../../src/common/mscloudprovider.cpp \
-    ../../src/common/msrequest.cpp \
-    ../../src/common/qstdout.cpp \
-    ../../src/common/msfsobject.cpp \
-    ../../src/common/msremotefsobject.cpp \
-    ../../src/common/mslocalfsobject.cpp \
-    ../../src/OneDrive/msonedrive.cpp \
-    ../../src/GoogleDrive/msgoogledrive.cpp \
-    ../../src/Dropbox/msdropbox.cpp \
-    ../../src/YandexDisk/msyandexdisk.cpp \
-    ../../src/MailRu/msmailru.cpp
+#    incominglistener.cpp \
+#    fswatcher.cpp \
+#    ../../src/common/msproviderspool.cpp \
+#    ../../src/common/mscloudprovider.cpp \
+#    ../../src/common/msrequest.cpp \
+#    ../../src/common/qstdout.cpp \
+#    ../../src/common/msfsobject.cpp \
+#    ../../src/common/msremotefsobject.cpp \
+#    ../../src/common/mslocalfsobject.cpp \
+#    ../../src/OneDrive/msonedrive.cpp \
+#    ../../src/GoogleDrive/msgoogledrive.cpp \
+#    ../../src/Dropbox/msdropbox.cpp \
+#    ../../src/YandexDisk/msyandexdisk.cpp \
+#    ../../src/MailRu/msmailru.cpp \
+    cc_fusefs.cpp \
+    cc_fuse.cpp
 
 
 LIBS+= -lfuse \
@@ -53,23 +55,27 @@ LIBS+= -lfuse \
 HEADERS += \
     json.hpp \
     ccfw.h \
-    ../../include/msproviderspool.h \
-    ../../include/mscloudprovider.h \
-    ../../include/msrequest.h \
-    ../../include/qstdout.h \
-    ../../include/msfsobject.h \
-    ../../include/msremotefsobject.h \
-    ../../include/mslocalfsobject.h \
-    ../../src/OneDrive/msonedrive.h \
-    ../../src/GoogleDrive/msgoogledrive.h \
-    ../../src/Dropbox/msdropbox.h \
-    ../../src/YandexDisk/msyandexdisk.h \
-    ../../src/MailRu/msmailru.h
+#    ../../include/msproviderspool.h \
+#    ../../include/mscloudprovider.h \
+#    ../../include/msrequest.h \
+#    ../../include/qstdout.h \
+#    ../../include/msfsobject.h \
+#    ../../include/msremotefsobject.h \
+#    ../../include/mslocalfsobject.h \
+#    ../../src/OneDrive/msonedrive.h \
+#    ../../src/GoogleDrive/msgoogledrive.h \
+#    ../../src/Dropbox/msdropbox.h \
+#    ../../src/YandexDisk/msyandexdisk.h \
+#    ../../src/MailRu/msmailru.h \
+    cc_fusefs.h \
+    cc_fuse.h
 
 
 
 
 unix:!macx: LIBS += -L$$PWD/../libfusecc/ -llibfusecc
+
+
 
 INCLUDEPATH += $$PWD/../libfusecc
 DEPENDPATH += $$PWD/../libfusecc

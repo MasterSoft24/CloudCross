@@ -1,5 +1,7 @@
 ﻿#include <signal.h>
 #include <QCoreApplication>
+#include <QTimer>
+#include <QThread>
 
 #include <iostream>
 #include <fstream>
@@ -29,17 +31,22 @@
 #include <sys/ioctl.h>
 #include <pthread.h>
 
-#include "json.hpp"
+//#include "json.hpp"
 
 #include "../libfusecc/libfusecc.h"
 #include "../libfusecc/ccseparatethread.h"
 #include "include/msproviderspool.h"
 
-using namespace std;
-using json = nlohmann::json;
+#include "cc_fusefs.h"
+#include "cc_fuse.h"
 
-#include "ccfw.h"
-//#include "incominglistener.cpp"
+
+
+using namespace std;
+//using json = nlohmann::json;
+
+//#include "ccfw.h"
+#include "incominglistener.cpp"
 //#include "fswatcher.cpp"
 
 static const char *filepath = "/file";
@@ -49,8 +56,8 @@ static const char *filecontent = "I'm the content of the only file available the
 // forward declarations
 void log(QString mes);
 
-string sendCommand_sync(json command);
-void sendCommand(json command);
+//string sendCommand_sync(json command);
+//void sendCommand(json command);
 
 
 // ========= GLOBALS ==========
@@ -61,10 +68,10 @@ QString mountPath;
 QString tokenPath;
 ProviderType provider;
 QString providerName;
-libFuseCC* ccLib;
-MSCloudProvider* providerObject;
+//libFuseCC* ccLib;
+//MSCloudProvider* providerObject;
 
-
+CC_Fuse* cFuse;
 
 
 static int sock_descr;
@@ -73,15 +80,15 @@ static int sock_descr;
 
 QString tempDirName;
 
-static string workSocket;
-static string workProvider;
-static string workPath;
-static string mountPoint;
+//static string workSocket;
+//static string workProvider;
+//static string workPath;
+//static string mountPoint;
 
-pthread_t listenerThread;
-//lst_param listenerThreadParams;
+//pthread_t listenerThread;
+////lst_param listenerThreadParams;
 
-pthread_t fsWatherThread;
+//pthread_t fsWatherThread;
 //fswatcher_param fsWatherThreadParams;
 
 // ----------------------------------------------------------------
@@ -94,9 +101,9 @@ int readFileContent(char* path,char* buf,int size, int offset){
 
 // ----------------------------------------------------------------
 
-int f_mknod(const string &path){
+int f_mknod(const QString &path){
 
-    int r= system(string("touch \""+path+"\"").c_str());
+    int r= system(QString("touch \""+path+"\"").toStdString().c_str());
     if(r == 0){
         return r;
     }
@@ -106,9 +113,9 @@ int f_mknod(const string &path){
 }
 
 
-int f_mkdir(const string &path){
+int f_mkdir(const QString &path){
 
-    int r= system(string("mkdir -p \""+path+"\"").c_str());
+    int r= system(QString("mkdir -p \""+path+"\"").toStdString().c_str());
     if(r == 0){
         return r;
     }
@@ -236,7 +243,7 @@ QHash<QString, MSFSObject> filterListByPath(/*map<string, MSFSObject> src,*/ QSt
 
     QHash<QString, MSFSObject> fl;
 
-        for(QHash<QString, MSFSObject>::iterator i = providerObject->syncFileList.begin(); i != providerObject->syncFileList.end(); i++){
+        for(QHash<QString, MSFSObject>::iterator i = CC_FuseFS::Instance()->providerObject->syncFileList.begin(); i != CC_FuseFS::Instance()->providerObject->syncFileList.end(); i++){
 
             if(path == i.value().path){
 
@@ -301,7 +308,7 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
               stbuf->st_mode = S_IFDIR | 0755;
               stbuf->st_uid=getuid();
               stbuf->st_gid=getgid();
-              stbuf->st_nlink = 1;
+              stbuf->st_nlink = 2;
               return 0;
     }
     else{
@@ -310,9 +317,9 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
 
         QString fname = QString("/tmp/")+tempDirName+QString(path);
 
-        QHash<QString, MSFSObject>::iterator i= providerObject->syncFileList.find(QString(path));
+        QHash<QString, MSFSObject>::iterator i= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(path));
 
-        if( i != providerObject->syncFileList.end()){
+        if( i != CC_FuseFS::Instance()->providerObject->syncFileList.end()){
 
             MSFSObject o = i.value();
 
@@ -380,7 +387,7 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
 
 
 
-                if( i != providerObject->syncFileList.end() ){// file or folder exists on remote
+                if( i != CC_FuseFS::providerObject->syncFileList.end() ){// file or folder exists on remote
 
                     MSFSObject o = i.value();
 
@@ -469,8 +476,7 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
     log("CALLBACK readdir "/*+string(path)*/);
 
 
-//            filler(buf, ".", NULL, 0);
-//            filler(buf, "..", NULL, 0);
+
 
      QString m_path;
 
@@ -515,11 +521,13 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
 
         }
 
+        filler(buf, ".", NULL, 0);
+        filler(buf, "..", NULL, 0);
 
         return 0;
     }
     else{
-//        struct stat st;
+        struct stat st;
 //        memset(&st, 0, sizeof(struct stat));
 //        st.st_mode = S_IFDIR | 0755;
 //        st.st_nlink = 2;
@@ -527,16 +535,16 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
 //        st.st_gid=getgid();
 //        filler(buf,".",&st,0);
 
-//        memset(&st, 0, sizeof(struct stat));
-//        st.st_mode = S_IFDIR | 0755;
-//        st.st_nlink = 2;
-//        st.st_uid=getuid();
-//        st.st_gid=getgid();
-//        filler(buf,"..",&st,0);
+        memset(&st, 0, sizeof(struct stat));
+        st.st_mode = S_IFDIR | 0755;
+        st.st_nlink = 2;
+        st.st_uid=getuid();
+        st.st_gid=getgid();
+        filler(buf,"..",&st,0);
 
-//        filler(buf, ".", NULL, 0);
-//        filler(buf, "..", NULL, 0);
-        return 0;
+        filler(buf, ".", NULL, 0);
+        filler(buf, "..", NULL, 0);
+        return -1;
     }
 
     //return -1;
@@ -546,35 +554,42 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
 
 static int open_callback(const char *path, struct fuse_file_info *fi) {
 
-log("OPEN_CALLBACK for "+QString(path));
+    //return CC_FuseFS::Instance()->Open(path,fi);
 
-    QHash<QString, MSFSObject>::iterator i= providerObject->syncFileList.find(QString(path));
+
+log("OPEN_CALLBACK for "+QString(path));
+//char* argv[1];
+//int argc=1;
+//argv[0]="this";
+//QCoreApplication ca(argc, argv);
+
+    QHash<QString, MSFSObject>::iterator i= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(path));
 
     //MSFSObject o;
 
-    if( i != providerObject->syncFileList.end()){
+    if( i != CC_FuseFS::Instance()->providerObject->syncFileList.end()){
 
     //if(i != fileList.end()){
 
         QString fname=QString("/tmp/")+tempDirName+QString(path);
 
         struct stat buffer;
-        if( stat(fname.toStdString().c_str(), &buffer) == 0){//file exists
+        if( stat(fname.toStdString().c_str(), &buffer) == 0){//file exists in cache
 
             //log("CALLBACK open - File Exists "+string(path)+" flags = "+to_string(fi->flags));
 
             //i->second.refCount++;
 
-//            fi->fh = open (fname.toStdString().c_str() ,fi->flags);
-//            if(fi->fh == -1){
-//                //log("CALLBACK open EXISTS - open for writing error");
-//            }
+            fi->fh = open (fname.toStdString().c_str() ,fi->flags);
+            if(fi->fh == -1){
+                log("CALLBACK open EXISTS - open for writing error");
+            }
 
             log("OPEN_CALLBACK File Exists "+fname);
             return 0;
 
         }
-        else{// file is missing
+        else{// file is missing in cache
 
            log("OPEN_CALLBACK File Missing "+fname);
 
@@ -583,14 +598,15 @@ log("OPEN_CALLBACK for "+QString(path));
             system(QString(QString("mkdir -p \"")+ptf+QString("\"")).toStdString().c_str());
 
             // create zero-size file
+            log("Create ZERO-SIZED file "+QString(path));
             fstream fs;
             fs.open(fname.toStdString().c_str(), ios::out);
             fs.close();
 
-//            fi->fh = open (fname.toStdString().c_str() ,fi->flags);
-//            if(fi->fh == -1){
-//               // log("CALLBACK open MISSING - open for writing error");
-//            }
+            fi->fh = open (fname.toStdString().c_str() ,fi->flags);
+            if(fi->fh == -1){
+                log("CALLBACK open MISSING - open for writing error");
+            }
 
             QMap<QString,QVariant> p;
             //p.insert("path",QVariant(tokenPath));
@@ -598,7 +614,7 @@ log("OPEN_CALLBACK for "+QString(path));
             p.insert("filePath",QVariant(QString(path)));
 
             //ccLib->runInSeparateThread(providerObject,QString("get_content"),p);
-            ccLib->run(providerObject,QString("get_content"),p);
+            CC_FuseFS::Instance()->ccLib->runInSeparateThread(CC_FuseFS::Instance()->providerObject,QString("get_content"),p);
 
             log("OPEN_CALLBACK File Will Be Downloaded "+fname);
 
@@ -628,17 +644,11 @@ log("OPEN_CALLBACK for "+QString(path));
 
 static int read_callback(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
 
-//    log("read "+to_string(size)+" "+to_string(offset));
-
-
-
-    //findObjectInFilelist(path,&o);
-
-    QHash<QString, MSFSObject>::iterator i= providerObject->syncFileList.find(QString(path));
+    QHash<QString, MSFSObject>::iterator i= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(path));
 
     MSFSObject o;
 
-    if( i != providerObject->syncFileList.end()){
+    if( i != CC_FuseFS::Instance()->providerObject->syncFileList.end()){
 
         o = i.value();
     }
@@ -649,7 +659,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
     int fullSize = o.remote.fileSize;
 
     QString fname = QString("/tmp/")+tempDirName+QString(path);
-    log("READ_CALLACK for "+fname);
+    log("READ_CALLBACK for "+fname);
 
     struct stat buffer;
     if(stat (fname.toStdString().c_str(), &buffer) == 0){//file exists in cache
@@ -665,7 +675,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
 
             if(false){
 
-                //log("CALLBACK read - file LOCAL CREATED and fully cached "+string(path));
+                log("CALLBACK read - file LOCAL CREATED and fully cached "+QString(path));
 
                 FILE* f = fopen(fname.toStdString().c_str(),"rb");
                 fseek(f,offset,SEEK_SET);
@@ -676,7 +686,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
             }
             else{
 
-                //log("CALLBACK read - file exists but don't cached "+string(path));
+                log("CALLBACK read - file exists but don't cached "+QString(path));
 
                 for(int i=0;i < WAIT_FOR_FIRST_DATA;i++){
                     sleep(1);
@@ -716,7 +726,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
 
 
 //                log("CALLBACK read - NORM "+string(path));
-//                FILE* f = fopen(fname.c_str(),"rb");
+//                FILE* f = fopen(fname.toStdString().c_str(),"rb");
 //                fseek(f,offset,SEEK_SET);
 //                size_t cnt = fread(buf,1,size,f);
 //                fclose(f);
@@ -741,7 +751,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
                         data.clear(); // clear possible failbit
                     }
 
-                   // log("CALLBACK read - NEW READED "+to_string(static_cast<int>(data.gcount())));
+                    log("CALLBACK read - NEW READED "+QString::number(data.gcount()));
 
                     return static_cast<int>(data.gcount());
 
@@ -878,34 +888,15 @@ static int write_callback(const char *path, const char *buf, size_t size, off_t 
     struct stat buffer;
     stat (fname.toStdString().c_str(), &buffer);
 
-    QHash<QString, MSFSObject>::iterator i= providerObject->syncFileList.find(QString(path));
+    QHash<QString, MSFSObject>::iterator i= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(path));
 
-    if( i != providerObject->syncFileList.end()){
+    if( i != CC_FuseFS::Instance()->providerObject->syncFileList.end()){
 
         MSFSObject o = i.value();
 
         o.remote.fileSize=buffer.st_size;
+        o.state = MSFSObject::ObjectState::ChangedLocal;
     }
-
-
-
-//    findObjectInFilelist(path,&o);
-
-
-
-//   // log("truncated to "+to_string(buffer.st_size));
-
-//    //log("write callback OK");
-
-//    json comm;
-//    comm["command"]="need_update";
-//    comm["params"]["socket"]=workSocket;
-//    comm["params"]["provider"]=workProvider;
-//    comm["params"]["path"]=workPath;
-//    comm["params"]["cachePath"]=fname;
-//    comm["params"]["filePath"]=string(path);
-
-//    sendCommand(comm) ;
 
     return res;
 
@@ -914,19 +905,19 @@ static int write_callback(const char *path, const char *buf, size_t size, off_t 
 
 static int ftruncate_callback(const char *path, off_t size,struct fuse_file_info *fi)
 {
-//    (void)fi;
-//    //log("CALLBACK ftruncate");
-//    string fname = string("/tmp/")+tempDirName+string(path);
+    (void)fi;
+    //log("CALLBACK ftruncate");
+    QString fname = QString("/tmp/")+tempDirName+QString(path);
 
 
-//        int res;
-//        res = truncate(fname.c_str(), size);
-//        if (res == -1){
-//                return -errno;
-//        }
+        int res;
+        res = truncate(fname.toStdString().c_str(), size);
+        if (res == -1){
+                return -errno;
+        }
 
 
-//        return 0;
+        return 0;
 }
 
 
@@ -934,18 +925,18 @@ static int ftruncate_callback(const char *path, off_t size,struct fuse_file_info
 static int truncate_callback(const char *path, off_t size)
 {
 
-//    //log("CALLBACK truncate");
-//    string fname = string("/tmp/")+tempDirName+string(path);
+    //log("CALLBACK truncate");
+    QString fname = QString("/tmp/")+tempDirName+QString(path);
 
 
-//        int res;
-//        res = truncate(fname.c_str(), size);
-//        if (res == -1){
-//                return -errno;
-//        }
+        int res;
+        res = truncate(fname.toStdString().c_str(), size);
+        if (res == -1){
+                return -errno;
+        }
 
 
-//        return 0;
+        return 0;
 }
 
 
@@ -959,41 +950,41 @@ static int xmp_readlink(const char *path, char *buf, size_t size){
 static int xmp_mknod(const char *path, mode_t mode, dev_t rdev){
 ////log("CALLBACK mknod");
 
-//    string fname = string("/tmp/")+tempDirName+string(path);
-//    string insname=string(path);
+    QString fname = QString("/tmp/")+tempDirName+QString(path);
+    QString insname=QString(path);
 
-//    log("CALLBACK mknod begin"+fname);
+    log("CALLBACK mknod begin"+fname);
 
-//    int res = f_mknod(fname.c_str());
+    int res = f_mknod(fname.toStdString().c_str());
 
-//    if(res == -1){
+    if(res == -1){
 
 
-//        string td = string("/tmp/")+tempDirName;
-//        string ptf = fname.substr(0,fname.find_last_of("/"));
-//        //ptf = ptf.substr(td.length());
+        QString td = QString("/tmp/")+tempDirName;
+        QString ptf = fname.mid(0,fname.lastIndexOf("/"));
+        //ptf = ptf.substr(td.length());
 
-////        if(ptf.length() == 0){
-////            ptf = "/";
-////        }
-
-//        log("CALLBACK mknod failed. Try create dir"+ptf);
-
-//        res = f_mkdir(ptf.c_str());
-//        if(res == -1){
-//            log("CALLBACK mknod create dir failed. ");
-//            return -errno;
-//        }
-//        else{
-//            res = f_mknod(fname.c_str());
-//            if(res == -1){
-//                log("CALLBACK mknod  failed again.");
-//                return -errno;
-//            }
+//        if(ptf.length() == 0){
+//            ptf = "/";
 //        }
 
+        log("CALLBACK mknod failed. Try create dir"+ptf);
 
-//    }
+        res = f_mkdir(ptf);
+        if(res == -1){
+            log("CALLBACK mknod create dir failed. ");
+            return -errno;
+        }
+        else{
+            res = f_mknod(fname);
+            if(res == -1){
+                log("CALLBACK mknod  failed again.");
+                return -errno;
+            }
+        }
+
+
+    }
 
 
 
@@ -1376,14 +1367,14 @@ return 0;
 
 static int xmp_access(const char *path, int mask){
 
-//    int res;
-//    string fname = string("/tmp/")+tempDirName+string(path);
-////log("CALLBACK access "+fname);
+    int res;
+    QString fname = QString("/tmp/")+tempDirName+QString(path);
+//log("CALLBACK access "+fname);
 
-//    res = access(fname.c_str(), mask);
-//    if (res == -1)
-//            return -errno;
-//    return 0;
+    res = access(fname.toStdString().c_str(), mask);
+    if (res == -1)
+            return -errno;
+    return 0;
 }
 
 
@@ -1396,18 +1387,20 @@ static int xmp_release(const char *path, struct fuse_file_info *fi)
 
 //log("CALLBACK release");
 
-//        string fname = string("/tmp/")+tempDirName+string(path);
+        QString fname = QString("/tmp/")+tempDirName+QString(path);
 
-//        map<string, MSFSObject>::iterator i= fileList.find(string(path));
+    QHash<QString, MSFSObject>::iterator i= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(path));
 
-//        i->second.refCount--;
-//        if(i->second.refCount < 0){
-//            i->second.refCount = 0;
-//        }
+    //MSFSObject o;
 
-//        int rc=i->second.refCount;
+    if( i != CC_FuseFS::Instance()->providerObject->syncFileList.end()){
 
-//        log("release callback; ref count is "+to_string(rc));
+        QFile f(fname);
+        //f.remove();
+        f.close();
+
+    }
+
 
         return 0;
 }
@@ -1543,47 +1536,20 @@ string readReplyFromCommandServer(){
 // ----------------------------------------------------------------
 
 
-string sendCommand_sync(json command){
+//string sendCommand_sync(json command){
 
-//    string j=command.dump();
+////    string j=command.dump();
 
-//    log("command to send is - "+j);
+////    log("command to send is - "+j);
 
-//    int wsz=write(sock_descr,j.c_str(),j.size());
-//    if(wsz == -1){
-//        log("command sending error");
-//        return "";
-//    }
+////    int wsz=write(sock_descr,j.c_str(),j.size());
+////    if(wsz == -1){
+////        log("command sending error");
+////        return "";
+////    }
 
-//    fsync(sock_descr);
-//    log("command was sended");
-
-//    string out= readReplyFromCommandServer();
-
-//    log("reply was received");
-
-//    //cout << out.c_str();
-//    //log(out);
-//    return out;
-}
-
-
-// ----------------------------------------------------------------
-
-void sendCommand(json command){
-
-//    string j=command.dump();
-
-//    log("command to send is - "+j);
-
-//    int wsz=write(sock_descr,j.c_str(),j.size());
-//    if(wsz == -1){
-//        log("command sending error");
-//        return;
-//    }
-
-//    fsync(sock_descr);
-//    log("command was sended");
+////    fsync(sock_descr);
+////    log("command was sended");
 
 ////    string out= readReplyFromCommandServer();
 
@@ -1592,7 +1558,34 @@ void sendCommand(json command){
 ////    //cout << out.c_str();
 ////    //log(out);
 ////    return out;
-}
+//}
+
+
+// ----------------------------------------------------------------
+
+//void sendCommand(json command){
+
+////    string j=command.dump();
+
+////    log("command to send is - "+j);
+
+////    int wsz=write(sock_descr,j.c_str(),j.size());
+////    if(wsz == -1){
+////        log("command sending error");
+////        return;
+////    }
+
+////    fsync(sock_descr);
+////    log("command was sended");
+
+//////    string out= readReplyFromCommandServer();
+
+//////    log("reply was received");
+
+//////    //cout << out.c_str();
+//////    //log(out);
+//////    return out;
+//}
 
 
 
@@ -1624,6 +1617,128 @@ void log(QString mes){
 
 // ----------------------------------------------------------------
 
+static void startWorker(){
+
+    tokenPath = "/home/ms/QT/CloudCross/build/debug/TEST4";  // argv[3]
+    mountPath = "/tmp/example"; // argv[4]
+
+    provider = (ProviderType) QString("4").toInt(); //QString::number(argv[2])
+
+    //ccLib = new libFuseCC();
+
+//    CC_FuseFS::Instance()->tokenPath = "/home/ms/QT/CloudCross/build/debug/TEST4";  // argv[3]
+//    CC_FuseFS::Instance()->mountPath = "/tmp/example"; // argv[4]
+
+//    CC_FuseFS::Instance()->provider = (ProviderType) QString("4").toInt(); //QString::number(argv[2])
+
+//    CC_FuseFS::Instance()->ccLib = new libFuseCC();
+
+
+//    bool lf_r = CC_FuseFS::Instance()->ccLib->getProviderInstance(CC_FuseFS::Instance()->provider, (MSCloudProvider**)&(CC_FuseFS::Instance()->providerObject), CC_FuseFS::Instance()->tokenPath);
+
+//    lf_r = CC_FuseFS::Instance()->ccLib->readRemoteFileList(CC_FuseFS::providerObject);
+
+
+
+//    log("WORKER MOUNT POINT IS "+string(argv[4]));
+
+//    if(!connectToCommandServer(std::string(argv[1]))){//std::string(argv[1])
+//        return 1;
+//    }
+
+
+    cFuse = new CC_Fuse();
+
+    cFuse->fuse_op.getattr = getattr_callback;
+    cFuse->fuse_op.open = open_callback;
+    cFuse->fuse_op.read = read_callback;
+    cFuse->fuse_op.readdir = readdir_callback;
+    cFuse->fuse_op.destroy = destroy_callback;
+    cFuse->fuse_op.write = write_callback;
+    cFuse->fuse_op.ftruncate = ftruncate_callback;
+    cFuse->fuse_op.truncate = truncate_callback;
+    cFuse->fuse_op.release = xmp_release;
+    cFuse->fuse_op.fsync = xmp_fsync;
+    cFuse->fuse_op.readlink = xmp_readlink;
+    cFuse->fuse_op.mknod = xmp_mknod;
+    cFuse->fuse_op.mkdir = xmp_mkdir;
+    cFuse->fuse_op.unlink = xmp_unlink;
+    cFuse->fuse_op.rmdir = xmp_rmdir;
+    cFuse->fuse_op.symlink = xmp_symlink;
+    cFuse->fuse_op.rename = xmp_rename;
+    cFuse->fuse_op.link = xmp_link;
+    cFuse->fuse_op.chmod = xmp_chmod;
+    cFuse->fuse_op.chown = xmp_chown;
+    cFuse->fuse_op.statfs = xmp_statfs;
+    cFuse->fuse_op.access = xmp_access;
+
+
+
+    fuse_op.getattr = getattr_callback;
+    //fuse_op.fgetattr = fgetattr_callback;
+    //fuse_op.open = open_callback;
+    fuse_op.read = read_callback;
+    fuse_op.readdir = readdir_callback;
+    fuse_op.destroy = destroy_callback;
+    fuse_op.write = write_callback;
+    fuse_op.ftruncate = ftruncate_callback;
+    fuse_op.truncate = truncate_callback;
+    fuse_op.release= xmp_release;
+    fuse_op.fsync = xmp_fsync;
+
+    fuse_op.readlink = xmp_readlink;
+    fuse_op.mknod = xmp_mknod;
+    fuse_op.mkdir = xmp_mkdir;
+    fuse_op.unlink = xmp_unlink;
+    fuse_op.rmdir = xmp_rmdir;
+    fuse_op.symlink= xmp_symlink;
+    fuse_op.rename = xmp_rename;
+    fuse_op.link = xmp_link;
+    fuse_op.chmod = xmp_chmod;
+    fuse_op.chown = xmp_chown;
+    fuse_op.statfs = xmp_statfs;
+
+    fuse_op.access = xmp_access;
+
+
+    tempDirName="TESTING_TEMPORARY";//string(argv[1])+string("_")+getTempName();
+
+    mkdir(QString("/tmp/"+tempDirName).toStdString().c_str(),0777);
+
+
+    //cFuse->start();
+
+    // rebuild arguments list for fuse
+    // -s single-thread
+    // -d debug
+    // -f foreground
+    // -o [no]rellinks
+
+    char* a[3];
+    a[0] = "/ttt/sd";//argv[0];
+    a[1] = (char*)mountPath.toStdString().c_str(); //argv[4];
+    a[2] = NULL;
+//    a[2]="-s";//
+//    a[3]="-f";//
+
+
+    fuse_main(2, a, &fuse_op, NULL);
+
+}
+
+
+//static void prepareWorker(){
+
+//    QTimer::singleShot(1000, this, SLOT(startWorker()));
+
+//}
+
+//Q_COREAPP_STARTUP_FUNCTION(startWorker)
+
+
+
+
+// ----------------------------------------------------------------
 
 int main(int argc, char *argv[])
 {
@@ -1633,17 +1748,30 @@ int main(int argc, char *argv[])
     // argv[3] = path to credentials
     // argv[4] = mount point
 
-    QCoreApplication ca(argc, argv);
+
+
+   QCoreApplication ca(argc, argv);
+//   ca.exec();
+//    return 0;
+
+
 
     tokenPath = "/home/ms/QT/CloudCross/build/debug/TEST4";  // argv[3]
     mountPath = "/tmp/example"; // argv[4]
 
     provider = (ProviderType) QString("4").toInt(); //QString::number(argv[2])
 
-    ccLib = new libFuseCC();
+    //ccLib = new libFuseCC();
+
+    CC_FuseFS::tokenPath = "/home/ms/QT/CloudCross/build/debug/TEST4";  // argv[3]
+    CC_FuseFS::mountPath = "/tmp/example"; // argv[4]
+
+    CC_FuseFS::provider = (ProviderType) QString("4").toInt(); //QString::number(argv[2])
+
+    CC_FuseFS::Instance()->ccLib = new libFuseCC();
 
 
-    bool lf_r = ccLib->getProviderInstance(provider, (MSCloudProvider**)&providerObject, tokenPath);
+    bool lf_r = CC_FuseFS::Instance()->ccLib->getProviderInstance(CC_FuseFS::provider, (MSCloudProvider**)&(CC_FuseFS::providerObject), CC_FuseFS::tokenPath);
 
 //    CCSeparateThread* st;
 
@@ -1682,7 +1810,7 @@ int main(int argc, char *argv[])
 
 //    sleep(1);
 
-    lf_r = ccLib->readRemoteFileList(providerObject);
+    lf_r = CC_FuseFS::Instance()->ccLib->readRemoteFileList(CC_FuseFS::providerObject);
 
 
 
@@ -1693,10 +1821,16 @@ int main(int argc, char *argv[])
 
 
     // rebuild arguments list for fuse
+    // -s single-thread
+    // -d debug
+    // -f foreground
+    // -o [no]rellinks
+
     char* a[2];
     a[0] = argv[0];
     a[1] = (char*)mountPath.toStdString().c_str(); //argv[4];
-    //a[2]="-f";//
+//    a[2]="-s";//
+//    a[3]="-f";//
 
 //    log("WORKER MOUNT POINT IS "+string(argv[4]));
 
@@ -1704,6 +1838,39 @@ int main(int argc, char *argv[])
 //        return 1;
 //    }
 
+
+    cFuse = new CC_Fuse();
+
+    cFuse->fuse_op.getattr = getattr_callback;
+    cFuse->fuse_op.open = open_callback;
+    cFuse->fuse_op.read = read_callback;
+    cFuse->fuse_op.readdir = readdir_callback;
+    cFuse->fuse_op.destroy = destroy_callback;
+    cFuse->fuse_op.write = write_callback;
+    cFuse->fuse_op.ftruncate = ftruncate_callback;
+    cFuse->fuse_op.truncate = truncate_callback;
+    cFuse->fuse_op.release = xmp_release;
+    cFuse->fuse_op.fsync = xmp_fsync;
+    cFuse->fuse_op.readlink = xmp_readlink;
+    cFuse->fuse_op.mknod = xmp_mknod;
+    cFuse->fuse_op.mkdir = xmp_mkdir;
+    cFuse->fuse_op.unlink = xmp_unlink;
+    cFuse->fuse_op.rmdir = xmp_rmdir;
+    cFuse->fuse_op.symlink = xmp_symlink;
+    cFuse->fuse_op.rename = xmp_rename;
+    cFuse->fuse_op.link = xmp_link;
+    cFuse->fuse_op.chmod = xmp_chmod;
+    cFuse->fuse_op.chown = xmp_chown;
+    cFuse->fuse_op.statfs = xmp_statfs;
+    cFuse->fuse_op.access = xmp_access;
+
+//    QThread* fuseThread = new QThread();
+
+//    cFuse->moveToThread(fuseThread);
+
+//    QObject::connect(fuseThread,SIGNAL(started()),cFuse,SLOT(run()));
+
+//    fuseThread->start();
 
 
     fuse_op.getattr = getattr_callback;
@@ -1733,19 +1900,6 @@ int main(int argc, char *argv[])
     fuse_op.access = xmp_access;
 
 
-//    workSocket = argv[1];
-//    workProvider = argv[2];
-//    workPath = argv[3];
-//    mountPoint = argv[4];
-
-//    json comm;
-//    comm["command"] = "get_file_list";
-//    comm["params"]["socket"] = argv[1];
-//    comm["params"]["provider"] = argv[2];
-//    comm["params"]["path"] = argv[3];
-
-//    //json jsonFileList = json::parse( sendCommand_sync(comm) );
-//    sendCommand_sync(comm);
 
 
 
@@ -1754,55 +1908,17 @@ int main(int argc, char *argv[])
     mkdir(QString("/tmp/"+tempDirName).toStdString().c_str(),0777);
 
 
-//    for(json::iterator i = jsonFileList.begin(); i != jsonFileList.end(); i++){
-
-//        MSFSObject obj;
-//        json jo=i.value();
-//        obj.state               = jo["state"];
-//        obj.path                = jo["path"];
-//        obj.fileName            = jo["fileName"];
-//        obj.refCount            = -1;
-
-//        //obj.remote.data         = jo["remote"]["data"];
-//        obj.remote.exist        = true;
-//        obj.remote.fileSize     = jo["remote"]["fileSize"];
-//        obj.remote.md5Hash      = jo["remote"]["md5Hash"];
-//        obj.remote.modifiedDate = jo["remote"]["modifiedDate"];
-//        obj.remote.objectType   = jo["remote"]["objectType"];
-
-
-//        fileList.insert(std::make_pair(i.key(),obj));
-
-
-//    }
 
 
 
-//    listenerThreadParams.onIncomingCommand = NULL;
-//    listenerThreadParams.state = false;
-//    listenerThreadParams.socketName = string(workSocket+".incoming");
-//    pthread_create(&listenerThread,NULL,incomingListener,&listenerThreadParams);
-//    pthread_detach(listenerThread);
-
-//    sleep(1);
-
-//    if(!listenerThreadParams.state){
-
-//        return -1;
-//    }
+    //cFuse->start();
 
 
+    fuse_main(2, a, &fuse_op, NULL);
 
-//    json comm2;
-//    comm2["command"] = "start_watcher";
-//    comm2["params"]["socket"] = argv[1];
-//    comm2["params"]["provider"] = argv[2];
-//    comm2["params"]["path"] = argv[3];
-//    comm2["params"]["watchPath"] = string("/tmp/"+tempDirName);
-
-//    sendCommand(comm2);
-
-    return fuse_main(2, a, &fuse_op, NULL);
+//    qDebug() <<("MAIN EXITED");
+//    log("MAIN EXITED");
+    return ca.exec();
 }
 
 
