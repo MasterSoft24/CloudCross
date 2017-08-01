@@ -227,66 +227,18 @@ string getTempName() {
 
 QHash<QString, MSFSObject> filterListByPath(/*map<string, MSFSObject> src,*/ QString path){
 
-    //log(" filterListByPath sent "+path);
-//    json comm;
-//    comm["command"] = "get_dir_list";
-//    comm["params"]["socket"] = workSocket;
-//    comm["params"]["provider"] = workProvider;
-//    comm["params"]["path"] = workPath;
-//    comm["params"]["mount"] = mountPoint;
-//    comm["params"]["dirPath"] = path;
-
-//    string reply = sendCommand_sync(comm) ;
-//    json jsonFileList = json::parse( reply );
-
-//    log(" filterListByPath receive "+reply);
-
     QHash<QString, MSFSObject> fl;
 
         for(QHash<QString, MSFSObject>::iterator i = CC_FuseFS::Instance()->providerObject->syncFileList.begin(); i != CC_FuseFS::Instance()->providerObject->syncFileList.end(); i++){
 
-            if(path == i.value().path){
+            if((path == i.value().path) && (i.value().state != MSFSObject::ObjectState::DeleteLocal)){
 
                 fl.insert(i.key(),i.value());
 
             }
-
-//            MSFSObject obj = convertJsonToFS_remote(i.value());
-//            json jo=i.value();
-//            obj.state               = jo["state"];
-//            obj.path                = jo["path"];
-//            obj.fileName            = jo["fileName"];
-//            obj.refCount            = -1;
-
-//            //obj.remote.data         = jo["remote"]["data"];
-//            obj.remote.exist        = true;
-//            obj.remote.fileSize     = jo["remote"]["fileSize"];
-//            obj.remote.md5Hash      = jo["remote"]["md5Hash"];
-//            obj.remote.modifiedDate = jo["remote"]["modifiedDate"];
-//            obj.remote.objectType   = jo["remote"]["objectType"];
-
-
-            //fl.insert(std::make_pair(i.key(),obj));
-
-
-
         }
 
     return fl;
-
-//    map<string, MSFSObject>::iterator i=src.begin();
-//    map<string,MSFSObject> out;
-
-//    for(;i != src.end(); i++){
-
-//        MSFSObject o=i->second;
-//        if(o.path == path){
-//            out.insert(std::make_pair(i->first,i->second));
-//        }
-//    }
-
-//    return out;
-
 }
 
 
@@ -473,7 +425,7 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
 
     (void) offset;
     (void) fi;
-    log("CALLBACK readdir "/*+string(path)*/);
+    log("CALLBACK readdir "+QString(path));
 
 
 
@@ -490,6 +442,8 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
 
 
     QHash<QString, MSFSObject> dl= filterListByPath( /*fileList,*/ QString(m_path));
+
+    log("CALLBACK readdir  COUNT OF DIR ENT IS "+QString::number(dl.size()));
 
     if(  dl.size() != 0 ){
 
@@ -647,6 +601,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
     QHash<QString, MSFSObject>::iterator i= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(path));
 
     MSFSObject o;
+    int fullSize;
 
     if( i != CC_FuseFS::Instance()->providerObject->syncFileList.end()){
 
@@ -656,13 +611,22 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
         return -1;
     }
 
-    int fullSize = o.remote.fileSize;
+
+    if( (o.state == MSFSObject::ObjectState::NewLocal)  || (o.state == MSFSObject::ObjectState::ChangedLocal) ){
+
+        fullSize = o.local.fileSize;
+    }
+    else{
+        fullSize = o.remote.fileSize;
+    }
+
+
 
     QString fname = QString("/tmp/")+tempDirName+QString(path);
     log("READ_CALLBACK for "+fname);
 
     struct stat buffer;
-    if(stat (fname.toStdString().c_str(), &buffer) == 0){//file exists in cache
+    if(stat(fname.toStdString().c_str(), &buffer) == 0){//file exists in cache
 
 //        // get real size of file
 //        FILE* r_f=fopen(fname.c_str(),"rb");
@@ -894,8 +858,8 @@ static int write_callback(const char *path, const char *buf, size_t size, off_t 
 
         MSFSObject o = i.value();
 
-        o.remote.fileSize=buffer.st_size;
-        o.state = MSFSObject::ObjectState::ChangedLocal;
+        i.value().remote.fileSize=buffer.st_size;
+        i.value().state = MSFSObject::ObjectState::ChangedLocal;
     }
 
     return res;
@@ -953,6 +917,13 @@ static int xmp_mknod(const char *path, mode_t mode, dev_t rdev){
     QString fname = QString("/tmp/")+tempDirName+QString(path);
     QString insname=QString(path);
 
+    QHash<QString, MSFSObject>::iterator i= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(path));
+
+    if( i != CC_FuseFS::Instance()->providerObject->syncFileList.end()){
+
+        return -errno;
+    }
+
     log("CALLBACK mknod begin"+fname);
 
     int res = f_mknod(fname.toStdString().c_str());
@@ -962,11 +933,7 @@ static int xmp_mknod(const char *path, mode_t mode, dev_t rdev){
 
         QString td = QString("/tmp/")+tempDirName;
         QString ptf = fname.mid(0,fname.lastIndexOf("/"));
-        //ptf = ptf.substr(td.length());
 
-//        if(ptf.length() == 0){
-//            ptf = "/";
-//        }
 
         log("CALLBACK mknod failed. Try create dir"+ptf);
 
@@ -987,257 +954,68 @@ static int xmp_mknod(const char *path, mode_t mode, dev_t rdev){
     }
 
 
+    CC_FuseFS::Instance()->ccLib->readSingleLocalFile(CC_FuseFS::Instance()->providerObject,QString(path));
 
-//    log("CALLBACK mknod OK. ");
-
-//        MSFSObject obj;
-
-//        string td = string("/tmp/")+tempDirName;
-//        string ptf = fname.substr(0,fname.find_last_of("/"));
-//        ptf = ptf.substr(td.length());
-
-//        if(ptf.length() == 0){
-//            ptf = "/";
-//        }
-//        else{
-//            ptf = ptf
-//                    +"/";
-//        }
-
-//        json comm1;
-//        comm1["command"]="add_object";
-//        comm1["params"]["socket"]=workSocket;
-//        comm1["params"]["provider"]=workProvider;
-//        comm1["params"]["path"]=workPath;
-//        comm1["params"]["cachePath"]=fname;
-//        comm1["params"]["filePath"]=fname;
-
-//        sendCommand(comm1) ;
-
-////        string fnm=fname.substr(fname.find_last_of("/")+1);
-
-//////        obj.state               = jo["state"];
-////        obj.path                = ptf;
-////        obj.fileName            = fnm;
-////        obj.refCount            = 1;
-////        obj.remote.exist        = true;
-////        obj.remote.fileSize     = 0;
-////        obj.remote.modifiedDate = time(0);
-////        obj.remote.objectType   = MSRemoteFSObject::Type::file;
-////        obj.localCreated        = true;
-
-////        fileList.insert(std::make_pair(string(insname),obj));
-
-//        //log("CALLBACK mknod NEW CREATED "+ ptf+string(" - ")+fnm);
-
-//        json comm;
-//        comm["command"]="need_update";
-//        comm["params"]["socket"]=workSocket;
-//        comm["params"]["provider"]=workProvider;
-//        comm["params"]["path"]=workPath;
-//        comm["params"]["cachePath"]=fname;
-//        comm["params"]["filePath"]=string(path);
-
-//        sendCommand(comm) ;
-
-//        return 0;
-
-
+    return 0;
 }
 
 
 static int xmp_mkdir(const char *path, mode_t mode){
 
-//   // log("CALLBACK mkdir");
+    log("CALLBACK mkdir "+QString(path));
 
-//    string fname = string("/tmp/")+tempDirName+string(path);
-//    string insname=string(path);
+    QString fname = QString("/tmp/")+tempDirName+QString(path);
 
-//        int res = f_mkdir(fname.c_str());
-//        if(res == -1){
-//            return -errno;
-//        }
-//        else{
+    QHash<QString, MSFSObject>::iterator i= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(path));
 
-//            MSFSObject obj;
+    if( i != CC_FuseFS::Instance()->providerObject->syncFileList.end()){
 
-//            string td = string("/tmp/")+tempDirName;
-//            string ptf = fname.substr(0,fname.find_last_of("/"));
-//            ptf = ptf.substr(td.length());
+        return -errno;
+    }
 
-//            if(ptf.length() == 0){
-//                ptf = "/";
-//            }
-//            else{
-//                ptf = ptf +"/";
-//            }
+        int res = f_mkdir(fname);
+        if(res == -1){
+            return -errno;
+        }
+        else{
 
+            CC_FuseFS::Instance()->ccLib->readSingleLocalFile(CC_FuseFS::Instance()->providerObject,QString(path));
 
-//            json comm1;
-//            comm1["command"]="add_object";
-//            comm1["params"]["socket"]=workSocket;
-//            comm1["params"]["provider"]=workProvider;
-//            comm1["params"]["path"]=workPath;
-//            comm1["params"]["cachePath"]=fname;
-//            comm1["params"]["filePath"]=fname;
-
-//            sendCommand(comm1) ;
-
-////            string fnm=fname.substr(fname.find_last_of("/")+1);
-
-////    //        obj.state               = jo["state"];
-////            obj.path                = ptf;
-////            obj.fileName            = fnm;
-////            obj.refCount            = 1;
-////            obj.remote.exist        = true;
-////            obj.remote.fileSize     = 0;
-////            obj.remote.modifiedDate = time(0);
-////            obj.remote.objectType   = MSRemoteFSObject::Type::folder;
-
-////            fileList.insert(std::make_pair(string(insname),obj));
-
-//            //log("CALLBACK mkdir NEW CREATED "+ ptf+string(" - ")+fnm);
-
-
-//            json comm;
-//            comm["command"]="need_update";
-//            comm["params"]["socket"]=workSocket;
-//            comm["params"]["provider"]=workProvider;
-//            comm["params"]["path"]=workPath;
-//            comm["params"]["cachePath"]=fname;
-//            comm["params"]["filePath"]=string(path);
-
-//            sendCommand(comm) ;
-
-
-//            return 0;
-//        }
+            return 0;
+        }
 }
 
 
 static int xmp_unlink(const char *path){
 
-//   // log("CALLBACK unlink");
-//    string fname = string("/tmp/")+tempDirName+string(path);
-//    //map<string, MSFSObject>::iterator i= fileList.find(string(path));
+   // log("CALLBACK unlink");
+    QString fname = QString("/tmp/")+tempDirName+QString(path);
 
-//    int res = unlink(fname.c_str());
+    QHash<QString, MSFSObject>::iterator i= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(path));
 
+    int res = unlink(fname.toStdString().c_str());
 
+    //CC_FuseFS::Instance()->providerObject->syncFileList.remove(i.key());
 
-////        fileList.erase(i);
+    i.value().state = MSFSObject::ObjectState::DeleteLocal;
 
-//        json comm1;
-//        comm1["command"]="remove_object";
-//        comm1["params"]["socket"]=workSocket;
-//        comm1["params"]["provider"]=workProvider;
-//        comm1["params"]["path"]=workPath;
-//        comm1["params"]["cachePath"]=fname;
-//        comm1["params"]["filePath"]=path;
-
-//        sendCommand(comm1) ;
-
-
-//        json comm;
-//        comm["command"]="unlink";
-//        comm["params"]["socket"]=workSocket;
-//        comm["params"]["provider"]=workProvider;
-//        comm["params"]["path"]=workPath;
-//        comm["params"]["cachePath"]=fname;
-//        comm["params"]["filePath"]=string(path);
-
-//        sendCommand(comm) ;
-
-//        json comm2;
-//        comm2["command"]="need_update";
-//        comm2["params"]["socket"]=workSocket;
-//        comm2["params"]["provider"]=workProvider;
-//        comm2["params"]["path"]=workPath;
-//        comm2["params"]["cachePath"]=fname;
-//        comm2["params"]["filePath"]=string(path);
-
-//        sendCommand(comm2) ;
-
-
-//    return 0;
-
-
-
-
-////    if( i != fileList.end()){
-
-////        int res = unlink(fname.c_str());
-////        if(res == -1){
-////            return -errno;
-////        }
-////        else{
-////            fileList.erase(i);
-
-////            json comm;
-////            comm["command"]="get_content";
-////            comm["params"]["socket"]=workSocket;
-////            comm["params"]["provider"]=workProvider;
-////            comm["params"]["path"]=workPath;
-////            comm["params"]["cachePath"]=fname;
-////            comm["params"]["filePath"]=string(path);
-
-////            sendCommand(comm) ;
-
-////            return 0;
-////        }
-////    }
-
-////    return -errno;
+    return 0;
 }
 
 
 static int xmp_rmdir(const char *path){
 
 //    //log("CALLBACK: rmdir");
-//    string fname = string("/tmp/")+tempDirName+string(path);
-//    //map<string, MSFSObject>::iterator i= fileList.find(string(path));
+    QString fname = QString("/tmp/")+tempDirName+QString(path);
 
-//    int res = rmdir(fname.c_str());
-
+    QHash<QString, MSFSObject>::iterator i= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(path));
 
 
+    int res = rmdir(fname.toStdString().c_str());
 
+    i.value().state = MSFSObject::ObjectState::DeleteLocal;
 
-
-////        fileList.erase(i);
-
-//        json comm1;
-//        comm1["command"]="remove_object";
-//        comm1["params"]["socket"]=workSocket;
-//        comm1["params"]["provider"]=workProvider;
-//        comm1["params"]["path"]=workPath;
-//        comm1["params"]["cachePath"]=fname;
-//        comm1["params"]["filePath"]=path;
-
-//        sendCommand(comm1) ;
-
-//        json comm;
-//        comm["command"]="unlink";
-//        comm["params"]["socket"]=workSocket;
-//        comm["params"]["provider"]=workProvider;
-//        comm["params"]["path"]=workPath;
-//        comm["params"]["cachePath"]=fname;
-//        comm["params"]["filePath"]=string(path);
-
-//        sendCommand(comm) ;
-
-//        json comm2;
-//        comm2["command"]="need_update";
-//        comm2["params"]["socket"]=workSocket;
-//        comm2["params"]["provider"]=workProvider;
-//        comm2["params"]["path"]=workPath;
-//        comm2["params"]["cachePath"]=fname;
-//        comm2["params"]["filePath"]=string(path);
-
-//        sendCommand(comm2) ;
-
-//        return 0;
-
+    return 0;
 }
 
 
@@ -1250,71 +1028,41 @@ static int xmp_symlink(const char *from, const char *to){
 
 static int xmp_rename(const char *from, const char *to){
 
-//    log("CALLBACK rename");
-//    return -1;
-////    stat buffer;
 
-//    string fname_from = string("/tmp/")+tempDirName+string(from);
-//    string fname_to = string("/tmp/")+tempDirName+string(to);
+    return -1;
 
-
-
-//    int result= rename( fname_from.c_str() , fname_to.c_str() );
-//    if(result == 0){
-
-//        //map<string, MSFSObject>::iterator i= fileList.find(string(from));
-
-//        string td = string("/tmp/")+tempDirName;
-//        string ptf = fname_to.substr(0,fname_to.find_last_of("/"));
-//        ptf = ptf.substr(td.length());
-//        string fnm = fname_to.substr(fname_to.find_last_of("/")+1);
-
-//        if(ptf.length() == 0){
-//            ptf = "/";
-//        }
+#ifdef THIS_IS_STUB
+    QString fname_from = QString("/tmp/")+tempDirName+QString(from);
+    QString fname_to = QString("/tmp/")+tempDirName+QString(to);
 
 
-//        json comm1;
-//        comm1["command"]="add_object";
-//        comm1["params"]["socket"]=workSocket;
-//        comm1["params"]["provider"]=workProvider;
-//        comm1["params"]["path"]=workPath;
-//        comm1["params"]["cachePath"]=fname_to;
-//        comm1["params"]["filePath"]=fname_to;
+    QHash<QString, MSFSObject>::iterator i_to= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(to));
 
-//        sendCommand(comm1) ;
+    if( i_to != CC_FuseFS::Instance()->providerObject->syncFileList.end()){
 
+        return -errno; // name exists
+    }
 
-//        json comm2;
-//        comm2["command"]="remove_object";
-//        comm2["params"]["socket"]=workSocket;
-//        comm2["params"]["provider"]=workProvider;
-//        comm2["params"]["path"]=workPath;
-//        comm2["params"]["cachePath"]=fname_from;
-//        comm2["params"]["filePath"]=from;
+    QHash<QString, MSFSObject>::iterator i_from= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(from));
 
-//        sendCommand(comm2) ;
+    if((i_from.value().remote.objectType == MSRemoteFSObject::Type::folder) || (i_from.value().local.objectType == MSLocalFSObject::Type::folder)){
 
+    }
+    else{
 
-////        i->second.path = ptf;
-////        i->second.fileName = fnm;
+        CC_FuseFS::Instance()->providerObject->syncFileList.insert(QString(to),i_from.value());
+        i_to= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(to));
+        i_to.value().fileName = QFileInfo(to).fileName();
+        i_to.value().state = MSFSObject::ObjectState::NewLocal;
 
-//        json comm;
-//        comm["command"]="need_update";
-//        comm["params"]["socket"]=workSocket;
-//        comm["params"]["provider"]=workProvider;
-//        comm["params"]["path"]=workPath;
-//        comm["params"]["cachePath"]="";//fname;
-//        comm["params"]["filePath"]="";//string(path);
+        i_from.value().state = MSFSObject::ObjectState::DeleteLocal;
 
-//        sendCommand(comm) ;
+        rename( fname_from.toStdString().c_str() , fname_to.toStdString().c_str() );
 
-//        return 0;
-//    }
-//    else{
-//     return -1;
-//    }
+    }
 
+    return 0;
+#endif
 }
 
 
@@ -1754,7 +1502,21 @@ int main(int argc, char *argv[])
 //   ca.exec();
 //    return 0;
 
+       QString path="/trr/tre";
+       QStringList sp = path.split("/");
 
+       if( sp.size() > 2){
+           QString tp="";
+
+
+           for(int i = 1; i < sp.size(); i++){
+               tp+="/"+sp[i];
+
+           }
+       }
+       else{
+           int s=98;
+       }
 
     tokenPath = "/home/ms/QT/CloudCross/build/debug/TEST4";  // argv[3]
     mountPath = "/tmp/example"; // argv[4]

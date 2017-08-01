@@ -191,6 +191,28 @@ bool libFuseCC::readSingleLocalFile(MSCloudProvider *p,const QString &path){
 
     return p->readLocalSingle(path);
 
+//    QStringList sp = path.split("/");
+
+//    if( sp.size() > 2){
+
+//        QString tp="";
+
+
+//        for(int i = 1; i < sp.size(); i++){
+//            tp+="/"+sp[i];
+//            if(!p->readLocalSingle(tp)){
+//                return false;
+//            }
+//        }
+
+//        return true;
+//    }
+//    else{
+//        return p->readLocalSingle(path);
+//    }
+
+
+
 }
 
 //-----------------------------------------------------------------------------------------------
