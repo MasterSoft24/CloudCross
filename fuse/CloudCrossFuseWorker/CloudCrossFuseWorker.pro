@@ -45,8 +45,7 @@ SOURCES += main.cpp \
 #    ../../src/Dropbox/msdropbox.cpp \
 #    ../../src/YandexDisk/msyandexdisk.cpp \
 #    ../../src/MailRu/msmailru.cpp \
-    cc_fusefs.cpp \
-    cc_fuse.cpp
+    cc_fusefs.cpp
 
 
 LIBS+= -lfuse \
@@ -67,8 +66,7 @@ HEADERS += \
 #    ../../src/Dropbox/msdropbox.h \
 #    ../../src/YandexDisk/msyandexdisk.h \
 #    ../../src/MailRu/msmailru.h \
-    cc_fusefs.h \
-    cc_fuse.h
+    cc_fusefs.h
 
 
 

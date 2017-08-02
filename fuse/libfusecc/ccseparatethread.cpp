@@ -59,6 +59,19 @@ bool CCSeparateThread::command_getFileContent(){
 
 
 
+bool CCSeparateThread::command_doSync(){
+
+    qStdOut() << "FUCK FUCKING";
+    MSCloudProvider* cp = lpProviderObject;
+     lpFuseCC->readRemoteFileList(cp);
+     //qDebug() << QString::number((qlonglong)cp)<< " THR";
+    return true;
+
+
+}
+
+
+
 void CCSeparateThread::run(){
 
     if(this->commandToExecute == "get_remote_file_list"){
@@ -73,6 +86,12 @@ void CCSeparateThread::run(){
 
     }
 
+
+    if(this->commandToExecute == "sync"){
+
+        this->command_doSync();
+
+    }
 
     emit finished();
     return ;

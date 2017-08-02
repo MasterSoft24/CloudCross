@@ -28,6 +28,9 @@ private:
     bool command_getRemoteFileList();
     bool command_getFileContent();
 
+    bool command_doSync();
+
+
     void log(QString mes);
 
     static QCoreApplication* a;

@@ -1,6 +1,9 @@
 #include "cc_fusefs.h"
 
 
+void* onSyncTimer(void* p);
+
+
 CC_FuseFS* CC_FuseFS::_instance = NULL;
 QString CC_FuseFS::mountPath = "";
 QString CC_FuseFS::tokenPath = "";
@@ -8,15 +11,54 @@ ProviderType CC_FuseFS::provider = (ProviderType)0;
 QString CC_FuseFS::providerName = "";
 libFuseCC* CC_FuseFS::ccLib = NULL;
 MSCloudProvider* CC_FuseFS::providerObject = NULL;
+//std::thread CC_FuseFS::syncTimer = std::thread(CC_FuseFS::onSyncTimer);
+
+bool CC_FuseFS::fsBlocked =false;
+bool CC_FuseFS::updateSheduled = false;
+int CC_FuseFS::lastUpdateSheduled =0;
+//-------------------------------------------------------------------------
+
+void m_log(QString mes){
+
+    FILE* lf=fopen("/tmp/ccfw.log","a+");
+    if(lf != NULL){
+
+        time_t rawtime;
+        struct tm * timeinfo;
+        char buffer[80];
+
+        time (&rawtime);
+        timeinfo = localtime(&rawtime);
+
+        strftime(buffer,sizeof(buffer),"%T - ",timeinfo);
+
+        mes = QString(buffer)+"CC_FUSE_FS "+mes+" \n";
+        fputs(mes.toStdString().c_str(),lf);
+        fclose(lf);
+    }
+
+//    string ns="echo "+mes+" >> /tmp/ccfw.log ";
+//    system(ns.c_str());
+    return;
+}
+
 
 
 
 CC_FuseFS::CC_FuseFS(){
 
-
+//    this->fsBlocked =false;
+//    this->updateSheduled = false;
+//    this->lastUpdateSheduled =0;
+    //this->syncTimer = new QTimer();
+    //connect(CC_FuseFS::syncTimer,SIGNAL(timeout()),this,SLOT(onSyncTimer()));
+    //this->syncTimer->setInterval(30 * 1000);
+   // CC_FuseFS::Instance()->syncTimer= std::thread(CC_FuseFS::onSyncTimer);
+//    pthread_create(&(tid), NULL, &onSyncTimer, NULL);
 
 }
 
+//-------------------------------------------------------------------------
 
 void CC_FuseFS::log(QString mes){
 
@@ -42,56 +84,62 @@ void CC_FuseFS::log(QString mes){
     return;
 }
 
+//-------------------------------------------------------------------------
+
+void* onSyncTimer2(void* p){
+
+    //CC_FuseFS::Instance()->log("TIMER elapsed");
+
+    while(true){
+
+         usleep (1000 * 3000);
+
+         m_log("TIMER ticked");
+
+//        int ct = QDateTime::currentSecsSinceEpoch();
+
+//        if( (CC_FuseFS::updateSheduled) && (!CC_FuseFS::fsBlocked) && ((ct - CC_FuseFS::lastUpdateSheduled) > 20)  ){
+
+//            CC_FuseFS::fsBlocked = true;
+
+//            CC_FuseFS::Instance()->log("SYNC started");
+
+//            QMap<QString,QVariant> p;
+
+//            //CC_FuseFS::Instance()->ccLib->run(CC_FuseFS::Instance()->providerObject,"sync", p);
+
+//            CC_FuseFS::updateSheduled = false;
+//            CC_FuseFS::fsBlocked = false;
+//        }
+
+    }
+
+}
+
+//-------------------------------------------------------------------------
 
 CC_FuseFS* CC_FuseFS::Instance() {
     if(_instance == NULL) {
         _instance = new CC_FuseFS();
+
     }
     return _instance;
 }
 
 
+//-------------------------------------------------------------------------
 
+void CC_FuseFS::doSheduleUpdate(){
 
-int CC_FuseFS::Open(const char *path, fuse_file_info *fileInfo){
-
-    log("OPEN ENTERED ");
-//    QCoreApplication* ca;
-//    int argc = 1;
-//    char * argv[] = {"CC_FuseFS", NULL};
-    if (QCoreApplication::instance() == NULL){
-
-//        ca =new QCoreApplication(argc,argv);
-//        ca->exec();
-        log("APP INSTANCE NOT DEFINED");
-    }
-
-//    connect(this,SIGNAL(testSig()),this,SLOT(onTestSig()));
-
-//    emit testSig();
-    //QCoreApplication::processEvents();
-
-
-
-//    MSRequest *req = new MSRequest();
-//    req->setMethod("get");
-
-//    //req->addHeader("Authorization","Bearer "+this->access_token);
-
-//    req->download("https://mastersoft24.ru/img/applications.png","/tmp/qqwweerr");
-
-//    //QString c=req->readReplyText();
-
-//    log("OPEN EXITED");
-
-    return 0;
+    CC_FuseFS::Instance()->updateSheduled = true;
+    CC_FuseFS::Instance()->lastUpdateSheduled = QDateTime::currentSecsSinceEpoch();
 
 }
 
-void CC_FuseFS::onTestSig(){
+//-------------------------------------------------------------------------
 
-    log("TEST SIG RECIVED");
-}
+
+
 
 
 

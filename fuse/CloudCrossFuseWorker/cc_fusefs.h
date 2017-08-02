@@ -3,9 +3,13 @@
 
 
 
-
+#include<pthread.h>
+#include <unistd.h>
+//#include <chrono>
 
 #include <QObject>
+#include <QTimer>
+#include <QDateTime>
 
 #include "include/msrequest.h"
 
@@ -17,6 +21,10 @@
 class CC_FuseFS : public QObject
 {
      Q_OBJECT
+private:
+
+    //static std::thread syncTimer;
+    pthread_t tid;
 
 public:
     CC_FuseFS();
@@ -25,10 +33,12 @@ public:
 
     static CC_FuseFS *Instance();
 
+    static void doSheduleUpdate();
+
 
     void log(QString mes);
 
-    int Open(const char *path, struct fuse_file_info *fileInfo);
+
 
 
 public:
@@ -42,17 +52,20 @@ public:
     static libFuseCC* ccLib;
     static MSCloudProvider* providerObject;
 
+    static bool updateSheduled;
+    static int lastUpdateSheduled;
+    static bool fsBlocked;
 
 public slots:
 
-    void onTestSig();
+    //void *onSyncTimer(void *p);
 
 
 
 
 signals:
 
-    void testSig();
+
 };
 
 #endif // CC_FUSEFS_H
