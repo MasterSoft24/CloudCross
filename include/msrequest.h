@@ -50,6 +50,7 @@
 #include <QNetworkProxy>
 #include <QCoreApplication>
 #include <QProcess>
+#include <QPair>
 
 #ifdef CCROSS_LIB
 #include "QtCUrl.h"
@@ -98,6 +99,12 @@ public:
 
     void printDebugInfo_request(const QNetworkRequest &req);
     void printDebugInfo_response(QNetworkReply *reply);
+
+
+#ifdef CCROSS_LIB
+    QString toUrlEncoded(QString p);
+    static size_t readCallback(void *ptr, size_t size, size_t nmemb, void *stream);
+#endif
 
 
     QByteArray readReplyText();

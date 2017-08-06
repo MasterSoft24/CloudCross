@@ -117,6 +117,97 @@ void MSRequest::addHeader(const QByteArray &headerName, const QByteArray &header
 
 void MSRequest::methodCharger(QNetworkRequest req){
 
+#ifdef CCROSS_LIB
+
+    QtCUrl cUrl;
+    //cUrl.setTextCodec("cp-1251");
+
+    QStringList headers;
+
+    QtCUrl::Options opt;
+    opt[CURLOPT_URL] = toUrlEncoded(req.url().url());//QUrl("https://mastersoft24.ru/img/applications.png");// //(QUrl) *(this->url); //this->query->toString();;
+
+
+    if(this->requestMethod == "get"){
+
+        opt[CURLOPT_HTTPGET] = 1;
+        opt[CURLOPT_URL] = toUrlEncoded(req.url().toString());
+        // possibly may be needed add query params to url string
+    }
+
+    if(this->requestMethod == "post"){
+
+        opt[CURLOPT_POST] = 1;
+
+        QString qs = "";
+
+        if(this->query->queryItems().size() > 0){
+
+//            for(int i=0; i < this->query->queryItems().size();  i++){
+
+
+//                QPair<QString,QString> p = this->query->queryItems().at(i);
+//                qs += p.first+"="+p.second+"&";
+
+//            }
+
+//            qs = qs.left(qs.length()-1);
+
+            opt[CURLOPT_POSTFIELDS] = QUrl::toPercentEncoding(this->query->toString() ,QByteArray("/,,/,\\,?,:,@,&,=,+,$,#,-,_,.,!,~,*,',(,)")) ;;// qs ;
+            //qDebug() << qs;
+
+        }
+
+        if(!req.hasRawHeader("Content-Type")){
+
+            if(!this->notUseContentType){
+                headers << "Content-Type:    application/x-www-form-urlencoded";
+            }
+        }
+
+    }
+
+    opt[CURLOPT_FOLLOWLOCATION] = 1;
+    opt[CURLOPT_FAILONERROR] = 1;
+
+    if(req.rawHeaderList().size() > 0){
+
+
+        for(int i = 0; i < req.rawHeaderList().size(); i++){
+
+
+            QString ss= QString(req.rawHeaderList().at(i)) + QString(":  ") + req.rawHeader(req.rawHeaderList().at(i));
+            headers << ss;
+        }
+
+    }
+
+    opt[CURLOPT_HTTPHEADER] = headers;
+
+//    opt[CURLOPT_SSL_VERIFYPEER] = 0;
+//    opt[CURLOPT_SSL_VERIFYHOST] = 0;
+
+
+    cUrl.exec(opt);
+
+    if (cUrl.lastError().isOk()) {
+
+        this->replyError = QNetworkReply::NetworkError::NoError;
+        this->replyText = QByteArray(cUrl.buffer(), cUrl.buffer().size());
+
+    }
+    else {
+        this->replyError = QNetworkReply::NetworkError::ContentGoneError;
+        qDebug() << (QString("Error: %1\nBuffer: %2").arg(cUrl.lastError().text()).arg(cUrl.errorBuffer()));
+    }
+
+
+    return;
+
+#endif
+
+
+#ifndef CCROSS_LIB
     QNetworkReply* replySync=0;
 
     if(this->requestMethod=="get"){
@@ -156,6 +247,8 @@ void MSRequest::methodCharger(QNetworkRequest req){
     delete(replySync);
     //this->loop->exit(0);
     //loop.deleteLater();
+
+#endif
 }
 
 
@@ -217,6 +310,16 @@ void MSRequest::printDebugInfo_response(QNetworkReply *reply){
 }
 
 
+#ifdef CCROSS_LIB
+
+QString MSRequest::toUrlEncoded(QString p){
+
+
+    return QUrl::toPercentEncoding(p ,QByteArray("/,,/,\\,?,:,@,&,=,+,$,#,-,_,.,!,~,*,',(,)")) ;;// qs ;
+}
+
+#endif
+
 
 
 void MSRequest::methodCharger(QNetworkRequest req, const QString &path){
@@ -236,22 +339,44 @@ void MSRequest::methodCharger(QNetworkRequest req, const QString &path){
     QStringList headers;
 
     QtCUrl::Options opt;
-    opt[CURLOPT_URL] = req.url();//QUrl("https://mastersoft24.ru/img/applications.png");// //(QUrl) *(this->url); //this->query->toString();;
+    opt[CURLOPT_URL] = this->toUrlEncoded(req.url().url());//QUrl("https://mastersoft24.ru/img/applications.png");// //(QUrl) *(this->url); //this->query->toString();;
 
 
     if(this->requestMethod == "get"){
 
         opt[CURLOPT_HTTPGET] = true;
+        opt[CURLOPT_URL] = toUrlEncoded(req.url().toString());
         // possibly may be needed add query params to url string
     }
 
     if(this->requestMethod == "post"){
+        opt[CURLOPT_POST] = 1;
 
-        opt[CURLOPT_POST] = true;
+        QString qs = "";
 
-        opt[CURLOPT_POSTFIELDS] = this->query->toString() ;
+        if(this->query->queryItems().size() > 0){
 
-        headers << "Content-Type    application/x-www-form-urlencoded";
+//            for(int i=0; i < this->query->queryItems().size();  i++){
+
+
+//                QPair<QString,QString> p = this->query->queryItems().at(i);
+//                qs += p.first+"="+p.second+"&";
+
+//            }
+
+//            qs = qs.left(qs.length()-1);
+
+            opt[CURLOPT_POSTFIELDS] = QUrl::toPercentEncoding(this->query->toString() ,QByteArray("/,,/,\\,?,:,@,&,=,+,$,#,-,_,.,!,~,*,',(,)")) ;;// qs ;
+            //qDebug() << qs;
+
+        }
+
+        if(!req.hasRawHeader("Content-Type")){
+
+            if(!this->notUseContentType){
+                headers << "Content-Type:    application/x-www-form-urlencoded";
+            }
+        }
     }
 
     opt[CURLOPT_FOLLOWLOCATION] = 1;
@@ -259,9 +384,11 @@ void MSRequest::methodCharger(QNetworkRequest req, const QString &path){
 
     if(req.rawHeaderList().size() > 0){
 
-        for(QList<QByteArray>::iterator i = req.rawHeaderList().begin(); i != req.rawHeaderList().end(); i++){
+        for(int i = 0; i < req.rawHeaderList().size(); i++){
 
-            headers << *i;
+
+            QString ss= QString(req.rawHeaderList().at(i)) + QString(":  ") + req.rawHeader(req.rawHeaderList().at(i));
+            headers << ss;
         }
 
     }
@@ -281,10 +408,12 @@ void MSRequest::methodCharger(QNetworkRequest req, const QString &path){
 
     if (cUrl.lastError().isOk()) {
 
+        this->replyError = QNetworkReply::NetworkError::NoError;
         this->outFile->write(cUrl.buffer(), cUrl.buffer().size());
         this->outFile->close();
     }
     else {
+        this->replyError = QNetworkReply::NetworkError::ContentGoneError;
         qDebug() << (QString("Error: %1\nBuffer: %2").arg(cUrl.lastError().text()).arg(cUrl.errorBuffer()));
     }
 
@@ -332,6 +461,30 @@ void MSRequest::methodCharger(QNetworkRequest req, const QString &path){
 
 void MSRequest::raw_exec(const QString &reqestURL){
 
+#ifdef CCROSS_LIB
+
+    QtCUrl cUrl;
+    QtCUrl::Options opt;
+
+    opt[CURLOPT_URL] = toUrlEncoded(reqestURL);
+    opt[CURLOPT_FOLLOWLOCATION] = 1;
+    opt[CURLOPT_FAILONERROR] = 1;
+
+    cUrl.exec(opt);
+
+    if (cUrl.lastError().isOk()) {
+
+        this->replyError = QNetworkReply::NetworkError::NoError;
+        this->replyText = QByteArray(cUrl.buffer(), cUrl.buffer().size());
+
+    }
+    else {
+        this->replyError = QNetworkReply::NetworkError::ContentGoneError;
+        qDebug() << (QString("Error: %1\nBuffer: %2").arg(cUrl.lastError().text()).arg(cUrl.errorBuffer()));
+    }
+#endif
+
+#ifndef CCROSS_LIB
     QUrl r(reqestURL);
 
     QString s=QUrl::toPercentEncoding(r.path().toUtf8(),"(){}/","");
@@ -342,13 +495,71 @@ void MSRequest::raw_exec(const QString &reqestURL){
     this->query->setQuery(r.query());
     this->setMethod("get");
     this->exec();
+#endif
 }
 
 
 
 void MSRequest::post(const QByteArray &data){
 
+#ifdef CCROSS_LIB
 
+    QtCUrl cUrl;
+    QStringList headers;
+    QtCUrl::Options opt;
+
+    opt[CURLOPT_POST] = 1;
+
+    opt[CURLOPT_URL] = toUrlEncoded(this->url->url());
+
+    if(this->query->queryItems().size() > 0){
+
+        opt[CURLOPT_POSTFIELDS] = this->toUrlEncoded(this->query->toString());
+
+    }
+
+    if(!this->hasRawHeader("Content-Type")){
+
+        if(!this->notUseContentType){
+            headers << "Content-Type:    application/x-www-form-urlencoded";
+        }
+    }
+
+    if(this->rawHeaderList().size() > 0){
+
+
+        for(int i = 0; i < this->rawHeaderList().size(); i++){
+
+
+            QString ss= QString(this->rawHeaderList().at(i)) + QString(":  ") + this->rawHeader(this->rawHeaderList().at(i));
+            headers << ss;
+        }
+
+    }
+
+    opt[CURLOPT_HTTPHEADER] = headers;
+    opt[CURLOPT_FOLLOWLOCATION] = 1;
+    opt[CURLOPT_FAILONERROR] = 1;
+
+    opt[CURLOPT_POSTFIELDS] = data;
+    opt[CURLOPT_POSTFIELDSIZE] = data.size();
+
+    cUrl.exec(opt);
+
+    if (cUrl.lastError().isOk()) {
+
+        this->replyError = QNetworkReply::NetworkError::NoError;
+        this->replyText = QByteArray(cUrl.buffer(), cUrl.buffer().size());
+
+    }
+    else {
+        this->replyError = QNetworkReply::NetworkError::ContentGoneError;
+        qDebug() << (QString("Error: %1\nBuffer: %2").arg(cUrl.lastError().text()).arg(cUrl.errorBuffer()));
+    }
+
+#endif
+
+#ifndef CCROSS_LIB
     QNetworkReply* replySync;
 
     this->url->setQuery(*this->query);
@@ -363,6 +574,7 @@ void MSRequest::post(const QByteArray &data){
     delete(replySync);
     //this->loop->exit(0);
     //this->loop.deleteLater();
+#endif
 }
 
 
@@ -441,8 +653,37 @@ void MSRequest::download(const QString &url, const QString &path){
 
 
 void MSRequest::put(const QByteArray &data){
+#ifdef CCROSS_LIB
 
+    QtCUrl cUrl;
+    QStringList headers;
+    QtCUrl::Options opt;
 
+    opt[CURLOPT_URL] = toUrlEncoded(this->url->url());
+
+    opt[CURLOPT_CUSTOMREQUEST] = "PUT";
+    //opt[CURLOPT_UPLOAD] = 1;
+    //opt[CURLOPT_INFILESIZE_LARGE] = data.size();
+
+    opt[CURLOPT_POSTFIELDS] = data;
+    opt[CURLOPT_POSTFIELDSIZE] = data.size();
+
+    cUrl.exec(opt);
+
+    if (cUrl.lastError().isOk()) {
+
+        this->replyError = QNetworkReply::NetworkError::NoError;
+        this->replyText = QByteArray(cUrl.buffer(), cUrl.buffer().size());
+
+    }
+    else {
+        this->replyError = QNetworkReply::NetworkError::ContentGoneError;
+        qDebug() << (QString("Error: %1\nBuffer: %2").arg(cUrl.lastError().text()).arg(cUrl.errorBuffer()));
+    }
+
+#endif
+
+#ifndef CCROSS_LIB
     QNetworkReply* replySync;
 
     this->url->setQuery(*this->query);
@@ -457,11 +698,61 @@ void MSRequest::put(const QByteArray &data){
     delete(replySync);
     //this->loop->exit(0);
     //loop.deleteLater();
+
+#endif
+}
+
+
+size_t MSRequest::readCallback(void *ptr, size_t size, size_t nmemb, void *stream){
+//  size_t retcode;
+//  curl_off_t nread;
+
+//  /* in real-world cases, this would probably get this data differently
+//     as this fread() stuff is exactly what the library already would do
+//     by default internally */
+//  retcode = fread(ptr, size, nmemb, stream);
+
+//  nread = (curl_off_t)retcode;
+
+
+//  return retcode;
 }
 
 
 void MSRequest::put(QIODevice *data){
 
+#ifdef CCROSS_LIB
+
+    QtCUrl cUrl;
+    QStringList headers;
+    QtCUrl::Options opt;
+
+    opt[CURLOPT_URL] = toUrlEncoded(this->url->url());
+    opt[CURLOPT_READFUNCTION] = readCallback;
+    opt[CURLOPT_UPLOAD] = 1;
+    opt[CURLOPT_PUT] = 1;
+    opt[CURLOPT_INFILESIZE_LARGE] = data->size();
+    opt[CURLOPT_READDATA] = QVariant::fromValue(data);
+
+//    opt[CURLOPT_POSTFIELDS] = data;
+//    opt[CURLOPT_POSTFIELDSIZE] = data.size();
+
+    cUrl.exec(opt);
+
+    if (cUrl.lastError().isOk()) {
+
+        this->replyError = QNetworkReply::NetworkError::NoError;
+        this->replyText = QByteArray(cUrl.buffer(), cUrl.buffer().size());
+
+    }
+    else {
+        this->replyError = QNetworkReply::NetworkError::ContentGoneError;
+        qDebug() << (QString("Error: %1\nBuffer: %2").arg(cUrl.lastError().text()).arg(cUrl.errorBuffer()));
+    }
+
+#endif
+
+#ifndef CCROSS_LIB
     QNetworkReply* replySync;
 
     this->url->setQuery(*this->query);
@@ -476,12 +767,45 @@ void MSRequest::put(QIODevice *data){
     delete(replySync);
     //this->loop->exit(0);
     //loop.deleteLater();
+#endif
 }
 
 
 
 void MSRequest::deleteResource(){
 
+#ifdef CCROSS_LIB
+
+    QtCUrl cUrl;
+    QStringList headers;
+    QtCUrl::Options opt;
+
+    opt[CURLOPT_URL] = toUrlEncoded(this->url->url());
+
+    opt[CURLOPT_CUSTOMREQUEST] = "DELETE";
+    //opt[CURLOPT_UPLOAD] = 1;
+    //opt[CURLOPT_INFILESIZE_LARGE] = data.size();
+
+    opt[CURLOPT_POSTFIELDS] = this->toUrlEncoded(this->query->toString());
+    opt[CURLOPT_POSTFIELDSIZE] = this->toUrlEncoded(this->query->toString()).size();
+
+    cUrl.exec(opt);
+
+    if (cUrl.lastError().isOk()) {
+
+        this->replyError = QNetworkReply::NetworkError::NoError;
+        this->replyText = QByteArray(cUrl.buffer(), cUrl.buffer().size());
+
+    }
+    else {
+        this->replyError = QNetworkReply::NetworkError::ContentGoneError;
+        qDebug() << (QString("Error: %1\nBuffer: %2").arg(cUrl.lastError().text()).arg(cUrl.errorBuffer()));
+    }
+
+
+#endif
+
+#ifndef CCROSS_LIB
     QNetworkReply* replySync;
 
     this->url->setQuery(*this->query);
@@ -496,6 +820,8 @@ void MSRequest::deleteResource(){
     delete(replySync);
     //this->loop->exit(0);
     //loop.deleteLater();
+
+#endif
 }
 
 

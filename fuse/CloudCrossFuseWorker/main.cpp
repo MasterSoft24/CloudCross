@@ -83,6 +83,7 @@ static struct fuse_server {
 static  fuse_operations fuse_op;
 
 QString mountPath;
+QString cachePath;
 QString tokenPath;
 ProviderType provider;
 QString providerName;
@@ -111,8 +112,9 @@ void* onSyncTimer(void* p){
             CC_FuseFS::Instance()->log("SYNC started");
 
             QMap<QString,QVariant> p;
+            p["cachePath"] = cachePath;
 
-            //CC_FuseFS::Instance()->ccLib->run(CC_FuseFS::Instance()->providerObject,"sync", p);
+            CC_FuseFS::Instance()->ccLib->run(CC_FuseFS::Instance()->providerObject,"sync", p);
 
             CC_FuseFS::updateSheduled = false;
             CC_FuseFS::fsBlocked = false;
@@ -137,9 +139,12 @@ int f_mknod(const QString &path){
     int r= system(QString("touch \""+path+"\"").toStdString().c_str());
     if(r == 0){
 
+//        if(path.indexOf("/tmp/"+tempDirName) != 0){
+
          CC_FuseFS::Instance()->ccLib->readSingleLocalFile(CC_FuseFS::Instance()->providerObject,QString(path));
          QHash<QString, MSFSObject>::iterator i= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(path));
          i.value().state = MSFSObject::ObjectState::NewLocal;
+//        }
 
         return r;
     }
@@ -969,7 +974,8 @@ static int xmp_mknod(const char *path, mode_t mode, dev_t rdev){
 
     log("CALLBACK mknod begin"+fname);
 
-    int res = f_mknod(fname.toStdString().c_str());
+    int res = f_mknod(fname);
+//    int res = f_mknod(QString(path));
 
     if(res == -1){
 
@@ -987,6 +993,7 @@ static int xmp_mknod(const char *path, mode_t mode, dev_t rdev){
         }
         else{
             res = f_mknod(fname);
+//            res = f_mknod(QString(path));
             if(res == -1){
                 log("CALLBACK mknod  failed again.");
                 return -errno;
@@ -1420,6 +1427,8 @@ int main(int argc, char *argv[])
 
 
     tempDirName="TESTING_TEMPORARY";//string(argv[1])+string("_")+getTempName();
+
+    cachePath = "/tmp/"+tempDirName;
 
     mkdir(QString("/tmp/"+tempDirName).toStdString().c_str(),0777);
 

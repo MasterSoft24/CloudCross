@@ -61,9 +61,34 @@ bool CCSeparateThread::command_getFileContent(){
 
 bool CCSeparateThread::command_doSync(){
 
-    qStdOut() << "FUCK FUCKING";
+    QString cachePath = commandParameters["cachePath"].toString();
+
     MSCloudProvider* cp = lpProviderObject;
-     lpFuseCC->readRemoteFileList(cp);
+
+    QHash<QString,MSFSObject> back = cp->syncFileList;
+    QHash<QString,MSFSObject> work;// = cp->syncFileList;
+
+
+    QHash<QString,MSFSObject>::iterator i = cp->syncFileList.begin();
+
+    for(i ;i != cp->syncFileList.end();i++){
+
+        if( ((i.value().state == MSFSObject::ObjectState::ChangedLocal) ||
+            (i.value().state == MSFSObject::ObjectState::NewLocal) ||
+            (i.value().state == MSFSObject::ObjectState::DeleteLocal)) &&
+            (i.key().indexOf(cachePath) != 0)){
+
+            work.insert(i.key(),i.value());
+        }
+
+    }
+
+    cp->setFlag("dryRun",true);
+    cp->dryRun = true;
+    cp->syncFileList = work;
+    cp->doSync();
+
+     //lpFuseCC->readRemoteFileList(cp);
      //qDebug() << QString::number((qlonglong)cp)<< " THR";
     return true;
 
