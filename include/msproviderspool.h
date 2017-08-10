@@ -76,6 +76,7 @@ public:
 
     QString currentPath;// directory where program was run
     QString workPath;// path set with -p option
+    QString credentialsPath;
 
     MSCloudProvider::SyncStrategy strategy; // sync strategy
 

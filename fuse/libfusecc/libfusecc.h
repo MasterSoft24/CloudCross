@@ -29,8 +29,8 @@ public:
     bool getProviderInstance(const QString &providerName, MSCloudProvider** lpProvider, const QString &workPath);
 
     bool readRemoteFileList(MSCloudProvider* p);
-    bool readLocalFileList(MSCloudProvider* p);
-    bool readSingleLocalFile(MSCloudProvider* p, const QString &path);
+    bool readLocalFileList(MSCloudProvider* p, const QString workPath);
+    bool readSingleLocalFile(MSCloudProvider* p, const QString &pathToFile, const QString workPath);
 
     bool readFileContent(MSCloudProvider* p, const QString &destPath, MSFSObject obj);
 
@@ -39,6 +39,8 @@ public:
 
     void runInSeparateThread(MSCloudProvider* providerInstance,const QString command, const QMap<QString,QVariant> parms);
     void run(MSCloudProvider* providerInstance,const QString command, const QMap<QString,QVariant> parms);
+
+    void clearLocalPartOfSyncFileList(MSCloudProvider *providerInstance);
 
 private:
 

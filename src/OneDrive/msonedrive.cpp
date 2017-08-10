@@ -375,7 +375,8 @@ bool MSOneDrive::remote_file_makeFolder(MSFSObject *object){
     }
     else{
 
-        req->setRequestUrl("https://api.onedrive.com/v1.0/drive/root:/"+object->path+":/children");
+        //req->setRequestUrl("https://api.onedrive.com/v1.0/drive/root:/"+object->path+":/children");
+        req->setRequestUrl("https://api.onedrive.com/v1.0/drive/root:"+object->path+":/children");
     }
 
     req->addHeader("Authorization",                     "Bearer "+this->access_token);
@@ -651,7 +652,7 @@ bool MSOneDrive::loadTokenFile(const QString &path){
 
 void MSOneDrive::loadStateFile(){
 
-    QFile key(this->workPath+"/"+this->stateFileName);
+    QFile key(this->credentialsPath+"/"+this->stateFileName);
 
     if(!key.open(QIODevice::ReadOnly))
     {
@@ -689,7 +690,7 @@ void MSOneDrive::saveStateFile(){
     jso.insert("last_sync",jts);
     state.setObject(jso);
 
-    QFile key(this->workPath+"/"+this->stateFileName);
+    QFile key(this->credentialsPath+"/"+this->stateFileName);
     key.open(QIODevice::WriteOnly | QIODevice::Text);
     QTextStream outk(&key);
     outk << state.toJson();

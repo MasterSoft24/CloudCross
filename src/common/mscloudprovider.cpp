@@ -56,6 +56,7 @@ MSCloudProvider::MSCloudProvider(QObject *parent)
     this->proxyServer=0;
 }
 
+
 bool MSCloudProvider::setProxyServer(const QString &type, const QString &proxy)
 {
     QStringList pa=proxy.split(':');
@@ -323,6 +324,7 @@ QString MSCloudProvider::getOption(const QString &optionName){
         return QString();
     }
 }
+
 
 
 bool MSCloudProvider::local_writeFileContent(const QString &filePath, MSRequest* req){

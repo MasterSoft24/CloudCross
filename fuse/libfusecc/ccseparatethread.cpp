@@ -61,34 +61,54 @@ bool CCSeparateThread::command_getFileContent(){
 
 bool CCSeparateThread::command_doSync(){
 
+
     QString cachePath = commandParameters["cachePath"].toString();
 
     MSCloudProvider* cp = lpProviderObject;
 
-    QHash<QString,MSFSObject> back = cp->syncFileList;
     QHash<QString,MSFSObject> work;// = cp->syncFileList;
 
 
     QHash<QString,MSFSObject>::iterator i = cp->syncFileList.begin();
 
-    for(i ;i != cp->syncFileList.end();i++){
+    for(;i != cp->syncFileList.end();i++){
 
         if( ((i.value().state == MSFSObject::ObjectState::ChangedLocal) ||
             (i.value().state == MSFSObject::ObjectState::NewLocal) ||
             (i.value().state == MSFSObject::ObjectState::DeleteLocal)) &&
             (i.key().indexOf(cachePath) != 0)){
 
+            // hack fo correcting a object state
+            if(i.value().state != MSFSObject::ObjectState::DeleteLocal){
+                if(i.value().remote.exist == false){
+                    i.value().state = MSFSObject::ObjectState::NewLocal;
+                }
+                else{
+                    i.value().state = MSFSObject::ObjectState::ChangedLocal;
+                }
+            }
+
+
+
+
             work.insert(i.key(),i.value());
+            i.value().state = MSFSObject::ObjectState::Sync;
         }
 
     }
 
-    cp->setFlag("dryRun",true);
-    cp->dryRun = true;
+//    cp->setFlag("dryRun",true);
+//    cp->dryRun = true;
+    QHash<QString,MSFSObject> back = cp->syncFileList;
     cp->syncFileList = work;
     cp->doSync();
 
-     //lpFuseCC->readRemoteFileList(cp);
+    //cp->syncFileList = back;
+
+     lpFuseCC->readRemoteFileList(cp);
+     lpFuseCC->readLocalFileList(cp,cachePath);
+
+     qStdOut()<< "Syncing was ended"<<endl;
      //qDebug() << QString::number((qlonglong)cp)<< " THR";
     return true;
 

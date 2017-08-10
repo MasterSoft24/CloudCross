@@ -32,6 +32,7 @@ bool libFuseCC::getProviderInstance(ProviderType p, MSCloudProvider **lpProvider
         *lpProvider = new MSGoogleDrive();
 
         (*lpProvider)->workPath = workPath;
+        (*lpProvider)->credentialsPath = workPath;
 
 
         if(! (*lpProvider)->loadTokenFile(workPath)){
@@ -54,6 +55,7 @@ bool libFuseCC::getProviderInstance(ProviderType p, MSCloudProvider **lpProvider
         (*lpProvider) = new MSYandexDisk();
 
         (*lpProvider)->workPath = workPath;
+        (*lpProvider)->credentialsPath = workPath;
 
         if(! (*lpProvider)->loadTokenFile(workPath)){
             return false;
@@ -74,6 +76,7 @@ bool libFuseCC::getProviderInstance(ProviderType p, MSCloudProvider **lpProvider
         (*lpProvider) = new MSMailRu();
 
         (*lpProvider)->workPath = workPath;
+        (*lpProvider)->credentialsPath = workPath;
 
         if(! (*lpProvider)->loadTokenFile(workPath)){
             return false;
@@ -95,6 +98,8 @@ bool libFuseCC::getProviderInstance(ProviderType p, MSCloudProvider **lpProvider
         (*lpProvider) = new MSOneDrive();
 
         (*lpProvider)->workPath = workPath;
+        (*lpProvider)->credentialsPath = workPath;
+
 
         if(! (*lpProvider)->loadTokenFile(workPath)){
             return false;
@@ -116,6 +121,7 @@ bool libFuseCC::getProviderInstance(ProviderType p, MSCloudProvider **lpProvider
         (*lpProvider) = new MSDropbox();
 
         (*lpProvider)->workPath = workPath;
+        (*lpProvider)->credentialsPath = workPath;
 
         if(! (*lpProvider)->loadTokenFile(workPath)){
             return false;
@@ -177,42 +183,28 @@ bool libFuseCC::readRemoteFileList(MSCloudProvider *p){
 
 //-----------------------------------------------------------------------------------------------
 
-bool libFuseCC::readLocalFileList(MSCloudProvider *p){
+bool libFuseCC::readLocalFileList(MSCloudProvider *p, const QString workPath){
 
-    return p->readLocal(p->workPath);
+    QString back = p->workPath;
 
+    bool r = p->readLocal(workPath);
+
+    p->workPath = back;
+
+    return r;
 }
 
 
 //-----------------------------------------------------------------------------------------------
 
 
-bool libFuseCC::readSingleLocalFile(MSCloudProvider *p,const QString &path){
+bool libFuseCC::readSingleLocalFile(MSCloudProvider *p,const QString &pathToFile, const QString workPath){
 
-    return p->readLocalSingle(path);
-
-//    QStringList sp = path.split("/");
-
-//    if( sp.size() > 2){
-
-//        QString tp="";
-
-
-//        for(int i = 1; i < sp.size(); i++){
-//            tp+="/"+sp[i];
-//            if(!p->readLocalSingle(tp)){
-//                return false;
-//            }
-//        }
-
-//        return true;
-//    }
-//    else{
-//        return p->readLocalSingle(path);
-//    }
-
-
-
+    QString back = p->workPath;
+    p->workPath = workPath;
+    bool r = p->readLocalSingle(pathToFile);
+    p->workPath = back;
+    return p;
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -279,6 +271,28 @@ void libFuseCC::run(MSCloudProvider *providerInstance, const QString command, co
     thread->run();
     delete(thread);
 }
+
+//-----------------------------------------------------------------------------------------------
+
+
+void libFuseCC::clearLocalPartOfSyncFileList(MSCloudProvider *providerInstance){
+
+    QHash<QString,MSFSObject>::iterator i = providerInstance->syncFileList.begin();
+    MSLocalFSObject empty;
+    QHash<QString,MSFSObject> newList;
+
+    for(;i != providerInstance->syncFileList.end();i++){
+
+        if((i.value().remote.exist) && (i.value().state != MSFSObject::ObjectState::DeleteLocal)){
+            i.value().local = empty;
+            newList.insert(i.key(),i.value());
+        }
+
+    }
+    providerInstance->syncFileList = newList;
+}
+
+//-----------------------------------------------------------------------------------------------
 
 
 

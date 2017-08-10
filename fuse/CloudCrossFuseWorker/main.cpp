@@ -94,6 +94,7 @@ pthread_t tid;
 
 QString tempDirName;
 
+// ----------------------------------------------------------------
 
 void* onSyncTimer(void* p){
 
@@ -101,7 +102,7 @@ void* onSyncTimer(void* p){
 
         sleep(5);
 
-         log("TIMER ticked");
+
 
         int ct = QDateTime::currentSecsSinceEpoch();
 
@@ -114,10 +115,21 @@ void* onSyncTimer(void* p){
             QMap<QString,QVariant> p;
             p["cachePath"] = cachePath;
 
-            CC_FuseFS::Instance()->ccLib->run(CC_FuseFS::Instance()->providerObject,"sync", p);
+            // Get a copy of work object to pass it to the sync process. For read-only accesibility to mounted directory during sunc process working.
+            MSCloudProvider* cp_c;
+            CC_FuseFS::Instance()->ccLib->getProviderInstance(CC_FuseFS::provider, (MSCloudProvider**)&(cp_c), CC_FuseFS::tokenPath);
+            cp_c->syncFileList = CC_FuseFS::Instance()->providerObject->syncFileList;
+            cp_c->flags = CC_FuseFS::Instance()->providerObject->flags;
+            cp_c->token = CC_FuseFS::Instance()->providerObject->token;
+            cp_c->workPath = CC_FuseFS::Instance()->providerObject->workPath;
+            cp_c->credentialsPath = CC_FuseFS::Instance()->providerObject->credentialsPath;
+
+//            CC_FuseFS::Instance()->ccLib->run(CC_FuseFS::Instance()->providerObject,"sync", p);
+            CC_FuseFS::Instance()->ccLib->run(cp_c,"sync", p);
 
             CC_FuseFS::updateSheduled = false;
             CC_FuseFS::fsBlocked = false;
+            delete(cp_c);
         }
 
     }
@@ -135,16 +147,22 @@ int readFileContent(char* path,char* buf,int size, int offset){
 // ----------------------------------------------------------------
 
 int f_mknod(const QString &path){
-
+    QString f_path;
     int r= system(QString("touch \""+path+"\"").toStdString().c_str());
     if(r == 0){
 
-//        if(path.indexOf("/tmp/"+tempDirName) != 0){
+        if(path.indexOf(cachePath) == 0){
+            f_path = QString(path).remove(0,cachePath.length());
+        }
+        else{
+            f_path = path;
+        }
 
-         CC_FuseFS::Instance()->ccLib->readSingleLocalFile(CC_FuseFS::Instance()->providerObject,QString(path));
-         QHash<QString, MSFSObject>::iterator i= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(path));
+
+         CC_FuseFS::Instance()->ccLib->readSingleLocalFile(CC_FuseFS::Instance()->providerObject,QString(path),cachePath);
+         QHash<QString, MSFSObject>::iterator i= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(f_path));
          i.value().state = MSFSObject::ObjectState::NewLocal;
-//        }
+
 
         return r;
     }
@@ -154,13 +172,23 @@ int f_mknod(const QString &path){
 }
 
 
-int f_mkdir(const QString &path){
+// ----------------------------------------------------------------
 
+
+int f_mkdir(const QString &path){
+    QString f_path;
     int r= system(QString("mkdir -p \""+path+"\"").toStdString().c_str());
     if(r == 0){
 
-        CC_FuseFS::Instance()->ccLib->readSingleLocalFile(CC_FuseFS::Instance()->providerObject,QString(path));
-        QHash<QString, MSFSObject>::iterator i= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(path));
+        if(path.indexOf(cachePath) == 0){
+            f_path = QString(path).remove(0,cachePath.length());
+        }
+        else{
+            f_path = path;
+        }
+
+        CC_FuseFS::Instance()->ccLib->readSingleLocalFile(CC_FuseFS::Instance()->providerObject,QString(path),cachePath);
+        QHash<QString, MSFSObject>::iterator i= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(f_path));
         i.value().state = MSFSObject::ObjectState::NewLocal;
 
         return r;
@@ -169,6 +197,43 @@ int f_mkdir(const QString &path){
         return -1;
     }
 }
+
+// ----------------------------------------------------------------
+
+int f_rmdir(const QString &path){
+
+    QString f_path;
+    QDir d(path);
+
+    if(d.exists()){
+        bool r = d.removeRecursively();
+
+        CC_FuseFS::Instance()->ccLib->clearLocalPartOfSyncFileList(CC_FuseFS::Instance()->providerObject);
+        CC_FuseFS::Instance()->ccLib->readLocalFileList(CC_FuseFS::Instance()->providerObject,cachePath);
+        return 0;
+    }
+
+
+    //int r= system(QString("rm -rf \""+path+"\"").toStdString().c_str());
+
+    else{
+        f_path = QString(path).remove(0,cachePath.length());
+
+        QHash<QString, MSFSObject>::iterator i= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(f_path));
+        if( i  != CC_FuseFS::Instance()->providerObject->syncFileList.end() ){
+
+            i.value().state = MSFSObject::ObjectState::DeleteLocal;
+            return 0;
+        }
+        else{
+            return -1;
+        }
+
+
+
+    }
+}
+
 
 // ----------------------------------------------------------------
 
@@ -347,7 +412,13 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
 
             }
 
-            if( (i.value().state == MSFSObject::ObjectState::NewLocal) || (i.value().state == MSFSObject::ObjectState::ChangedLocal)){
+            if(stat(fname.toStdString().c_str(), stbuf) == 0){// if it was localy created but already synced
+
+                return 0;
+            }
+
+            if( (i.value().state == MSFSObject::ObjectState::NewLocal) ||
+                (i.value().state == MSFSObject::ObjectState::ChangedLocal)){
 
                 int res;
                 res = stat(fname.toStdString().c_str(), stbuf);
@@ -644,7 +715,7 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
 
 static int read_callback(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi){
 
-    if(CC_FuseFS::Instance()->fsBlocked) return -1; // block FS when sync process worked
+    //if(CC_FuseFS::Instance()->fsBlocked) return -1; // block FS when sync process worked
 
     QHash<QString, MSFSObject>::iterator i= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(path));
 
@@ -1072,16 +1143,18 @@ static int xmp_rmdir(const char *path){
 //    //log("CALLBACK: rmdir");
     QString fname = QString("/tmp/")+tempDirName+QString(path);
 
-    QHash<QString, MSFSObject>::iterator i= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(path));
+    int r = f_rmdir(fname);
+
+//    QHash<QString, MSFSObject>::iterator i= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(path));
 
 
-    int res = rmdir(fname.toStdString().c_str());
+//    int res = rmdir(fname.toStdString().c_str());
 
-    i.value().state = MSFSObject::ObjectState::DeleteLocal;
+//    i.value().state = MSFSObject::ObjectState::DeleteLocal;
 
     CC_FuseFS::Instance()->doSheduleUpdate();
 
-    return 0;
+    return r;
 }
 
 
@@ -1368,7 +1441,10 @@ int main(int argc, char *argv[])
     tokenPath = "/home/ms/QT/CloudCross/build/debug/TEST4";  // argv[3]
     mountPath = "/tmp/example"; // argv[4]
 
-    provider = (ProviderType) QString("4").toInt(); //QString::number(argv[2])
+    tempDirName="TESTING_TEMPORARY";//string(argv[1])+string("_")+getTempName();
+    cachePath = "/tmp/"+tempDirName;
+
+    provider = (ProviderType) QString("0").toInt(); //QString::number(argv[2])
 
     //ccLib = new libFuseCC();
 
@@ -1381,6 +1457,7 @@ int main(int argc, char *argv[])
 
 
     bool lf_r = CC_FuseFS::Instance()->ccLib->getProviderInstance(CC_FuseFS::provider, (MSCloudProvider**)&(CC_FuseFS::providerObject), CC_FuseFS::tokenPath);
+    CC_FuseFS::providerObject->workPath = cachePath;
 
     lf_r = CC_FuseFS::Instance()->ccLib->readRemoteFileList(CC_FuseFS::providerObject);
 
@@ -1426,9 +1503,8 @@ int main(int argc, char *argv[])
     fuse_op.access = xmp_access;
 
 
-    tempDirName="TESTING_TEMPORARY";//string(argv[1])+string("_")+getTempName();
 
-    cachePath = "/tmp/"+tempDirName;
+
 
     mkdir(QString("/tmp/"+tempDirName).toStdString().c_str(),0777);
 

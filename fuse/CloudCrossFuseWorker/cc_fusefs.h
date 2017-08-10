@@ -47,6 +47,7 @@ public:
 
     static QString mountPath;
     static QString tokenPath;
+    //static QString credentialsPath;
     static ProviderType provider;
     static QString providerName;
     static libFuseCC* ccLib;

@@ -74,6 +74,7 @@ public:
 
     QString currentPath;// directory where program was run
     QString workPath;// path set with -p option
+    QString credentialsPath; // path to provider credentials. At common case this path is same as workPath
 
     enum CloudObjects{
                         Files=1,
@@ -88,6 +89,7 @@ public:
     };
 
     MSCloudProvider(QObject* parent=0);
+
 
     QString providerName;
 
@@ -181,6 +183,8 @@ public:
     virtual QString getReplyErrorString(const QString &body) = 0;
 
     virtual bool directUpload(const QString &url,const QString &remotePath) =0;
+
+
 
 
     // ======= REMOTE FUNCTIONS BLOCK =======

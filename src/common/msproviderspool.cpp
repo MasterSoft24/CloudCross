@@ -76,6 +76,7 @@ void MSProvidersPool::addProvider(MSCloudProvider *provider,bool statelessMode){
     if(cp==NULL){
         provider->currentPath=this->currentPath;
         provider->workPath=this->workPath;
+        provider->credentialsPath = this->workPath; // WARNING
         provider->strategy=this->strategy;
 
         QHash<QString,bool>::iterator it=this->flags.begin();
@@ -105,6 +106,7 @@ void MSProvidersPool::addProvider(MSCloudProvider *provider,bool statelessMode){
 void MSProvidersPool::getCurrentPath(){
     this->currentPath=QDir::currentPath();
     this->workPath=this->currentPath;
+    this->credentialsPath = this->workPath; // WARNING
 }
 
 
@@ -132,7 +134,8 @@ MSCloudProvider* MSProvidersPool::getProvider(const QString &providerName){
 void MSProvidersPool::saveTokenFile(const QString &providerName){
     MSCloudProvider* cp=this->getProvider(providerName);
     if(cp!=NULL){
-        cp->saveTokenFile(this->workPath);
+//        cp->saveTokenFile(this->workPath);
+        cp->saveTokenFile(this->credentialsPath);
 
     }
 }
@@ -141,7 +144,8 @@ void MSProvidersPool::saveTokenFile(const QString &providerName){
 bool MSProvidersPool::loadTokenFile(const QString &providerName){
     MSCloudProvider* cp=this->getProvider(providerName);
     if(cp!=NULL){
-        return cp->loadTokenFile(this->workPath);
+//        return cp->loadTokenFile(this->workPath);
+        return cp->loadTokenFile(this->credentialsPath);
 
     }
     return false;

@@ -7,6 +7,7 @@ void* onSyncTimer(void* p);
 CC_FuseFS* CC_FuseFS::_instance = NULL;
 QString CC_FuseFS::mountPath = "";
 QString CC_FuseFS::tokenPath = "";
+//QString CC_FuseFS::credentialsPath = "";
 ProviderType CC_FuseFS::provider = (ProviderType)0;
 QString CC_FuseFS::providerName = "";
 libFuseCC* CC_FuseFS::ccLib = NULL;

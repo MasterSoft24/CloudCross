@@ -212,7 +212,7 @@ bool MSGoogleDrive::loadTokenFile(const QString &path){
 
 void MSGoogleDrive::loadStateFile(){
 
-    QFile key(this->workPath+"/"+this->stateFileName);
+    QFile key(this->credentialsPath+"/"+this->stateFileName);
 
     if(!key.open(QIODevice::ReadOnly))
     {
@@ -253,7 +253,7 @@ void MSGoogleDrive::saveStateFile(){
     jso.insert("last_sync",jts);
     state.setObject(jso);
 
-    QFile key(this->workPath+"/"+this->stateFileName);
+    QFile key(this->credentialsPath+"/"+this->stateFileName);
     key.open(QIODevice::WriteOnly | QIODevice::Text);
     QTextStream outk(&key);
     outk << state.toJson();
@@ -2082,6 +2082,15 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
     // collect request data body
 
     QByteArray metaData;
+
+//    for(int r=0; r < req->query->queryItems().size();r++){
+
+//        metaData.append(QString("--"+bound+"\r\n").toLocal8Bit());
+//        metaData.append(QString("Content-Disposition: form-data; name=" + req->query->queryItems().at(r).first.toLocal8Bit() + "\r\n\r\n").toLocal8Bit());
+//        metaData.append(QString( req->query->queryItems().at(r).second.toLocal8Bit() +"\r\n").toLocal8Bit());
+//    }
+
+
     metaData.append(QString("--"+bound+"\r\n").toLocal8Bit());
     metaData.append(QString("Content-Type: application/json; charset=UTF-8\r\n\r\n").toLocal8Bit());
 
