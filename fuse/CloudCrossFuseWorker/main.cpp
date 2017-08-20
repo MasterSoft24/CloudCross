@@ -127,6 +127,10 @@ void* onSyncTimer(void* p){
 //            CC_FuseFS::Instance()->ccLib->run(CC_FuseFS::Instance()->providerObject,"sync", p);
             CC_FuseFS::Instance()->ccLib->run(cp_c,"sync", p);
 
+            // renew sync filelist in an instance of MSCloudProvider
+            CC_FuseFS::Instance()->providerObject->syncFileList.clear();
+            CC_FuseFS::Instance()->providerObject->syncFileList = cp_c->syncFileList;
+
             CC_FuseFS::updateSheduled = false;
             CC_FuseFS::fsBlocked = false;
             delete(cp_c);
@@ -202,21 +206,32 @@ int f_mkdir(const QString &path){
 
 int f_rmdir(const QString &path){
 
+//    QDir dir(path);
+//    QDir::Filters entryInfoList_flags=QDir::Files|QDir::Dirs |QDir::NoDotAndDotDot;
+
+//    QFileInfoList files = dir.entryInfoList(entryInfoList_flags);
+
+//    foreach(const QFileInfo &fi, files){
+
+
+//    }
+
+
     QString f_path;
     QDir d(path);
 
     if(d.exists()){
         bool r = d.removeRecursively();
 
-        CC_FuseFS::Instance()->ccLib->clearLocalPartOfSyncFileList(CC_FuseFS::Instance()->providerObject);
-        CC_FuseFS::Instance()->ccLib->readLocalFileList(CC_FuseFS::Instance()->providerObject,cachePath);
-        return 0;
+//        CC_FuseFS::Instance()->ccLib->clearLocalPartOfSyncFileList(CC_FuseFS::Instance()->providerObject);
+//        CC_FuseFS::Instance()->ccLib->readLocalFileList(CC_FuseFS::Instance()->providerObject,cachePath);
+//        return 0;
     }
 
 
     //int r= system(QString("rm -rf \""+path+"\"").toStdString().c_str());
 
-    else{
+//    else{
         f_path = QString(path).remove(0,cachePath.length());
 
         QHash<QString, MSFSObject>::iterator i= CC_FuseFS::Instance()->providerObject->syncFileList.find(QString(f_path));
@@ -231,7 +246,7 @@ int f_rmdir(const QString &path){
 
 
 
-    }
+//    }
 }
 
 
@@ -1140,6 +1155,7 @@ static int xmp_rmdir(const char *path){
 
     if(CC_FuseFS::Instance()->fsBlocked) return -1; // block FS when sync process worked
 
+
 //    //log("CALLBACK: rmdir");
     QString fname = QString("/tmp/")+tempDirName+QString(path);
 
@@ -1420,7 +1436,11 @@ int main(int argc, char *argv[])
     // argv[3] = path to credentials
     // argv[4] = mount point
 
-
+// 0 - Google
+// 1 - Dropbox
+// 2 - Yandex
+// 3 - Mail
+// 4 - OneDrive
 
    QCoreApplication ca(argc, argv);
 
@@ -1444,14 +1464,14 @@ int main(int argc, char *argv[])
     tempDirName="TESTING_TEMPORARY";//string(argv[1])+string("_")+getTempName();
     cachePath = "/tmp/"+tempDirName;
 
-    provider = (ProviderType) QString("0").toInt(); //QString::number(argv[2])
+
 
     //ccLib = new libFuseCC();
 
     CC_FuseFS::tokenPath = "/home/ms/QT/CloudCross/build/debug/TEST4";  // argv[3]
     CC_FuseFS::mountPath = "/tmp/example"; // argv[4]
 
-    CC_FuseFS::provider = (ProviderType) QString("4").toInt(); //QString::number(argv[2])
+    CC_FuseFS::provider = (ProviderType) QString("1").toInt(); //QString::number(argv[2])
 
     CC_FuseFS::Instance()->ccLib = new libFuseCC();
 

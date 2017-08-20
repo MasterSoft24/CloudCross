@@ -51,6 +51,7 @@
 #include <QCoreApplication>
 #include <QProcess>
 #include <QPair>
+#include <QHash>
 
 #ifdef CCROSS_LIB
 #include "QtCUrl.h"
@@ -68,14 +69,15 @@ public:
     ~MSRequest();
 
 //private:
-
+#ifndef ZCCROSS_LIB
     QUrl* url;
     QUrlQuery* query;
     QNetworkAccessManager* manager;
 
-    QString requestMethod; // get, post, put, post-multipart etc
-    QEventLoop* loop;
 
+    QEventLoop* loop;
+#endif
+    QString requestMethod; // get, post, put, post-multipart etc
     QFile* outFile;
     QDataStream* outFileStream;
 
@@ -102,8 +104,20 @@ public:
 
 
 #ifdef CCROSS_LIB
-    QString toUrlEncoded(QString p);
-    static size_t readCallback(void *ptr, size_t size, size_t nmemb, void *stream);
+    QString toUrlEncoded(const QString &p);
+    //static size_t readCallback(void *ptr, size_t size, size_t nmemb, void *stream);
+
+    QtCUrl cUrlObject;
+    QHash<QString,QString> queryItems;
+    QHash<QString,QString> requestHeaders;
+    QString requestURL;
+    QFile cookieJarFile;
+
+    // methods
+
+    void setCURLOptions(QByteArray payload=QByteArray());
+    void setCURLOptions(QIODevice* payloadPtr);
+
 #endif
 
 

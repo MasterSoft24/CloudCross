@@ -440,12 +440,12 @@ bool MSOneDrive::remote_file_trash(MSFSObject *object){
 
     if(object->path == "/"){
 
-        req->setRequestUrl("https://api.onedrive.com/v1.0/drive/root:/"+QUrl::toPercentEncoding(object->fileName));
+        req->setRequestUrl("https://api.onedrive.com/v1.0/drive/root:/"+(object->fileName));
 
     }
     else{
 
-        req->setRequestUrl("https://api.onedrive.com/v1.0/drive/root:"+QUrl::toPercentEncoding(object->path+object->fileName));
+        req->setRequestUrl("https://api.onedrive.com/v1.0/drive/root:"+(object->path+object->fileName));
     }
 
     req->addHeader("Authorization",                     "Bearer "+this->access_token);

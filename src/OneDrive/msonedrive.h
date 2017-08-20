@@ -42,7 +42,7 @@
 #include <utime.h>
 #include <sys/time.h>
 
-#define ONEDRIVE_MAX_FILESIZE  10000 //61865984
+#define ONEDRIVE_MAX_FILESIZE  100000 //61865984
 
 
 

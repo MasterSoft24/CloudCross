@@ -285,6 +285,7 @@ void libFuseCC::clearLocalPartOfSyncFileList(MSCloudProvider *providerInstance){
 
         if((i.value().remote.exist) && (i.value().state != MSFSObject::ObjectState::DeleteLocal)){
             i.value().local = empty;
+            i.value().state = MSFSObject::ObjectState::NewRemote;
             newList.insert(i.key(),i.value());
         }
 

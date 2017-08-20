@@ -31,6 +31,8 @@
 #include <QStringList>
 
 
+//#define QTCURL_DEBUG
+
 CURLcode curlGlobalInit() {
 	return curl_global_init(CURL_GLOBAL_ALL);
 }
@@ -107,7 +109,11 @@ QString QtCUrl::exec(Options& opt) {
 		return _textCodec->toUnicode(reply);
 	}
 
-	return reply;
+    return reply;
+}
+
+QString QtCUrl::exec(){
+    return this->exec(this->requestOptions);
 }
 
 
@@ -121,7 +127,7 @@ void QtCUrl::setOptions(Options& opt) {
 
 #ifdef QTCURL_DEBUG
 	curl_easy_setopt(_curl, CURLOPT_VERBOSE, 1);
-	curl_easy_setopt(_curl, CURLOPT_DEBUGFUNCTION, trace);
+    curl_easy_setopt(_curl, CURLOPT_DEBUGFUNCTION, trace);
 #endif
 
 	OptionsIterator i(defaults);
@@ -182,15 +188,35 @@ void QtCUrl::setOptions(Options& opt) {
 				if (typeName == "QtCUrl::WriterPtr") {
 					curl_easy_setopt(_curl, i.key(), value.value<WriterPtr>());
 				}
+                else if (typeName == "QtCUrl::ReaderPtr") {
+                    curl_easy_setopt(_curl, i.key(), value.value<ReaderPtr>());
+                }
 				else if (typeName == "std::string*") {
                     curl_easy_setopt(_curl, i.key(), value.value<std::string*>());
 				}
 				else if (typeName == "char*") {
 					curl_easy_setopt(_curl, i.key(), value.value<char*>());
 				}
+                else if (typeName == "void*") {
+                    curl_easy_setopt(_curl, i.key(), value.value<char*>());
+                }
+                else if (typeName == "QIODevice*") {
+                    curl_easy_setopt(_curl, i.key(), value.value<QIODevice*>());
+                }
+                else if (typeName == "qlonglong") {
+                    curl_easy_setopt(_curl, i.key(), value.value<qlonglong>());
+                }
 				else {
 					qDebug() << "[QtCUrl] Unsupported option type: " << typeName;
 				}
 		}
 	}
+}
+
+QString QtCUrl::escape(QString str){
+
+    QByteArray s = str.toLocal8Bit();
+    return QString(curl_easy_escape(_curl, s.toStdString().c_str(),s.size() ));
+
+
 }

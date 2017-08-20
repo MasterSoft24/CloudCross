@@ -438,7 +438,8 @@ bool MSYandexDisk::readRemote(const QString &currentPath){ //QString parentId,QS
 bool MSYandexDisk::_readRemote(const QString &rootPath){
 
 
-    return this->readRemote(rootPath);
+//    return this->readRemote(rootPath);
+    return this->readRemote("/");
 }
 
 
@@ -1497,7 +1498,12 @@ bool MSYandexDisk::remote_file_insert(MSFSObject *object){
 
     req->addHeader("Authorization",                     "OAuth "+this->access_token);
     req->addHeader("Content-Type",                      QString("application/json; charset=UTF-8"));
+#ifndef ZCCROSS_LIB
     req->addQueryItem("path",                           object->path+object->fileName);
+#else
+    req->addQueryItem("path",                           QString(object->path+object->fileName).replace("/","%2f"));
+#endif
+
     req->addQueryItem("overwrite",                           "true");
 
     req->exec();
@@ -1921,7 +1927,8 @@ bool MSYandexDisk::local_writeFileContent(const QString &filePath, const QString
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
-        exit(1);
+        //exit(1);
+        return false;
     }
 
 
@@ -1958,7 +1965,8 @@ bool MSYandexDisk::directUpload(const QString &url, const QString &remotePath){
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
-        exit(1);
+        //exit(1);
+        return false;
     }
 
     QFileInfo fileRemote(remotePath);
@@ -2019,7 +2027,8 @@ bool MSYandexDisk::directUpload(const QString &url, const QString &remotePath){
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
-        exit(1);
+       // exit(1);
+        return false;
     }
 
 
@@ -2051,7 +2060,8 @@ bool MSYandexDisk::directUpload(const QString &url, const QString &remotePath){
         //error file not found
         qStdOut()<<"Unable to open of "+filePath <<endl;
         delete(req);
-        exit(1);
+        //exit(1);
+        return false;
     }
 
 
@@ -2061,7 +2071,8 @@ bool MSYandexDisk::directUpload(const QString &url, const QString &remotePath){
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
-        exit(1);
+        //exit(1);
+        return false;
     }
 
 

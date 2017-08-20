@@ -681,12 +681,12 @@ bool MSDropbox::readLocal(const QString &path){
 
                 if(fi.isDir()){
                     fsObject->local.objectType=MSLocalFSObject::Type::folder;
-                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000;// /1000 added 20.08.17
                 }
                 else{
 
                     fsObject->local.objectType=MSLocalFSObject::Type::file;
-                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000;// /1000 added 20.08.17
 
                 }
 
@@ -719,12 +719,12 @@ bool MSDropbox::readLocal(const QString &path){
 
                 if(fi.isDir()){
                     fsObject.local.objectType=MSLocalFSObject::Type::folder;
-                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000;// /1000 added 20.08.17
                 }
                 else{
 
                     fsObject.local.objectType=MSLocalFSObject::Type::file;
-                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000;// /1000 added 20.08.17;
 
                 }
 
@@ -1470,7 +1470,8 @@ bool MSDropbox::remote_file_get(MSFSObject* object){
     req->setMethod("post");
 
     req->addHeader("Authorization","Bearer "+this->access_token);
-    req->addHeader("Dropbox-API-Arg","{\"path\": \""+id+"\"}");
+    req->addHeader("Dropbox-API-Arg","{\"path\":\""+id+"\"}");
+    req->addHeader("Content-Type",QByteArray()); // this line needed for requests with libcurl version of MSRequest
 
     QByteArray ba;
     req->post(ba);

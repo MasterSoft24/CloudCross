@@ -29,6 +29,7 @@
 #include <QVariant>
 #include <QLinkedList>
 #include <QByteArray>
+#include <QIODevice>
 class QTextCodec;
 
 
@@ -40,12 +41,23 @@ public:
 	typedef QHashIterator<CURLoption, QVariant> OptionsIterator;
     typedef int (*WriterPtr)(char*, size_t, size_t, std::string*);
 
+    // Changes for a CloudCross MSRequest class
+
+    typedef size_t (*ReaderPtr)(void*, size_t , size_t , void*);
+
+    Options requestOptions;
+
+    QString escape(QString str);
+
+
 	class Code {
 	public:
 		Code(CURLcode code = CURLE_OK): _code(code) {}
 		QString text() { return curl_easy_strerror(_code); }
 		inline CURLcode code() { return _code; }
 		inline bool isOk() { return _code == CURLE_OK; }
+
+
 
 	private:
 		CURLcode _code;
@@ -55,6 +67,8 @@ public:
 	virtual ~QtCUrl();
 
 	QString exec(Options& opt);
+    QString exec();
+
 	QByteArray buffer() const {
         return QByteArray(_buffer.data(), _buffer.size());
 	}
@@ -81,7 +95,10 @@ private:
 };
 
 Q_DECLARE_METATYPE(QtCUrl::WriterPtr)
+Q_DECLARE_METATYPE(QtCUrl::ReaderPtr)
 Q_DECLARE_METATYPE(std::string*)
 Q_DECLARE_METATYPE(char*)
+Q_DECLARE_METATYPE(void*)
+Q_DECLARE_METATYPE(QIODevice*)
 
 #endif // QTCURL_H

@@ -89,21 +89,34 @@ bool CCSeparateThread::command_doSync(){
             }
 
 
+            //QHash<QString,MSFSObject>::iterator p =  cp->syncFileList.find();
+
+            // try to get parent of current object
+            MSFSObject po=cp->filelist_getParentFSObject(i.value());
+            if( po.path != ""){
+                if( po.state != MSFSObject::ObjectState::NewLocal){
+
+                    po.state = MSFSObject::ObjectState::Sync;
+                }
+                work.insert(po.path+po.fileName,po);
+            }
 
 
             work.insert(i.key(),i.value());
-            i.value().state = MSFSObject::ObjectState::Sync;
+            //i.value().state = MSFSObject::ObjectState::Sync;
         }
 
     }
 
 //    cp->setFlag("dryRun",true);
 //    cp->dryRun = true;
-    QHash<QString,MSFSObject> back = cp->syncFileList;
+    //QHash<QString,MSFSObject> back = cp->syncFileList;
+
     cp->syncFileList = work;
     cp->doSync();
 
     //cp->syncFileList = back;
+    cp->syncFileList.clear();
 
      lpFuseCC->readRemoteFileList(cp);
      lpFuseCC->readLocalFileList(cp,cachePath);
