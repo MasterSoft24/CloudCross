@@ -44,12 +44,20 @@
 #include <utime.h>
 #include <sys/time.h>
 
+#ifdef CCROSS_LIB
+#define QNetworkCookieJar MSNetworkCookieJar
+//#define manager->cookieJar "getCookieJar"
+#endif
 #include <QNetworkCookieJar>
 
 class MSMailRu : public MSCloudProvider
 {
 public:
     MSMailRu();
+
+#ifdef CCROSS_LIB
+   QHash<QString,MSNetworkCookieJar*> cookieList;
+#endif
 
 
 

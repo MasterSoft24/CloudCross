@@ -1885,7 +1885,7 @@ bool MSGoogleDrive::remote_file_insert(MSFSObject *object){
         return true;
     }
 
-    QString bound="ccross-data";
+    QString bound="--ccross-data";
     MSFSObject po=this->filelist_getParentFSObject(*object);
     QString parentID="";
     if(po.path != ""){
@@ -1898,7 +1898,7 @@ bool MSGoogleDrive::remote_file_insert(MSFSObject *object){
     req->setMethod("post");
 
     req->addHeader("Authorization",                     "Bearer "+this->access_token);
-    req->addHeader("Content-Type",                      "multipart/related; boundary="+QString(bound).toLocal8Bit());
+    req->addHeader("Content-Type",                      "multipart/related; boundary="+QString("ccross-data").toLocal8Bit());
     req->addQueryItem("uploadType",                     "multipart");
 
     // document conversion support
@@ -1950,7 +1950,7 @@ bool MSGoogleDrive::remote_file_insert(MSFSObject *object){
     // collect request data body
 
     QByteArray metaData;
-    metaData.append(QString("--"+bound+"\r\n").toLocal8Bit());
+    metaData.append(QString(""+bound+"\r\n").toLocal8Bit());
     metaData.append(QString("Content-Type: application/json; charset=UTF-8\r\n\r\n").toLocal8Bit());
 
     //make file metadata in json representation
@@ -1978,11 +1978,28 @@ bool MSGoogleDrive::remote_file_insert(MSFSObject *object){
 
     //metaData.append(QString(QJsonDocument(metaJson).toJson()).toLocal8Bit());
     metaData.append((QJsonDocument(metaJson).toJson()));
-    metaData.append(QString("\r\n--"+bound+"\r\n").toLocal8Bit());
+    metaData.append(QString("\r\n"+bound+"\r\n").toLocal8Bit());
 
     QByteArray mediaData;
 
-    mediaData.append(QString("Content-Type: "+object->local.mimeType+"\r\n\r\n").toLocal8Bit());
+
+    // hack to avoid zerosize mime type (has effect in a fuse mode)
+    if(object->local.mimeType.contains("zerosize")){
+
+        QMimeDatabase db;
+        QMimeType type = db.mimeTypeForFile(this->workPath+object->path+object->fileName);
+        object->local.mimeType=type.name();
+        object->local.fileSize = object->remote.fileSize;//QFileInfo().size();
+
+        if(type.name().contains("text/")){
+
+            object->local.mimeType += "; charset=utf-8";
+        }
+    }
+
+    mediaData.append(QString("Content-Type: "+ object->local.mimeType +"\r\n\r\n").toLocal8Bit());
+//    mediaData.append(QString("Content-Type: application/octet-stream\r\n\r\n").toLocal8Bit());
+
 
     QString filePath=this->workPath+object->path+object->fileName;
 
@@ -1999,7 +2016,7 @@ bool MSGoogleDrive::remote_file_insert(MSFSObject *object){
     file.close();
 
 
-    mediaData.append(QString("\r\n--"+bound+"--").toLocal8Bit());
+    mediaData.append(QString("\r\n"+bound+"--").toLocal8Bit());
 
     req->addHeader("Content-Length",QString::number(metaData.length()+mediaData.length()).toLocal8Bit());
 

@@ -681,12 +681,12 @@ bool MSDropbox::readLocal(const QString &path){
 
                 if(fi.isDir()){
                     fsObject->local.objectType=MSLocalFSObject::Type::folder;
-                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000;// /1000 added 20.08.17
+                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000 * 1000;// /1000 added 20.08.17 *1000 added 3.09.17
                 }
                 else{
 
                     fsObject->local.objectType=MSLocalFSObject::Type::file;
-                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000;// /1000 added 20.08.17
+                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000 * 1000;// /1000 added 20.08.17 *1000 added 3.09.17
 
                 }
 
@@ -719,12 +719,12 @@ bool MSDropbox::readLocal(const QString &path){
 
                 if(fi.isDir()){
                     fsObject.local.objectType=MSLocalFSObject::Type::folder;
-                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000;// /1000 added 20.08.17
+                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000 * 1000;// /1000 added 20.08.17 *1000 added 3.09.17
                 }
                 else{
 
                     fsObject.local.objectType=MSLocalFSObject::Type::file;
-                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000;// /1000 added 20.08.17;
+                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000 * 1000;// /1000 added 20.08.17; *1000 added 3.09.17
 
                 }
 
@@ -868,7 +868,7 @@ MSFSObject::ObjectState MSDropbox::filelist_defineObjectState(const MSLocalFSObj
 //        else{
 
             // compare last modified date for local and remote
-            if(local.modifiedDate==remote.modifiedDate){
+            if(local.modifiedDate == remote.modifiedDate){
 
                 return MSFSObject::ObjectState::Sync;
 
@@ -1606,10 +1606,26 @@ bool MSDropbox::remote_file_insert(MSFSObject *object){
                 return false;
             }
 
-                if(!this->testReplyBodyForError(req->readReplyText())){
-                    qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                    return false;
-                }
+            if(!this->testReplyBodyForError(req->readReplyText())){
+                qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+                return false;
+            }
+
+            //  changing a local file timestamp to timestamp of remote file to make it equals for correct SYNC status processing
+            // This code was added for FUSE
+
+            QString content = req->readReplyText();
+
+            QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+            QJsonObject job = json.object();
+
+            utimbuf tb;
+            tb.actime=(this->toMilliseconds(job["client_modified"].toString(),true))/1000;;
+            tb.modtime=(this->toMilliseconds(job["client_modified"].toString(),true))/1000;;
+
+            utime(filePath.toStdString().c_str(),&tb);
+            //------------------------------------------------------------------------------------------------------------------
+
 
     }
     else{ // multipass uploading
@@ -1692,10 +1708,26 @@ bool MSDropbox::remote_file_insert(MSFSObject *object){
             return false;
         }
 
-            if(!this->testReplyBodyForError(req->readReplyText())){
-                qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                return false;
-            }
+        if(!this->testReplyBodyForError(req->readReplyText())){
+            qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+            return false;
+        }
+
+        //  changing a local file timestamp to timestamp of remote file to make it equals for correct SYNC status processing
+        // This code was added for FUSE
+
+        QString content = req->readReplyText();
+
+        QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+        QJsonObject job = json.object();
+
+        utimbuf tb;
+        tb.actime=(this->toMilliseconds(job["client_modified"].toString(),true))/1000;;
+        tb.modtime=(this->toMilliseconds(job["client_modified"].toString(),true))/1000;;
+
+        utime(filePath.toStdString().c_str(),&tb);
+        //------------------------------------------------------------------------------------------------------------------
+
 
     }
 
@@ -1811,10 +1843,26 @@ bool MSDropbox::remote_file_update(MSFSObject *object){
                 return false;
             }
 
-                if(!this->testReplyBodyForError(req->readReplyText())){
-                    qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                    return false;
-                }
+            if(!this->testReplyBodyForError(req->readReplyText())){
+                qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+                 return false;
+            }
+
+            //  changing a local file timestamp to timestamp of remote file to make it equals for correct SYNC status processing
+            // This code was added for FUSE
+
+            QString content = req->readReplyText();
+
+            QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+            QJsonObject job = json.object();
+
+            utimbuf tb;
+            tb.actime=(this->toMilliseconds(job["client_modified"].toString(),true))/1000;;
+            tb.modtime=(this->toMilliseconds(job["client_modified"].toString(),true))/1000;;
+
+            utime(filePath.toStdString().c_str(),&tb);
+            //------------------------------------------------------------------------------------------------------------------
+
 
     }
     else{ // multipass uploading
@@ -1897,10 +1945,26 @@ bool MSDropbox::remote_file_update(MSFSObject *object){
             return false;
         }
 
-            if(!this->testReplyBodyForError(req->readReplyText())){
-                qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                return false;
-            }
+        if(!this->testReplyBodyForError(req->readReplyText())){
+            qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+            return false;
+        }
+
+        //  changing a local file timestamp to timestamp of remote file to make it equals for correct SYNC status processing
+        // This code was added for FUSE
+
+        QString content = req->readReplyText();
+
+        QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+        QJsonObject job = json.object();
+
+        utimbuf tb;
+        tb.actime=(this->toMilliseconds(job["client_modified"].toString(),true))/1000;;
+        tb.modtime=(this->toMilliseconds(job["client_modified"].toString(),true))/1000;;
+
+        utime(filePath.toStdString().c_str(),&tb);
+        //------------------------------------------------------------------------------------------------------------------
+
 
     }
 

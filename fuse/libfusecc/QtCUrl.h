@@ -48,6 +48,7 @@ public:
     Options requestOptions;
 
     QString escape(QString str);
+//    QByteArray escape(QByteArray str);
 
 
 	class Code {

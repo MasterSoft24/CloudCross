@@ -150,6 +150,14 @@ int readFileContent(char* path,char* buf,int size, int offset){
 
 // ----------------------------------------------------------------
 
+int f_createDirInTemp(const char* name){
+
+    QString fpath = "/tmp/" + tempDirName + name;
+    return system(QString("mkdir -p \""+QString(fpath)+"\"").toStdString().c_str());
+}
+
+// ----------------------------------------------------------------
+
 int f_mknod(const QString &path){
     QString f_path;
     int r= system(QString("touch \""+path+"\"").toStdString().c_str());
@@ -370,6 +378,16 @@ QHash<QString, MSFSObject> filterListByPath(/*map<string, MSFSObject> src,*/ QSt
 
 // ----------------------------------------------------------------
 
+static int opendir_callback(const char *path, struct fuse_file_info *fi){
+
+//    QString fpath = "/tmp/" + tempDirName + path;
+//    int r= system(QString("mkdir -p \""+QString(fpath)+"\"").toStdString().c_str());
+    return 0;;
+}
+
+// ----------------------------------------------------------------
+
+
 static int fgetattr_callback(const char *path, struct stat *stbuf, struct fuse_file_info * fi) {
 
 //log("STUB fgetattr");
@@ -381,7 +399,7 @@ return -ENOENT;
 static int getattr_callback(const char *path, struct stat *stbuf) {
 
     if (QString(path) == QString("/")){
-        log("CALLBACK getattr for /");
+        //log("CALLBACK getattr for /");
 
               stbuf->st_mode = S_IFDIR | 0755;
               stbuf->st_uid=getuid();
@@ -409,7 +427,10 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
 
                     stbuf->st_mode = S_IFDIR | 0755;
                     stbuf->st_nlink = 2;
-                    //stbuf->st_size = 4096;
+                    stbuf->st_size = 40;
+
+                    f_createDirInTemp(path);
+
                 }
                 else{
 
@@ -421,6 +442,8 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
                 stbuf->st_uid=getuid();
                 stbuf->st_gid=getgid();
                 stbuf->st_mtime=o.remote.modifiedDate/1000;
+                stbuf->st_blksize = 4096;
+                stbuf->st_dev = 37;
 
                 return 0;
 
@@ -440,15 +463,15 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
 
 
                 if (res == -1){
-                        return -errno;
+                        return -ENOENT;
                 }
 
                 return 0;
             }
         }
-        else{
+//        else{
 
-        }
+//        }
 
 
         return -ENOENT;
@@ -560,7 +583,8 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
     log("CALLBACK readdir "+QString(path));
 
 
-
+    filler(buf, ".", NULL, 0);
+    filler(buf, "..", NULL, 0);
 
      QString m_path;
 
@@ -575,7 +599,7 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
 
     QHash<QString, MSFSObject> dl= filterListByPath( /*fileList,*/ QString(m_path));
 
-    log("CALLBACK readdir  COUNT OF DIR ENT IS "+QString::number(dl.size()));
+    //log("CALLBACK readdir  COUNT OF DIR ENT IS "+QString::number(dl.size()));
 
     if(  dl.size() != 0 ){
 
@@ -590,6 +614,7 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
 
                 st.st_mode = S_IFDIR | 0755;
                 st.st_nlink = 2;
+//                st.st_size = 40; // MAGIC
             }
             else{
 
@@ -601,21 +626,23 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
             st.st_uid=getuid();
             st.st_gid=getgid();
             st.st_mtime=i.value().remote.modifiedDate/1000;
+            st.st_blksize = 4096;
+            st.st_dev = 37;
 
 
             filler(buf,i.value().fileName.toStdString().c_str(),&st,0);
 
         }
 
-        filler(buf, ".", NULL, 0);
-        filler(buf, "..", NULL, 0);
+//        filler(buf, ".", NULL, 0);
+//        filler(buf, "..", NULL, 0);
 
         return 0;
     }
     else{
         struct stat st;
 //        memset(&st, 0, sizeof(struct stat));
-//        st.st_mode = S_IFDIR | 0755;
+//        st.st_mode = S_IFDIR | 0755;/
 //        st.st_nlink = 2;
 //        st.st_uid=getuid();
 //        st.st_gid=getgid();
@@ -626,11 +653,14 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
         st.st_nlink = 2;
         st.st_uid=getuid();
         st.st_gid=getgid();
-        filler(buf,"..",&st,0);
+        st.st_blksize = 4096;
+        st.st_dev = 37;
 
-        filler(buf, ".", NULL, 0);
-        filler(buf, "..", NULL, 0);
-        return -1;
+//        filler(buf,"..",&st,0);
+
+//        filler(buf, ".", &st, 0);
+//        filler(buf, "..", &st, 0);
+        return 0;
     }
 
     //return -1;
@@ -704,17 +734,6 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
 
             //log("OPEN_CALLBACK File Will Be Downloaded "+fname);
 
-//            json comm;
-//            comm["command"]="get_content";
-//            comm["params"]["socket"]=workSocket;
-//            comm["params"]["provider"]=workProvider;
-//            comm["params"]["path"]=workPath;
-//            comm["params"]["cachePath"]=fname;
-//            comm["params"]["filePath"]=string(path);
-
-//            sendCommand(comm) ;
-
-            //i->second.refCount=0;
         }
 
         //log("open callback ended for "+string(path)+" ; ref count is "+to_string(i->second.refCount));
@@ -1184,9 +1203,9 @@ static int xmp_symlink(const char *from, const char *to){
 static int xmp_rename(const char *from, const char *to){
 
 
-    return -1;
+    return 0;
 
-#ifdef THIS_IS_STUB
+#ifndef THIS_IS_STUB
     QString fname_from = QString("/tmp/")+tempDirName+QString(from);
     QString fname_to = QString("/tmp/")+tempDirName+QString(to);
 
@@ -1471,7 +1490,7 @@ int main(int argc, char *argv[])
     CC_FuseFS::tokenPath = "/home/ms/QT/CloudCross/build/debug/TEST4";  // argv[3]
     CC_FuseFS::mountPath = "/tmp/example"; // argv[4]
 
-    CC_FuseFS::provider = (ProviderType) QString("1").toInt(); //QString::number(argv[2])
+    CC_FuseFS::provider = (ProviderType) QString("4").toInt(); //QString::number(argv[2])
 
     CC_FuseFS::Instance()->ccLib = new libFuseCC();
 
@@ -1521,6 +1540,7 @@ int main(int argc, char *argv[])
     fuse_op.statfs = xmp_statfs;
 
     fuse_op.access = xmp_access;
+    fuse_op.opendir = opendir_callback;
 
 
 

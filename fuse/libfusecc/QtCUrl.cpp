@@ -86,7 +86,7 @@ QtCUrl::~QtCUrl() {
 		curl_slist_free_all(_slist.first());
 		_slist.removeFirst();
 	}
-	curl_easy_cleanup(_curl);
+    curl_easy_cleanup(_curl);
 	delete[] _errorBuffer;
 }
 
@@ -101,14 +101,21 @@ void QtCUrl::setTextCodec(QTextCodec* codec) {
 }
 
 QString QtCUrl::exec(Options& opt) {
+
 	setOptions(opt);
+    //
+
 	_lastCode = Code(curl_easy_perform(_curl));
     const char* reply = opt[CURLOPT_WRITEDATA].value<std::string*>()->data();
 
 	if (_textCodec) {
+//        curl_easy_cleanup(_curl);
 		return _textCodec->toUnicode(reply);
 	}
 
+
+    curl_easy_setopt(_curl, CURLOPT_COOKIELIST, "FLUSH");
+    //curl_easy_cleanup(_curl);
     return reply;
 }
 
@@ -217,6 +224,16 @@ QString QtCUrl::escape(QString str){
 
     QByteArray s = str.toLocal8Bit();
     return QString(curl_easy_escape(_curl, s.toStdString().c_str(),s.size() ));
-
-
 }
+
+//QByteArray QtCUrl::escape(QByteArray str){
+
+
+//    return curl_easy_escape(_curl, str.toStdString().c_str(),str.size() );
+//}
+
+
+
+
+
+

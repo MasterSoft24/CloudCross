@@ -65,6 +65,7 @@ SOURCES += libfusecc.cpp \
     ../../src/Dropbox/msdropbox.cpp \
     ../../src/YandexDisk/msyandexdisk.cpp \
     ../../src/MailRu/msmailru.cpp \
+    msnetworkcookiejar.cpp
 
 HEADERS += libfusecc.h\
         libfusecc_global.h \
@@ -82,6 +83,7 @@ HEADERS += libfusecc.h\
     ../../src/Dropbox/msdropbox.h \
     ../../src/YandexDisk/msyandexdisk.h \
     ../../src/MailRu/msmailru.h \
+    msnetworkcookiejar.h
 
 unix {
     target.path = /usr/lib

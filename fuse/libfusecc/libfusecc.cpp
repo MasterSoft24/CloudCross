@@ -176,8 +176,10 @@ bool libFuseCC::getProviderInstance(const QString &providerName, MSCloudProvider
 
 bool libFuseCC::readRemoteFileList(MSCloudProvider *p){
 
-    return p->_readRemote("");
+    bool r = p->_readRemote("");
 
+
+    return r;
 }
 
 

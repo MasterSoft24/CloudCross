@@ -55,6 +55,7 @@
 
 #ifdef CCROSS_LIB
 #include "QtCUrl.h"
+#include "msnetworkcookiejar.h"
 #endif
 
 
@@ -111,11 +112,11 @@ public:
     QHash<QString,QString> queryItems;
     QHash<QString,QString> requestHeaders;
     QString requestURL;
-    QFile cookieJarFile;
+    //QFile cookieJarFile;
 
     // methods
 
-    void setCURLOptions(QByteArray payload=QByteArray());
+    void setCURLOptions(const QByteArray &payload=QByteArray());
     void setCURLOptions(QIODevice* payloadPtr);
 
 #endif
@@ -153,9 +154,16 @@ public:
 
     // cookie functions block
 
-    QNetworkCookieJar* cookieJar;
 
+
+#ifndef CCROSS_LIB
+    QNetworkCookieJar* cookieJar;
     void MSsetCookieJar(QNetworkCookieJar *cookie);
+#else
+    MSNetworkCookieJar* cookieJarObject;
+    void MSsetCookieJar(MSNetworkCookieJar *cookie);
+    MSNetworkCookieJar *getCookieJar();
+#endif
     QJsonObject cookieToJSON();
     bool cookieFromJSON(const QJsonObject &cookie);
 

@@ -60,11 +60,23 @@ bool MSMailRu::auth(){
 
     MSRequest* req=new MSRequest(this->proxyServer);
 
+//    try{
+
+//        delete this->cookies;
+
+//    }
+//    catch(...){
+
+//    }
+
     this->cookies=new QNetworkCookieJar();
+
+    this->cookieList.insert(this->cookies->name, this->cookies);
 
     req->MSsetCookieJar(this->cookies);
 
     req->setRequestUrl("http://auth.mail.ru/cgi-bin/auth?lang=ru_RU&from=authpopup");
+//    req->setRequestUrl("https://auth.mail.ru/cgi-bin/auth");
     req->setMethod("post");
 
     req->addQueryItem("page",           "https://cloud.mail.ru/?from=promo");
@@ -73,6 +85,7 @@ bool MSMailRu::auth(){
     req->addQueryItem("Login",          this->login);
     req->addQueryItem("Password",       this->password);
     req->addQueryItem("new_auth_form",  "1");
+
 
     req->exec();
 
@@ -134,7 +147,12 @@ bool MSMailRu::auth(){
 
 
         //this->cookies=new QNetworkCookieJar(req->manager->cookieJar());
+#ifndef CCROSS_LIB
         this->cookies=(req->manager->cookieJar());
+#else
+
+        this->cookies=(req->getCookieJar());
+#endif
 
         //this->readRemote("/");
 
@@ -282,13 +300,19 @@ QString MSMailRu::remote_dispatcher(const QString &target){
 
     if(!req->replyOK()){
         req->printReplyError();
+        this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         return "";
     }
 
     QString content=req->readReplyText();
 
-    this->cookies=req->manager->cookieJar();
+#ifndef CCROSS_LIB
+        this->cookies=(req->manager->cookieJar());
+#else
+
+        this->cookies=(req->getCookieJar());
+#endif
 
 
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
@@ -296,6 +320,7 @@ QString MSMailRu::remote_dispatcher(const QString &target){
     QString serverURL=job["body"].toObject()[target].toArray()[0].toObject()["url"].toString();
 
     req->deleteLater();
+    //this->cookies->deleteLater();//delete(this->cookies);
 
     return serverURL;
 
@@ -333,13 +358,20 @@ bool MSMailRu::remote_file_get(MSFSObject *object){
 
     if(!req->replyOK()){
         req->printReplyError();
+        this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         return false;
     }
 
     QString content=req->readReplyText();
 
-    this->cookies=req->manager->cookieJar();
+#ifndef CCROSS_LIB
+        this->cookies=(req->manager->cookieJar());
+#else
+
+        this->cookies=(req->getCookieJar());
+#endif
+
     req_prev=req;
 
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
@@ -388,12 +420,14 @@ bool MSMailRu::remote_file_get(MSFSObject *object){
 
 
             qStdOut() << "Service error. "<< req->replyErrorText;
+            this->cookies->deleteLater();//delete(this->cookies);
             delete(req);
             return false;
 
     }
 
 
+    this->cookies->deleteLater();//delete(this->cookies);
     delete(req);
     return true;
 
@@ -422,26 +456,25 @@ bool MSMailRu::remote_file_insert(MSFSObject *object){
     MSRequest* req_prev;
     MSRequest* req=new MSRequest(this->proxyServer);
 
-    QString bound="ccross-data";
+    QString bound="----ccross-data";
 
     req->MSsetCookieJar(this->cookies);
 
-    // upload file body to intermediate server and recive confirm hash
+    // upload the file body to intermediate server and recive a confirm hash
 
     req->setRequestUrl(url); //url "https://cloclo3-upload.cloud.mail.ru/upload/"
     req->setMethod("post");
 
-    req->addHeader("Content-Type", "multipart/form-data; boundary=----"+QString(bound).toLocal8Bit());
+    req->addHeader("Content-Type",                  "multipart/form-data; boundary="+QString(bound).toLocal8Bit());
 
-    req->addQueryItem("cloud_domain",       "2");
-    req->addQueryItem("fileapi14785802593646",       "");
-
-    req->addQueryItem("x-email",      this->login);
+    req->addQueryItem("cloud_domain",               "2");
+    req->addQueryItem("fileapi14785802593646",      "");
+    req->addQueryItem("x-email",                    this->login);
 
 
     QByteArray mediaData;
 
-    mediaData.append(QString("------"+bound+"\r\n").toLocal8Bit());
+    mediaData.append(QString(""+bound+"\r\n").toLocal8Bit());
     mediaData.append(QString("Content-Disposition: form-data; name=\"file\"; filename=\""+object->fileName+"\"\r\n"));
     mediaData.append(QString("Content-Type: application/octet-stream\r\n\r\n").toLocal8Bit());
     //mediaData.append(QString("Content-Type: multipart/form-data;\r\n\r\n").toLocal8Bit());
@@ -462,7 +495,7 @@ bool MSMailRu::remote_file_insert(MSFSObject *object){
 
     file.close();
 
-    mediaData.append(QString("\r\n------"+bound+"--\r\n").toLocal8Bit());
+    mediaData.append(QString("\r\n"+bound+"--\r\n").toLocal8Bit());
 
     req->addHeader("Content-Length",QString::number(mediaData.length()).toLocal8Bit());
 
@@ -475,33 +508,41 @@ bool MSMailRu::remote_file_insert(MSFSObject *object){
         return false;
     }
 
-
+QString xzxzx = QString(req->readReplyText());
     QStringList arr=QString(req->readReplyText()).split(';'); // at this point we recieve confirmation hash in arr[0] and size of file in arr[1]
 
-    this->cookies=req->manager->cookieJar();
+#ifndef CCROSS_LIB
+        this->cookies=(req->manager->cookieJar());
+#else
+
+        this->cookies=(req->getCookieJar());
+#endif
+
     req_prev=req;
 
     req=new MSRequest(this->proxyServer);
 
     req->MSsetCookieJar(this->cookies);
 
-    delete(req_prev);
+
 
 
     req->setRequestUrl("https://cloud.mail.ru/api/v2/file/add");
     req->setMethod("post");
 
-    req->addQueryItem("api",       "2");
-    req->addQueryItem("build",       this->build);
-    req->addQueryItem("conflict",       "strict"); // api does not contains ignore param CLOUDWEB-5028 (7114 too)
-    req->addQueryItem("email",       this->login);
-    req->addQueryItem("home",       object->path+object->fileName);
-    req->addQueryItem("hash",       arr[0]);
-    req->addQueryItem("size",       arr[1].left(arr[1].length() - 2));
-    req->addQueryItem("token",       this->token);
-    req->addQueryItem("x-email",       this->login);
-    req->addQueryItem("x-page-id",       this->x_page_id);
+    req->addQueryItem("api",                "2");
+    req->addQueryItem("build",              this->build);
+    req->addQueryItem("conflict",           "strict"); // api does not contains ignore param CLOUDWEB-5028 (7114 too)
+    req->addQueryItem("email",              this->login);
+    req->addQueryItem("home",               object->path+object->fileName);
 
+    req->addQueryItem("hash",               arr[0]);
+    req->addQueryItem("size",               arr[1].left(arr[1].length() - 2));
+    req->addQueryItem("token",              this->token);
+    req->addQueryItem("x-email",            this->login);
+    req->addQueryItem("x-page-id",          this->x_page_id);
+
+   // req->addHeader("Content-Type", QString("application/x-www-form-urlencoded"));
     req->exec();
 
     if(!req->replyOK()){
@@ -529,6 +570,7 @@ bool MSMailRu::remote_file_insert(MSFSObject *object){
 
 
         req->printReplyError();
+        delete(req_prev);
         delete(req);
         return false;
     }
@@ -539,6 +581,7 @@ bool MSMailRu::remote_file_insert(MSFSObject *object){
     QJsonObject job = json.object();
     int status=job["status"].toInt();
 
+    delete(req_prev);
     delete(req);
 
     if(status == 200){
@@ -622,6 +665,7 @@ bool MSMailRu::remote_file_makeFolder(MSFSObject *object){
             if(r == true){
 
                 this->remote_file_makeFolder(object);
+                this->cookies->deleteLater();//delete(this->cookies);
                 delete(req);
                 return true;
 
@@ -631,6 +675,7 @@ bool MSMailRu::remote_file_makeFolder(MSFSObject *object){
         }
 
         req->printReplyError();
+        this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         return false;
     }
@@ -643,6 +688,7 @@ bool MSMailRu::remote_file_makeFolder(MSFSObject *object){
     QJsonObject job = json.object();
     int status=job["status"].toInt();
 
+    this->cookies->deleteLater();//delete(this->cookies);
     delete(req);
 
     if(status == 200){
@@ -691,6 +737,7 @@ bool MSMailRu::remote_file_trash(MSFSObject *object){
 
     if(!req->replyOK()){
         req->printReplyError();
+        this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         return false;
     }
@@ -703,6 +750,7 @@ bool MSMailRu::remote_file_trash(MSFSObject *object){
     QJsonObject job = json.object();
     int status=job["status"].toInt();
 
+    this->cookies->deleteLater();//delete(this->cookies);
     delete(req);
 
     if(status == 200){
@@ -1453,6 +1501,7 @@ bool MSMailRu::readRemote(const QString &path, QNetworkCookieJar* cookie)
 
             qStdOut()<<"Authentication failed. Possibly you need re-auth or login and passwrd is incorrect" <<endl;
 
+            this->cookies->deleteLater();//delete(this->cookies);
             return providerAuthStatus;
         }
     }
@@ -1486,6 +1535,8 @@ bool MSMailRu::readRemote(const QString &path, QNetworkCookieJar* cookie)
     req->exec();
 
     if(!req->replyOK()){
+        //delete req->cookieJarObject;
+        //this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         req->printReplyError();
         return false;
@@ -1572,15 +1623,57 @@ bool MSMailRu::readRemote(const QString &path, QNetworkCookieJar* cookie)
 
         }
 
+        //delete this->cookies;;//this->cookies->deleteLater();//delete(this->cookies);
+//        try{
+//            if(!req->cookieJarObject->isCookieRemoved()){
+
+//                req->cookieJarObject->deleteLater();
+//                req->cookieJarObject = nullptr;
+//            }
+
+//        }
+//        catch(...){
+//            req->cookieJarObject = nullptr;
+//        }
+
+
     delete(req);
 
         return true;
 }
 
+
+
 bool MSMailRu::_readRemote(const QString &rootPath){
 
     Q_UNUSED(rootPath);
-    return this->readRemote("/",NULL);
+    bool r= this->readRemote("/",NULL);
+
+#ifdef CCROSS_LIB
+    // clear a forgotten cookie files
+    QHash<QString,MSNetworkCookieJar*> ql = this ->cookieList;
+    this ->cookieList.clear();
+
+    QHash<QString,MSNetworkCookieJar*>::iterator i = ql.begin();
+
+    for(;i != ql.end();i++){
+
+        QString n = i.value()->name;
+        delete i.value();
+        ql.remove(n);
+        i = ql.begin();
+        if(ql.size() == 0)break;
+    }
+
+    if(ql.size() > 0){// remove last object as well
+        i = ql.begin();
+        QString n = i.value()->name;
+        delete i.value();
+        ql.remove(n);
+    }
+#endif
+
+    return r;
 }
 
 
@@ -2051,6 +2144,7 @@ bool MSMailRu::directUpload(const QString &url, const QString &remotePath){
 
         //error file not found
         qStdOut()<<"Unable to open of "+filePath <<endl;
+        this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         return false;
     }
@@ -2067,6 +2161,7 @@ bool MSMailRu::directUpload(const QString &url, const QString &remotePath){
 
     if(!req->replyOK()){
         req->printReplyError();
+        this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         return false;
     }
@@ -2074,7 +2169,13 @@ bool MSMailRu::directUpload(const QString &url, const QString &remotePath){
 
     QStringList arr=QString(req->readReplyText()).split(';'); // at this point we recieve confirmation hash in arr[0] and size of file in arr[1]
 
-    this->cookies=req->manager->cookieJar();
+#ifndef CCROSS_LIB
+        this->cookies=(req->manager->cookieJar());
+#else
+
+        this->cookies=(req->getCookieJar());
+#endif
+
     req_prev=req;
 
     req=new MSRequest(this->proxyServer);
@@ -2111,6 +2212,7 @@ bool MSMailRu::directUpload(const QString &url, const QString &remotePath){
 
 
         req->printReplyError();
+        this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         return false;
     }
@@ -2123,6 +2225,7 @@ bool MSMailRu::directUpload(const QString &url, const QString &remotePath){
 
     file.remove();
 
+    this->cookies->deleteLater();//delete(this->cookies);
     delete(req);
 
     if(status == 200){

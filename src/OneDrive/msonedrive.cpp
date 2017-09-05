@@ -48,9 +48,9 @@ bool MSOneDrive::remote_file_get(MSFSObject *object){
         return true;
     }
 
-    if(object->remote.data["id"].toString()=="")return false; //remove me
+    if(object->remote.data["id"].toString() == "")return false; //remove me
 
-    QString filePath=this->workPath+object->path+object->fileName;
+    QString filePath = this->workPath + object->path + object->fileName;
 
     MSRequest *req = new MSRequest(this->proxyServer);
     req->setMethod("get");
@@ -58,9 +58,9 @@ bool MSOneDrive::remote_file_get(MSFSObject *object){
     req->addHeader("Authorization","Bearer "+this->access_token);
 
 
-    req->download(object->remote.data["@content.downloadUrl"].toString(),this->workPath+object->path+object->fileName);
+    req->download(object->remote.data["@content.downloadUrl"].toString(), this->workPath + object->path + object->fileName);
 
-    QString c=req->readReplyText();
+    QString c = req->readReplyText();
 
     if((int)req->replyError == 0){
 
