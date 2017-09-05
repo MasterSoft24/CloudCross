@@ -37,8 +37,8 @@ class QTextCodec;
 
 class QtCUrl {
 public:
-	typedef QHash<CURLoption, QVariant> Options;
-	typedef QHashIterator<CURLoption, QVariant> OptionsIterator;
+    typedef QHash<CURLoption, QVariant> Options;
+    typedef QHashIterator<CURLoption, QVariant> OptionsIterator;
     typedef int (*WriterPtr)(char*, size_t, size_t, std::string*);
 
     // Changes for a CloudCross MSRequest class
@@ -48,51 +48,51 @@ public:
     Options requestOptions;
 
     QString escape(QString str);
-//    QByteArray escape(QByteArray str);
+    //    QByteArray escape(QByteArray str);
 
 
-	class Code {
-	public:
-		Code(CURLcode code = CURLE_OK): _code(code) {}
-		QString text() { return curl_easy_strerror(_code); }
-		inline CURLcode code() { return _code; }
-		inline bool isOk() { return _code == CURLE_OK; }
+    class Code {
+    public:
+        Code(CURLcode code = CURLE_OK): _code(code) {}
+        QString text() { return curl_easy_strerror(_code); }
+        inline CURLcode code() { return _code; }
+        inline bool isOk() { return _code == CURLE_OK; }
 
 
 
-	private:
-		CURLcode _code;
-	};
+    private:
+        CURLcode _code;
+    };
 
-	QtCUrl();
-	virtual ~QtCUrl();
+    QtCUrl();
+    virtual ~QtCUrl();
 
-	QString exec(Options& opt);
+    QString exec(Options& opt);
     QString exec();
 
-	QByteArray buffer() const {
+    QByteArray buffer() const {
         return QByteArray(_buffer.data(), _buffer.size());
-	}
-	inline Code lastError() { return _lastCode; }
-	QString errorBuffer() { return _errorBuffer; }
-	void setTextCodec(const char* codecName);
-	void setTextCodec(QTextCodec* codec);
+    }
+    inline Code lastError() { return _lastCode; }
+    QString errorBuffer() { return _errorBuffer; }
+    void setTextCodec(const char* codecName);
+    void setTextCodec(QTextCodec* codec);
 
 
 
 protected:
-	void setOptions(Options& opt);
+    void setOptions(Options& opt);
 
 private:
-	CURL* _curl;
-	char* _errorBuffer;
+    CURL* _curl;
+    char* _errorBuffer;
     std::string _buffer;
 
     QByteArray replyBuffer;
 
-	Code _lastCode;
-	QTextCodec* _textCodec;
-	QLinkedList<curl_slist*> _slist;
+    Code _lastCode;
+    QTextCodec* _textCodec;
+    QLinkedList<curl_slist*> _slist;
 };
 
 Q_DECLARE_METATYPE(QtCUrl::WriterPtr)

@@ -27,6 +27,9 @@ CONFIG += console c++11
 CONFIG -= app_bundle
 #CONFIG -= qt
 
+TARGET = ccfw
+VERSION = 1.0.0
+
 
 include(../../CloudCross.pri)
 
@@ -52,7 +55,6 @@ LIBS+= -lfuse \
         -pthread
 
 HEADERS += \
-    json.hpp \
     ccfw.h \
 #    ../../include/msproviderspool.h \
 #    ../../include/mscloudprovider.h \
@@ -71,9 +73,9 @@ HEADERS += \
 
 
 
-unix:!macx: LIBS += -L$$PWD/../libfusecc/ -llibfusecc
+unix:!macx: LIBS += -L$$PWD/../build/ -lfusecc
 
 
 
-INCLUDEPATH += $$PWD/../libfusecc
-DEPENDPATH += $$PWD/../libfusecc
+INCLUDEPATH += $$PWD/../build
+DEPENDPATH += $$PWD/../build

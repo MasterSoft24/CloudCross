@@ -89,6 +89,8 @@ void CC_FuseFS::log(QString mes){
 
 void* onSyncTimer2(void* p){
 
+    Q_UNUSED(p)
+
     //CC_FuseFS::Instance()->log("TIMER elapsed");
 
     while(true){

@@ -65,6 +65,8 @@ MSRequest::MSRequest(QNetworkProxy *proxy)
     }
 #else
 
+    Q_UNUSED(proxy)
+
     cUrlObject.requestOptions[CURLOPT_COOKIEFILE].setValue(QString());
     cookieJarObject = nullptr;
 
@@ -1080,8 +1082,7 @@ void MSRequest::put(const QByteArray &data){
 #ifdef CCROSS_LIB
 size_t readCallback(void *ptr, size_t size, size_t nmemb, void *stream){
 
-    int y=867;
-    y++;
+    Q_UNUSED(size)
     return ((QFile*)stream)->read((char*)ptr,nmemb);
 //  size_t retcode;
 //  curl_off_t nread;
@@ -1118,8 +1119,8 @@ void MSRequest::put(QIODevice *data){
     this->cUrlObject.requestOptions[CURLOPT_FOLLOWLOCATION] = 1;
     this->cUrlObject.requestOptions[CURLOPT_READFUNCTION].setValue( &readCallback);
 
-    int fh = ((QFile*)data)->handle();
-    FILE* fd = fdopen(fh,"rb");
+//    int fh = ((QFile*)data)->handle();
+//    FILE* fd = fdopen(fh,"rb");
 
     this->cUrlObject.requestOptions[CURLOPT_READDATA].setValue(data);// = qVariantFromValue((void*) data);//static_cast<void*> ((QFile*)data);
 

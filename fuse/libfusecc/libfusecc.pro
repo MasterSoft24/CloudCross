@@ -31,7 +31,8 @@ QT       += network
 
 QT       -= gui
 
-TARGET = libfusecc
+TARGET = fusecc
+VERSION = 1.0.0
 TEMPLATE = lib
 
 DEFINES += LIBFUSECC_LIBRARY

@@ -1,9 +1,9 @@
 #include "ccseparatethread.h"
 #include "libfusecc.h"
 
-QCoreApplication* CCSeparateThread::a=NULL;
-int CCSeparateThread::argc = 1;
-char * CCSeparateThread::argv[] = {"SharedLibrary", NULL};
+//QCoreApplication* CCSeparateThread::a=NULL;
+//int CCSeparateThread::argc = 1;
+//char * CCSeparateThread::argv[] = {"SharedLibrary", NULL};
 
 CCSeparateThread::CCSeparateThread(QObject *parent) : QObject(parent){
 
@@ -16,8 +16,8 @@ CCSeparateThread::CCSeparateThread(QObject *parent) : QObject(parent){
 bool CCSeparateThread::command_getRemoteFileList(){
 
     MSCloudProvider* cp = lpProviderObject;
-     lpFuseCC->readRemoteFileList(cp);
-     //qDebug() << QString::number((qlonglong)cp)<< " THR";
+    lpFuseCC->readRemoteFileList(cp);
+
     return true;
 
 }
@@ -41,17 +41,9 @@ bool CCSeparateThread::command_getFileContent(){
         lpFuseCC->readFileContent(cp,pathToCache,obj);
 
 
-//        QString b =cp->workPath;
-//        cp->workPath = pathToCache;
-//        cp->remote_file_get(&obj);
-//        cp->workPath = b;
-
         log("getFileContent CloudProvider remote_file_get executed");
         return true;
     }
-     //this->workerPtr->fileList.find(filePath).value();
-
-
 
     log("getFileContent ERROR!!!!");
     return  false;
@@ -74,9 +66,9 @@ bool CCSeparateThread::command_doSync(){
     for(;i != cp->syncFileList.end();i++){
 
         if( ((i.value().state == MSFSObject::ObjectState::ChangedLocal) ||
-            (i.value().state == MSFSObject::ObjectState::NewLocal) ||
-            (i.value().state == MSFSObject::ObjectState::DeleteLocal)) &&
-            (i.key().indexOf(cachePath) != 0)){
+             (i.value().state == MSFSObject::ObjectState::NewLocal) ||
+             (i.value().state == MSFSObject::ObjectState::DeleteLocal)) &&
+                (i.key().indexOf(cachePath) != 0)){
 
             // hack fo correcting a object state
             if(i.value().state != MSFSObject::ObjectState::DeleteLocal){
@@ -87,9 +79,6 @@ bool CCSeparateThread::command_doSync(){
                     i.value().state = MSFSObject::ObjectState::ChangedLocal;
                 }
             }
-
-
-            //QHash<QString,MSFSObject>::iterator p =  cp->syncFileList.find();
 
             // try to get parent of current object
             MSFSObject po=cp->filelist_getParentFSObject(i.value());
@@ -103,26 +92,19 @@ bool CCSeparateThread::command_doSync(){
 
 
             work.insert(i.key(),i.value());
-            //i.value().state = MSFSObject::ObjectState::Sync;
+
         }
 
     }
 
-//    cp->setFlag("dryRun",true);
-//    cp->dryRun = true;
-    //QHash<QString,MSFSObject> back = cp->syncFileList;
-
     cp->syncFileList = work;
     cp->doSync();
 
-    //cp->syncFileList = back;
     cp->syncFileList.clear();
 
-     lpFuseCC->readRemoteFileList(cp);
-     lpFuseCC->readLocalFileList(cp,cachePath);
+    lpFuseCC->readRemoteFileList(cp);
+    lpFuseCC->readLocalFileList(cp,cachePath);
 
-     qStdOut()<< "Syncing was ended"<<endl;
-     //qDebug() << QString::number((qlonglong)cp)<< " THR";
     return true;
 
 
@@ -177,8 +159,7 @@ void CCSeparateThread::log(QString mes){
         fclose(lf);
     }
 
-//    string ns="echo "+mes+" >> /tmp/ccfw.log ";
-//    system(ns.c_str());
+
     return;
 }
 

@@ -1,10 +1,10 @@
 #include "libfusecc.h"
 
 
- int libFuseCC::argc = 1;
- char * libFuseCC::argv[] = {"libFuseCC", NULL};
- QCoreApplication * libFuseCC::app = NULL;
- QThread * libFuseCC::thread = NULL;
+int libFuseCC::argc = 1;
+char * libFuseCC::argv[] = {"libFuseCC", NULL};
+QCoreApplication * libFuseCC::app = NULL;
+QThread * libFuseCC::thread = NULL;
 
 
 
@@ -12,12 +12,12 @@ libFuseCC::libFuseCC()
 {
 
     if (thread == NULL)
-     {
-         thread = new QThread();
-         connect(thread, SIGNAL(started()), this, SLOT(onStarted()), Qt::DirectConnection);
-         thread->start();
-         qDebug()<< "DONE fuseCC created";
-     }
+    {
+        thread = new QThread();
+        connect(thread, SIGNAL(started()), this, SLOT(onStarted()), Qt::DirectConnection);
+        thread->start();
+
+    }
 }
 
 
@@ -138,8 +138,7 @@ bool libFuseCC::getProviderInstance(ProviderType p, MSCloudProvider **lpProvider
         break;
     }
     default:
-        //#pragma message("WARNING: You need to implement DEPRECATED for this compiler")
-        //log("DEFAULT");
+
         break;
     }
 
@@ -204,7 +203,7 @@ bool libFuseCC::readSingleLocalFile(MSCloudProvider *p,const QString &pathToFile
 
     QString back = p->workPath;
     p->workPath = workPath;
-    bool r = p->readLocalSingle(pathToFile);
+    p->readLocalSingle(pathToFile);
     p->workPath = back;
     return p;
 }
@@ -214,11 +213,12 @@ bool libFuseCC::readSingleLocalFile(MSCloudProvider *p,const QString &pathToFile
 
 bool libFuseCC::readFileContent(MSCloudProvider *p, const QString &destPath,  MSFSObject obj){
 
-            QString b =p->workPath;
-            p->workPath = destPath;
-            p->remote_file_get(&obj);
-            p->workPath = b;
+    QString b =p->workPath;
+    p->workPath = destPath;
+    p->remote_file_get(&obj);
+    p->workPath = b;
 
+    return true;
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -252,7 +252,7 @@ void libFuseCC::runInSeparateThread(MSCloudProvider *providerInstance, const QSt
 
     thr->start();
 
-    int y=86;
+
 }
 
 
@@ -302,12 +302,12 @@ void libFuseCC::clearLocalPartOfSyncFileList(MSCloudProvider *providerInstance){
 void libFuseCC::onStarted(){
 
     if (QCoreApplication::instance() == NULL){
-           app = new QCoreApplication(argc, argv);
-           app->exec();
+        app = new QCoreApplication(argc, argv);
+        app->exec();
     }
     else{
-//        app = QCoreApplication::instance();
-//        app->exec();
+        //        app = QCoreApplication::instance();
+        //        app->exec();
     }
 
 }
