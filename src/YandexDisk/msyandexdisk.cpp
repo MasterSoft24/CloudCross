@@ -437,7 +437,7 @@ bool MSYandexDisk::readRemote(const QString &currentPath){ //QString parentId,QS
 
 bool MSYandexDisk::_readRemote(const QString &rootPath){
 
-
+    Q_UNUSED(rootPath)
 //    return this->readRemote(rootPath);
     return this->readRemote("/");
 }
@@ -571,7 +571,7 @@ bool MSYandexDisk::createSyncFileList(){
 // this->remote_createDirectory((this->syncFileList.values()[0].path+this->syncFileList.values()[0].fileName));
 
 
-    this->doSync();
+    this->doSync(this->syncFileList);
 
     return true;
 }
@@ -885,7 +885,14 @@ MSFSObject::ObjectState MSYandexDisk::filelist_defineObjectState(const MSLocalFS
 //=======================================================================================
 
 
-void MSYandexDisk::doSync(){
+void MSYandexDisk::checkFolderStructures(){
+
+}
+
+//=======================================================================================
+
+
+void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
     QHash<QString,MSFSObject>::iterator lf;
 

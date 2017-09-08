@@ -805,7 +805,13 @@ return  MSFSObject::ObjectState::ErrorState;
 
 
 
-void MSOneDrive::doSync(){
+void MSOneDrive::checkFolderStructures(){
+
+}
+
+
+
+void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
     QHash<QString,MSFSObject>::iterator lf;
 
@@ -1820,7 +1826,7 @@ bool MSOneDrive::createSyncFileList(){
 // this->remote_createDirectory((this->syncFileList.values()[0].path+this->syncFileList.values()[0].fileName));
 
 
-    this->doSync();
+    this->doSync(this->syncFileList);
 
     return true;
 

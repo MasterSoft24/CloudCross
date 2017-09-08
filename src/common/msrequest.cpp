@@ -147,6 +147,25 @@ void MSRequest::addHeader(const QByteArray &headerName, const QByteArray &header
 }
 
 
+
+QString MSRequest::getReplyHeader(const QByteArray &headerName){
+
+    for(int i = 0; i < this->replyHeaders.size(); i++){
+
+        QPair<QByteArray,QByteArray> h = this->replyHeaders[i];
+
+        if(QString(h.first) == QString(headerName)){
+
+            return QString(h.second);
+        }
+
+    }
+
+    return "";
+
+}
+
+
 void MSRequest::methodCharger(QNetworkRequest req){
 
 #ifdef CCROSS_LIB
@@ -217,7 +236,7 @@ void MSRequest::methodCharger(QNetworkRequest req){
 #endif
 
 //    connect(replySync,SIGNAL(downloadProgress(qint64,qint64)),this,SLOT(doDownloadProgress(qint64,qint64)));
-//    connect(replySync,SIGNAL(readyRead()),this,SLOT(doReadyRead()));
+    //connect(replySync,SIGNAL(readyRead()),this,SLOT(doReadyRead()));
 
 
 //    QEventLoop loop;
@@ -630,7 +649,7 @@ void MSRequest::methodCharger(QNetworkRequest req, const QString &path){
     this->currentReply=replySync;
 
 //    connect(replySync,SIGNAL(downloadProgress(qint64,qint64)),this,SLOT(doDownloadProgress(qint64,qint64)));
-//    connect(replySync,SIGNAL(readyRead()),this,SLOT(doReadyRead()));
+    //connect(replySync,SIGNAL(readyRead()),this,SLOT(doReadyRead()));
 //    connect(replySync,SIGNAL(finished()),this,SLOT(doRequestFinished()));
 
     //this->requesProcessed =true;
@@ -755,67 +774,6 @@ void MSRequest::post(const QByteArray &data){
 
     return;
 
-
-
-
-
-
-
-
-
-    QtCUrl cUrl;
-    cUrl.setTextCodec("utf-8");
-    QStringList headers;
-    QtCUrl::Options opt;
-
-    opt[CURLOPT_POST] = 1;
-
-    opt[CURLOPT_URL] = (this->url->url());
-
-    if(this->query->queryItems().size() > 0){
-
-        opt[CURLOPT_POSTFIELDS] = this->toUrlEncoded(this->query->toString());
-
-    }
-
-    if(!this->hasRawHeader("Content-Type")){
-
-        if(!this->notUseContentType){
-            headers << "Content-Type:    application/x-www-form-urlencoded";
-        }
-    }
-
-    if(this->rawHeaderList().size() > 0){
-
-
-        for(int i = 0; i < this->rawHeaderList().size(); i++){
-
-
-            QString ss= QString(this->rawHeaderList().at(i)) + QString(":  ") + this->rawHeader(this->rawHeaderList().at(i));
-            headers << ss;//this->toUrlEncoded(ss);
-        }
-
-    }
-
-    opt[CURLOPT_HTTPHEADER] = headers;
-    opt[CURLOPT_FOLLOWLOCATION] = 1;
-    opt[CURLOPT_FAILONERROR] = 1;
-
-    opt[CURLOPT_POSTFIELDS] = (data);
-    opt[CURLOPT_POSTFIELDSIZE] = (data).size();
-
-    cUrl.exec(opt);
-
-    if (cUrl.lastError().isOk()) {
-
-        this->replyError = QNetworkReply::NetworkError::NoError;
-        this->replyText = QByteArray(cUrl.buffer(), cUrl.buffer().size());
-
-    }
-    else {
-        this->replyError = QNetworkReply::NetworkError::ContentGoneError;
-        qDebug() << (QString("MSRequest - POST Error: %1\nBuffer: %2").arg(cUrl.lastError().text()).arg(cUrl.errorBuffer()));
-    }
 
 #endif
 
@@ -950,6 +908,38 @@ void MSRequest::download(const QString &url, const QString &path){
 }
 
 
+
+void MSRequest::syncDownloadWithGet( QString path){
+
+
+    this->url->setQuery(*this->query);
+    this->setUrl(*this->url);
+
+    this->outFile= new QFile(path);
+    bool e=this->outFile->open(QIODevice::WriteOnly );
+
+    if(e == false){
+        this->replyError = QNetworkReply::NetworkError::UnknownContentError;
+        return;
+    }
+
+
+
+
+    QNetworkReply* replySync = replySync=this->manager->get(*this);
+    this->currentReply = replySync;
+
+    connect(replySync,SIGNAL(readyRead()),this,SLOT(doReadyRead()));
+    connect(replySync, SIGNAL(finished()),this->loop, SLOT(quit()));
+    this->loop->exec();
+
+    delete(replySync);
+    //this->loop->exit(0);
+    //loop.deleteLater();
+
+}
+
+
 void MSRequest::put(const QByteArray &data){
 #ifdef CCROSS_LIB
 
@@ -1078,6 +1068,9 @@ void MSRequest::put(const QByteArray &data){
 
 #endif
 }
+
+
+
 
 #ifdef CCROSS_LIB
 size_t readCallback(void *ptr, size_t size, size_t nmemb, void *stream){
@@ -1283,9 +1276,11 @@ void MSRequest::deleteResource(){
 
 void MSRequest::exec(){
 
+#ifdef CCROSS_LIB
     methodCharger(*this);
 
     return;
+#endif
 
 #ifndef CCROSS_LIB
 
@@ -1366,7 +1361,7 @@ void MSRequest::doReadyRead(){
 
     //this->loop->exit(0);
 
-    log("doReadyRead was entered");
+    //log("doReadyRead was entered");
 }
 
 

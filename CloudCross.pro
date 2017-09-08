@@ -47,7 +47,8 @@ SOURCES += main.cpp \
     src/Dropbox/msdropbox.cpp \
     src/YandexDisk/msyandexdisk.cpp \
     src/MailRu/msmailru.cpp \
-    src/OneDrive/msonedrive.cpp
+    src/OneDrive/msonedrive.cpp \
+    src/common/mssyncthread.cpp
 
 
 
@@ -65,7 +66,8 @@ HEADERS += \
     src/Dropbox/msdropbox.h \
     src/YandexDisk/msyandexdisk.h \
     src/MailRu/msmailru.h \
-    src/OneDrive/msonedrive.h
+    src/OneDrive/msonedrive.h \
+    include/mssyncthread.h
 
 
 target.path = /usr/bin
@@ -74,4 +76,10 @@ INSTALLS += target
 DISTFILES += \
     README.MD \
     doc/ccross.ronn
+
+
+
+# DEFINITIONS
+
+DEFINES += GOOGLEDRIVE_CHUNK_SIZE=100*1024*1024 # max chunk size (minimum is a262144 bytes)
 

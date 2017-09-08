@@ -71,7 +71,10 @@ bool MSMailRu::auth(){
 
     this->cookies=new QNetworkCookieJar();
 
+#ifdef CCROSS_LIB
+
     this->cookieList.insert(this->cookies->name, this->cookies);
+#endif
 
     req->MSsetCookieJar(this->cookies);
 
@@ -957,7 +960,14 @@ MSFSObject::ObjectState MSMailRu::filelist_defineObjectState(const MSLocalFSObje
 //=======================================================================================
 
 
-void MSMailRu::doSync(){
+void MSMailRu::checkFolderStructures(){
+
+}
+
+//=======================================================================================
+
+
+void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
     QHash<QString,MSFSObject>::iterator lf;
 
@@ -2038,7 +2048,7 @@ bool MSMailRu::createSyncFileList(){
 // this->remote_createDirectory((this->syncFileList.values()[0].path+this->syncFileList.values()[0].fileName));
 
 
-    this->doSync();
+    this->doSync(this->syncFileList);
 
     return true;
 }

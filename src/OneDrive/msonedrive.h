@@ -89,7 +89,8 @@ public:
     void saveStateFile();
     bool refreshToken();
     MSFSObject::ObjectState filelist_defineObjectState(const MSLocalFSObject &local, const MSRemoteFSObject &remote);
-    void doSync();
+    void checkFolderStructures();
+    void doSync(QHash<QString,MSFSObject> fsObjectList);
 
 
     QHash<QString,MSFSObject>   filelist_getFSObjectsByState(MSFSObject::ObjectState state) ;

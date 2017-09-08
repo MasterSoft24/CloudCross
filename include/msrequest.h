@@ -131,6 +131,7 @@ public:
 
     void addHeader(const QString &headerName, const QString &headerValue);
     void addHeader(const QByteArray &headerName, const QByteArray &headerValue);
+    QString getReplyHeader(const QByteArray &headerName);
 
     void exec();
     void post(const QByteArray &data);
@@ -142,6 +143,9 @@ public:
 
     void download(const QString &url);
     void download(const QString &url, const QString &path);
+
+    void syncDownloadWithGet(QString path);
+
     void deleteResource();
 
     bool replyOK();

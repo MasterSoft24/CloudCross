@@ -610,7 +610,7 @@ bool MSDropbox::createSyncFileList(){
 // this->remote_createDirectory((this->syncFileList.values()[0].path+this->syncFileList.values()[0].fileName));
 
 
-    this->doSync();
+    this->doSync(this->syncFileList);
 
     return true;
 }
@@ -928,7 +928,14 @@ MSFSObject::ObjectState MSDropbox::filelist_defineObjectState(const MSLocalFSObj
 //=======================================================================================
 
 
-void MSDropbox::doSync(){
+void MSDropbox::checkFolderStructures(){
+
+}
+
+//=======================================================================================
+
+
+void MSDropbox::doSync(QHash<QString, MSFSObject> fsObjectList){
 
     QHash<QString,MSFSObject>::iterator lf;
 

@@ -48,6 +48,10 @@
 #include <QTcpServer>
 
 
+#include <QThread>
+#include <QSemaphore>
+
+
 
 #include "msfsobject.h"
 #include "msidslist.h"
@@ -90,6 +94,7 @@ public:
 
     MSCloudProvider(QObject* parent=0);
 
+    QSemaphore *threadsRunning;
 
     QString providerName;
 
@@ -123,7 +128,10 @@ public:
     virtual void saveStateFile()=0;
     virtual bool refreshToken()=0;
     virtual MSFSObject::ObjectState filelist_defineObjectState(const MSLocalFSObject &local, const MSRemoteFSObject &remote)=0;
-    virtual void doSync()=0;
+
+    virtual void checkFolderStructures()=0;
+
+    virtual void doSync(QHash<QString,MSFSObject> fsObjectList)=0;
     //virtual bool remote_file_generateIDs(int count) =0 ;
 
     virtual bool _readRemote(const QString &rootPath) = 0;

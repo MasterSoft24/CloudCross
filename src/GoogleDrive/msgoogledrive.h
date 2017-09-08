@@ -1,8 +1,8 @@
 /*
     CloudCross: Opensource program for syncronization of local files and folders with clouds
 
-    Copyright (C) 2016  Vladimir Kamensky
-    Copyright (C) 2016  Master Soft LLC.
+    Copyright (C) 2016-2017  Vladimir Kamensky
+    Copyright (C) 2016-2017  Master Soft LLC.
     All rights reserved.
 
 
@@ -36,6 +36,7 @@
 
 #include <QObject>
 #include <include/mscloudprovider.h>
+#include "include/mssyncthread.h"
 
 
 
@@ -111,7 +112,9 @@ public:
      bool filterOfficeMimeTypes(const QString &mime);
 
 
-     void doSync();
+     void checkFolderStructures();
+     void doSync(QHash<QString,MSFSObject> fsObjectList);
+
 
      QHash<QString,MSFSObject>      filelist_getFSObjectsByState(MSFSObject::ObjectState state);
 
