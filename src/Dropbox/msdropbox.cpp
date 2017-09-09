@@ -2210,6 +2210,13 @@ void MSDropbox::local_removeFile(const QString &path){
     QString origPath=this->workPath+path;
     QString trashedPath=this->workPath+"/"+this->trashFileName+path;
 
+    // create trashed folder structure if it's needed
+    QFileInfo tfi(trashedPath);
+    QDir tfs(tfi.absolutePath().replace(this->workPath,""));
+    if(!tfs.exists()){
+        tfs.mkdir(this->workPath + tfi.absolutePath().replace(this->workPath,""));
+    }
+
     QFile f;
     f.setFileName(origPath);
     bool res=f.rename(trashedPath);
@@ -2238,6 +2245,13 @@ void MSDropbox::local_removeFolder(const QString &path){
 
     QString origPath=this->workPath+path;
     QString trashedPath=this->workPath+"/"+this->trashFileName+path;
+
+    // create trashed folder structure if it's needed
+    QFileInfo tfi(trashedPath);
+    QDir tfs(tfi.absolutePath().replace(this->workPath,""));
+    if(!tfs.exists()){
+        tfs.mkdir(this->workPath + tfi.absolutePath().replace(this->workPath,""));
+    }
 
     QDir f;
     f.setPath(origPath);
