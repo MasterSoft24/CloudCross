@@ -136,8 +136,8 @@ bool MSCloudProvider::filterIncludeFileNames(const QString &path){// return fals
     }
     else{
         QStringList filters = this->includeList.split('|');
-        qDebug() << filters;
-        qDebug() << path;
+        //qDebug() << filters;
+        //qDebug() << path;
         for(QString &filt : filters){
             QRegExp regex2(filt);
             regex2.setPatternSyntax(QRegExp::Wildcard);
@@ -145,7 +145,7 @@ bool MSCloudProvider::filterIncludeFileNames(const QString &path){// return fals
             int m = regex2.indexIn(path);
 
             if(m != -1){
-                qDebug() << path << "     match";
+                //qDebug() << path << "     match";
                 return false;
             }
         }
@@ -436,9 +436,13 @@ void MSCloudProvider::onDataRecieved(){
             ce=c.indexOf(" ",cb);
             code=c.mid(cb+5,ce-cb-5);
 
-	    this->oauthListenerSocket->close();
+            this->oauthListenerSocket->write("HTTP/1.1 302 Found\r\nLocation: https://cloudcross.mastersoft24.ru/authcomplete.html");
+            //this->oauthListenerSocket->write("HTTP/1.0 200 OK\r\n<html><body><h1>Auth complete</h1></body></html>\r\n");
+            this->oauthListenerSocket->waitForBytesWritten();
 
-	    this->stopListener();
+            //this->oauthListenerSocket->close();
+
+            this->stopListener();
 
             emit oAuthCodeRecived(code,this);
         }
