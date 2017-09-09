@@ -42,6 +42,8 @@
 #include <utime.h>
 #include <sys/time.h>
 
+#include "include/mssyncthread.h"
+
 class MSYandexDisk : public MSCloudProvider
 {
 public:

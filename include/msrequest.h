@@ -87,6 +87,8 @@ public:
 
 public:
 
+    bool setQueryForDownload; // used in syncDownloadWithGet();
+
     QNetworkReply* lastReply;// deprecated
     QNetworkReply* currentReply;// deprecated
 

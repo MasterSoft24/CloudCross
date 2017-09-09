@@ -42,6 +42,9 @@ MSRequest::MSRequest(QNetworkProxy *proxy)
     // init members on create object
 
 #ifndef CCROSS_LIB
+
+    this->setQueryForDownload =true;
+
     this->url=new QUrl();
     this->manager=new QNetworkAccessManager();
     this->query=new QUrlQuery();
@@ -912,7 +915,10 @@ void MSRequest::download(const QString &url, const QString &path){
 void MSRequest::syncDownloadWithGet( QString path){
 
 
-    this->url->setQuery(*this->query);
+    if(this->setQueryForDownload){
+        this->url->setQuery(*this->query);
+    }
+
     this->setUrl(*this->url);
 
     this->outFile= new QFile(path);
