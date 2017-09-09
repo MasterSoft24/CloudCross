@@ -42,8 +42,7 @@
 #include <utime.h>
 #include <sys/time.h>
 
-#define ONEDRIVE_MAX_FILESIZE  100000 //61865984
-
+#include "include/mssyncthread.h"
 
 
 class MSOneDrive : public MSCloudProvider

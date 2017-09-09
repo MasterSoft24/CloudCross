@@ -135,7 +135,7 @@ void MSProvidersPool::saveTokenFile(const QString &providerName){
     MSCloudProvider* cp=this->getProvider(providerName);
     if(cp!=NULL){
 //        cp->saveTokenFile(this->workPath);
-        cp->saveTokenFile(this->credentialsPath);
+        cp->saveTokenFile(cp->credentialsPath);
 
     }
 }
@@ -145,7 +145,7 @@ bool MSProvidersPool::loadTokenFile(const QString &providerName){
     MSCloudProvider* cp=this->getProvider(providerName);
     if(cp!=NULL){
 //        return cp->loadTokenFile(this->workPath);
-        return cp->loadTokenFile(this->credentialsPath);
+        return cp->loadTokenFile(cp->credentialsPath);
 
     }
     return false;

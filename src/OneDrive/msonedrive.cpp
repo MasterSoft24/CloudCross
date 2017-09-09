@@ -53,12 +53,17 @@ bool MSOneDrive::remote_file_get(MSFSObject *object){
     QString filePath = this->workPath + object->path + object->fileName;
 
     MSRequest *req = new MSRequest(this->proxyServer);
+
+afterReauth:
+
+    req->setRequestUrl(object->remote.data["@content.downloadUrl"].toString());
     req->setMethod("get");
 
     req->addHeader("Authorization","Bearer "+this->access_token);
 
 
-    req->download(object->remote.data["@content.downloadUrl"].toString(), this->workPath + object->path + object->fileName);
+    //req->download(object->remote.data["@content.downloadUrl"].toString(), this->workPath + object->path + object->fileName);
+    req->syncDownloadWithGet(this->workPath + object->path + object->fileName);
 
     QString c = req->readReplyText();
 
@@ -75,6 +80,17 @@ bool MSOneDrive::remote_file_get(MSFSObject *object){
         delete(req);
         return true;
 
+    }
+    else{
+        if(req->replyErrorText.contains("Host requires authentication")){
+            delete(req);
+            this->refreshToken();
+            req = new MSRequest(this->proxyServer);
+
+            qStdOut() << "OneDrive token expired. Refreshing token done. Retry last operation. "<<endl;
+
+            goto afterReauth;
+        }
     }
 
     return false;
@@ -145,6 +161,8 @@ bool MSOneDrive::remote_file_insert(MSFSObject *object){
 
     MSRequest *req = new MSRequest(this->proxyServer);
 
+afterReauth:
+
     req->setRequestUrl("https://api.onedrive.com/v1.0/drive/root:"+QString(object->path+object->fileName)+":/upload.createSession");
     req->setMethod("post");
 
@@ -157,6 +175,17 @@ bool MSOneDrive::remote_file_insert(MSFSObject *object){
     req->exec();
 
     if(!req->replyOK()){
+
+        if(req->replyErrorText.contains("Host requires authentication")){
+            delete(req);
+            this->refreshToken();
+            req = new MSRequest(this->proxyServer);
+
+            qStdOut() << "OneDrive token expired. Refreshing token done. Retry last operation. "<<endl;
+
+            goto afterReauth;
+        }
+
         req->printReplyError();
         delete(req);
         return false;
@@ -187,7 +216,7 @@ bool MSOneDrive::remote_file_insert(MSFSObject *object){
     QFile file(filePath);
 
     qint64 fSize=file.size();
-    quint64 passCount=(quint64)((double)fSize/(double)ONEDRIVE_MAX_FILESIZE);// count of 59MB blocks
+    quint64 passCount=(quint64)((double)fSize/(double)ONEDRIVE_CHUNK_SIZE);// count of 59MB blocks
 
     if (!file.open(QIODevice::ReadOnly)){
 
@@ -202,6 +231,8 @@ bool MSOneDrive::remote_file_insert(MSFSObject *object){
     if(passCount==0){// onepass and finalize uploading
 
         req = new MSRequest(this->proxyServer);
+
+
         req->setRequestUrl(uploadUrl);
 
         req->addHeader("Authorization",                     "Bearer "+this->access_token);
@@ -216,14 +247,24 @@ bool MSOneDrive::remote_file_insert(MSFSObject *object){
             return false;
         }
 
-        QByteArray* ba=new QByteArray();
+        //QByteArray* ba=new QByteArray();
 
         file.seek(cursorPosition);
-        ba->append(file.read(ONEDRIVE_MAX_FILESIZE));
+        //ba->append(file.read(ONEDRIVE_CHUNK_SIZE));
 
-        req->put(*ba);
+        req->put(file.read(ONEDRIVE_CHUNK_SIZE));
 
         if(!req->replyOK()){
+
+            if(req->replyErrorText.contains("Host requires authentication")){
+                delete(req);
+                this->refreshToken();
+                req = new MSRequest(this->proxyServer);
+                qStdOut() << "OneDrive token expired. Refreshing token done. Retry last operation. "<<endl;
+
+                goto afterReauth;
+            }
+
             req->printReplyError();
             delete(req);
             return false;
@@ -263,17 +304,17 @@ bool MSOneDrive::remote_file_insert(MSFSObject *object){
 
             if(cursorPosition == 0){
 
-                blsz=ONEDRIVE_MAX_FILESIZE;
+                blsz=ONEDRIVE_CHUNK_SIZE;
             }
             else{
 
-                if(fSize - cursorPosition < ONEDRIVE_MAX_FILESIZE){
+                if(fSize - cursorPosition < ONEDRIVE_CHUNK_SIZE){
 
                     blsz=fSize - cursorPosition;
                 }
                 else{
 
-                    blsz=ONEDRIVE_MAX_FILESIZE;
+                    blsz=ONEDRIVE_CHUNK_SIZE;
                 }
 
             }
@@ -287,14 +328,23 @@ bool MSOneDrive::remote_file_insert(MSFSObject *object){
 
             req->addHeader("Content-Range",                     "bytes "+QString::number(cursorPosition).toLocal8Bit()+"-"+QString::number(cursorPosition+blsz-1).toLocal8Bit()+"/"+QString::number(fSize).toLocal8Bit());
 
-            QByteArray* ba=new QByteArray();
+            //QByteArray* ba=new QByteArray();
 
             file.seek(cursorPosition);
-            ba->append(file.read(ONEDRIVE_MAX_FILESIZE));
+            //ba->append(file.read(ONEDRIVE_CHUNK_SIZE));
 
-            req->put(*ba);
+            req->put(file.read(ONEDRIVE_CHUNK_SIZE));
 
             if(!req->replyOK()){
+
+                if(req->replyErrorText.contains("Host requires authentication")){
+                    delete(req);
+                    this->refreshToken();
+                    req = new MSRequest(this->proxyServer);
+                    qStdOut() << "OneDrive token expired. Refreshing token done. Retry last operation. "<<endl;
+                    goto afterReauth;
+                }
+
                 req->printReplyError();
                 delete(req);
                 return false;
@@ -315,7 +365,7 @@ bool MSOneDrive::remote_file_insert(MSFSObject *object){
             cursorPosition=cp.toLong();
 
             delete(req);
-            delete(ba);
+            //delete(ba);
 
         }while(true);
 
@@ -807,12 +857,6 @@ return  MSFSObject::ObjectState::ErrorState;
 
 void MSOneDrive::checkFolderStructures(){
 
-}
-
-
-
-void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
-
     QHash<QString,MSFSObject>::iterator lf;
 
     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
@@ -867,6 +911,66 @@ void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
     }
 
+}
+
+
+
+void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
+
+    QHash<QString,MSFSObject>::iterator lf;
+
+//    if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
+
+//        // create new folder structure on remote
+
+//        qStdOut()<<"Checking folder structure on remote" <<endl;
+
+//        QHash<QString,MSFSObject> localFolders=this->filelist_getFSObjectsByTypeLocal(MSLocalFSObject::Type::folder);
+//        localFolders=this->filelist_getFSObjectsByState(localFolders,MSFSObject::ObjectState::NewLocal);
+
+//        lf=localFolders.begin();
+
+//        while(lf != localFolders.end()){
+
+//            this->remote_createDirectory(lf.key());
+
+//            lf++;
+//        }
+//    }
+//    else{
+
+//        // create new folder structure on local
+
+//        qStdOut()<<"Checking folder structure on local" <<endl;
+
+//        QHash<QString,MSFSObject> remoteFolders=this->filelist_getFSObjectsByTypeRemote(MSRemoteFSObject::Type::folder);
+//        remoteFolders=this->filelist_getFSObjectsByState(remoteFolders,MSFSObject::ObjectState::NewRemote);
+
+//        lf=remoteFolders.begin();
+
+//        while(lf != remoteFolders.end()){
+
+//            this->local_createDirectory(this->workPath+lf.key());
+
+//            lf++;
+//        }
+
+//        // trash local folder
+//        QHash<QString,MSFSObject> trashFolders=this->filelist_getFSObjectsByTypeLocal(MSLocalFSObject::Type::folder);
+//        trashFolders=this->filelist_getFSObjectsByState(trashFolders,MSFSObject::ObjectState::DeleteRemote);
+
+//        lf=trashFolders.begin();
+
+//        while(lf != trashFolders.end()){
+
+
+//            this->local_removeFolder(lf.key());
+
+//            lf++;
+//        }
+
+//    }
+
 
 
 
@@ -877,9 +981,9 @@ void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
             qStdOut()<<"Start downloading in force mode" <<endl;
 
-            lf=this->syncFileList.begin();
+            lf=fsObjectList.begin();
 
-            for(;lf != this->syncFileList.end();lf++){
+            for(;lf != fsObjectList.end();lf++){
 
                 MSFSObject obj=lf.value();
 
@@ -906,9 +1010,9 @@ void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                 qStdOut()<<"Start uploading in force mode" <<endl;
 
-                lf=this->syncFileList.begin();
+                lf=fsObjectList.begin();
 
-                for(;lf != this->syncFileList.end();lf++){
+                for(;lf != fsObjectList.end();lf++){
 
                     MSFSObject obj=lf.value();
 
@@ -970,9 +1074,9 @@ void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
     qStdOut()<<"Start syncronization" <<endl;
 
-    lf=this->syncFileList.begin();
+    lf=fsObjectList.begin();
 
-    for(;lf != this->syncFileList.end();lf++){
+    for(;lf != fsObjectList.end();lf++){
 
         MSFSObject obj=lf.value();
 
@@ -1826,7 +1930,75 @@ bool MSOneDrive::createSyncFileList(){
 // this->remote_createDirectory((this->syncFileList.values()[0].path+this->syncFileList.values()[0].fileName));
 
 
-    this->doSync(this->syncFileList);
+    // make separately lists of objects
+    QList<QString> keys = this->syncFileList.uniqueKeys();
+
+    if(keys.size()>3){// split list to few parts
+
+        this->threadsRunning = new QSemaphore(3);
+
+        QThread* t1 = new QThread(this);
+        QThread* t2 = new QThread();
+        QThread* t3 = new QThread(this);
+
+        MSSyncThread* thr1 = new MSSyncThread(nullptr,this);
+        thr1->moveToThread(t1);
+        connect(t1,SIGNAL(started()),thr1,SLOT(run()));
+        connect(t1,SIGNAL(finished()),thr1,SLOT(deleteLater()));
+        connect(thr1,SIGNAL(finished()),t1,SLOT(quit()));
+
+        MSSyncThread* thr2 = new MSSyncThread(nullptr,this);
+        thr2->moveToThread(t2);
+        connect(t2,SIGNAL(started()),thr2,SLOT(run()));
+        connect(t2,SIGNAL(finished()),thr2,SLOT(deleteLater()));
+        connect(thr2,SIGNAL(finished()),t2,SLOT(quit()));
+
+        MSSyncThread* thr3 = new MSSyncThread(nullptr,this);
+        thr3->moveToThread(t3);
+        connect(t3,SIGNAL(started()),thr3,SLOT(run()));
+        connect(t3,SIGNAL(finished()),thr3,SLOT(deleteLater()));
+        connect(thr3,SIGNAL(finished()),t3,SLOT(quit()));
+
+
+//        QHash<QString,MSFSObject> L1;
+//        QHash<QString,MSFSObject> L2;
+//        QHash<QString,MSFSObject> L3;
+
+        for(int i=0;i<keys.size();i+=3){
+
+            if(i<=keys.size()-1){
+                thr1->threadSyncList.insert(keys[i],this->syncFileList.find(keys[i]).value());
+            }
+            if(i+1 <= keys.size()-1){
+                thr2->threadSyncList.insert(keys[i+1],this->syncFileList.find(keys[i+1]).value());
+            }
+            if(i+2 <= keys.size()-1){
+                thr3->threadSyncList.insert(keys[i+2],this->syncFileList.find(keys[i+2]).value());
+            }
+
+        }
+        //this->doSync(L2);
+
+        this->checkFolderStructures();
+
+        t1->start();
+        t2->start();
+        t3->start();
+        t1->wait();
+        t2->wait();
+        t3->wait();
+
+//        while (this->threadsRunning->available()<3) {
+
+//        }
+
+
+    }
+    else{// sync as is
+
+        this->checkFolderStructures();
+        this->doSync(this->syncFileList);
+    }
 
     return true;
 
