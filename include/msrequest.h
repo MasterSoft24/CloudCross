@@ -145,6 +145,7 @@ public:
     void download(const QString &url, const QString &path);
 
     void syncDownloadWithGet(QString path);
+    void syncDownloadWithPost( QString path, QByteArray data);
 
     void deleteResource();
 

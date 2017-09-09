@@ -940,6 +940,40 @@ void MSRequest::syncDownloadWithGet( QString path){
 }
 
 
+
+void MSRequest::syncDownloadWithPost( QString path, QByteArray data){
+
+
+    this->url->setQuery(*this->query);
+    this->setUrl(*this->url);
+
+    this->outFile= new QFile(path);
+    bool e=this->outFile->open(QIODevice::WriteOnly );
+
+    if(e == false){
+        this->replyError = QNetworkReply::NetworkError::UnknownContentError;
+        return;
+    }
+
+
+
+
+    QNetworkReply* replySync = replySync=this->manager->post(*this,data.data());
+    this->currentReply = replySync;
+
+    connect(replySync,SIGNAL(readyRead()),this,SLOT(doReadyRead()));
+    connect(replySync, SIGNAL(finished()),this->loop, SLOT(quit()));
+    this->loop->exec();
+
+    delete(replySync);
+    //this->loop->exit(0);
+    //loop.deleteLater();
+
+}
+
+
+
+
 void MSRequest::put(const QByteArray &data){
 #ifdef CCROSS_LIB
 

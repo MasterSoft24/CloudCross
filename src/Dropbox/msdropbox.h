@@ -40,6 +40,8 @@
 
 #include <sys/types.h>
 
+#include "include/mssyncthread.h"
+
 #ifdef PLATFORM_WINDOWS
 #include <sys/utime.h>
 #endif
