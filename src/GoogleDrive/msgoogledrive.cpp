@@ -1856,6 +1856,8 @@ bool MSGoogleDrive::remote_file_get(MSFSObject* object){
 
     MSRequest *req = new MSRequest(this->proxyServer);
 
+afterReauth:
+
     req->setRequestUrl("https://www.googleapis.com/drive/v2/files/"+id);
     req->setMethod("get");
 
@@ -1939,6 +1941,15 @@ bool MSGoogleDrive::remote_file_get(MSFSObject* object){
 //    req->exec();
 
 
+    if(req->replyErrorText.contains("Host requires authentication")){
+        delete(req);
+        this->refreshToken();
+        req = new MSRequest(this->proxyServer);
+
+        qStdOut() << "GoogleDrive token expired. Refreshing token done. Retry last operation. "<<endl;
+
+        goto afterReauth;
+    }
 
 
     if(this->testReplyBodyForError(req->readReplyText())){
@@ -1978,6 +1989,8 @@ bool MSGoogleDrive::remote_file_insert(MSFSObject *object){
     }
 
     MSRequest *req = new MSRequest(this->proxyServer);
+
+afterReauth:
 
     req->setRequestUrl("https://www.googleapis.com/upload/drive/v2/files");
     req->setMethod("post");
@@ -2094,6 +2107,17 @@ bool MSGoogleDrive::remote_file_insert(MSFSObject *object){
     req->post(metaData);
 
     if(!req->replyOK()){
+
+        if(req->replyErrorText.contains("Host requires authentication")){
+            delete(req);
+            this->refreshToken();
+            req = new MSRequest(this->proxyServer);
+
+            qStdOut() << "GoogleDrive token expired. Refreshing token done. Retry last operation. "<<endl;
+
+            goto afterReauth;
+        }
+
         req->printReplyError();
         delete(req);
         return false;
@@ -2156,6 +2180,17 @@ bool MSGoogleDrive::remote_file_insert(MSFSObject *object){
             req->put(file.read(GOOGLEDRIVE_CHUNK_SIZE));
 
             if(!req->replyOK()){
+
+                if(req->replyErrorText.contains("Host requires authentication")){
+                    delete(req);
+                    this->refreshToken();
+                    req = new MSRequest(this->proxyServer);
+
+                    qStdOut() << "GoogleDrive token expired. Refreshing token done. Retry last operation. "<<endl;
+
+                    goto afterReauth;
+                }
+
                 req->printReplyError();
                 delete(req);
                 return false;
@@ -2178,6 +2213,8 @@ bool MSGoogleDrive::remote_file_insert(MSFSObject *object){
 
         req = new MSRequest(this->proxyServer);
 
+afterReauth2:
+
         req->setRequestUrl(uploadURI);
         req->query = new QUrlQuery(req->url->query());// extract query string and setup his separately
 
@@ -2190,6 +2227,17 @@ bool MSGoogleDrive::remote_file_insert(MSFSObject *object){
         file.close();
 
         if(!req->replyOK()){
+
+            if(req->replyErrorText.contains("Host requires authentication")){
+                delete(req);
+                this->refreshToken();
+                req = new MSRequest(this->proxyServer);
+
+                qStdOut() << "GoogleDrive token expired. Refreshing token done. Retry last operation. "<<endl;
+
+                goto afterReauth2;
+            }
+
             req->printReplyError();
             delete(req->query);
             delete(req);
