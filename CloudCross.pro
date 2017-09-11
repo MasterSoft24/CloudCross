@@ -48,7 +48,8 @@ SOURCES += main.cpp \
     src/YandexDisk/msyandexdisk.cpp \
     src/MailRu/msmailru.cpp \
     src/OneDrive/msonedrive.cpp \
-    src/common/mssyncthread.cpp
+    src/common/mssyncthread.cpp \
+    src/common/qmultibuffer.cpp
 
 
 
@@ -67,7 +68,8 @@ HEADERS += \
     src/YandexDisk/msyandexdisk.h \
     src/MailRu/msmailru.h \
     src/OneDrive/msonedrive.h \
-    include/mssyncthread.h
+    include/mssyncthread.h \
+    include/qmultibuffer.h
 
 
 target.path = /usr/bin

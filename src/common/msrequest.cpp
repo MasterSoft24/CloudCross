@@ -799,6 +799,30 @@ void MSRequest::post(const QByteArray &data){
 }
 
 
+
+
+void MSRequest::post(QIODevice *data){
+
+#ifndef CCROSS_LIB
+    QNetworkReply* replySync;
+
+    this->url->setQuery(*this->query);
+    this->setUrl(*this->url);
+
+    replySync=this->manager->post(*this,data);
+
+    //QEventLoop loop;
+    connect(replySync, SIGNAL(finished()),this->loop, SLOT(quit()));
+    loop->exec();
+
+    delete(replySync);
+    //this->loop->exit(0);
+    //this->loop.deleteLater();
+#endif
+
+}
+
+
 void MSRequest::download(const QString &url){
 
 #ifdef CCROSS_LIB
@@ -932,7 +956,7 @@ void MSRequest::syncDownloadWithGet( QString path){
 
 
 
-    QNetworkReply* replySync = replySync=this->manager->get(*this);
+    QNetworkReply* replySync = this->manager->get(*this);
     this->currentReply = replySync;
 
     connect(replySync,SIGNAL(readyRead()),this,SLOT(doReadyRead()));
@@ -964,7 +988,7 @@ void MSRequest::syncDownloadWithPost( QString path, QByteArray data){
 
 
 
-    QNetworkReply* replySync = replySync=this->manager->post(*this,data.data());
+    QNetworkReply* replySync = this->manager->post(*this,data.data());
     this->currentReply = replySync;
 
     connect(replySync,SIGNAL(readyRead()),this,SLOT(doReadyRead()));
@@ -974,6 +998,24 @@ void MSRequest::syncDownloadWithPost( QString path, QByteArray data){
     delete(replySync);
     //this->loop->exit(0);
     //loop.deleteLater();
+
+}
+
+void MSRequest::postMultipart(QHttpMultiPart *multipart){
+
+    QNetworkReply* replySync;
+
+    this->url->setQuery(*this->query);
+    this->setUrl(*this->url);
+
+    replySync=this->manager->post(*this,multipart);
+    //multipart->setParent(replySync);
+
+    //QEventLoop loop;
+    connect(replySync, SIGNAL(finished()),this->loop, SLOT(quit()));
+    loop->exec();
+
+    //delete(replySync);
 
 }
 

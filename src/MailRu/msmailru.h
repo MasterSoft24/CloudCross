@@ -36,9 +36,14 @@
 #define MSMAILRU_H
 
 #include <include/mscloudprovider.h>
+#include "include/qmultibuffer.h"
+#include "include/mssyncthread.h"
 #include <QFile>
 #include <QDir>
 #include <QFileDevice>
+#include <QHttpMultiPart>
+#include <QHttpPart>
+#include <QBuffer>
 
 #include <sys/types.h>
 #include <utime.h>

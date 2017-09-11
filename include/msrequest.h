@@ -53,6 +53,8 @@
 #include <QPair>
 #include <QHash>
 
+#include <QHttpMultiPart>
+
 #ifdef CCROSS_LIB
 #include "QtCUrl.h"
 #include "msnetworkcookiejar.h"
@@ -137,6 +139,7 @@ public:
 
     void exec();
     void post(const QByteArray &data);
+    void post(QIODevice *data);
     void put(const QByteArray &data);
     void put(QIODevice* data);
     void methodCharger(QNetworkRequest req);
@@ -148,6 +151,7 @@ public:
 
     void syncDownloadWithGet(QString path);
     void syncDownloadWithPost( QString path, QByteArray data);
+    void postMultipart(QHttpMultiPart* multipart);
 
     void deleteResource();
 
