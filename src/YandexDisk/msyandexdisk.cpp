@@ -2069,23 +2069,27 @@ bool MSYandexDisk::local_writeFileContent(const QString &filePath, const QString
 
     req->setMethod("get");
 
+#ifndef CCROSS_LIB
     req->setQueryForDownload = false; // don't use a query parameters settings in syncDownloadWithGet function
 
-//    req->download(hrefToDownload);
     req->syncDownloadWithGet(filePath);
+#endif
+#ifdef CCROSS_LIB
+    req->download(hrefToDownload);
+#endif
 
 
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
-        //exit(1);
+
         return false;
     }
 
-
-//    QFile file(filePath);
-//    file.open(QIODevice::WriteOnly );
-//    QDataStream outk(&file);
+#ifdef CCROSS_LIB
+    QFile file(filePath);
+    file.open(QIODevice::WriteOnly );
+    QDataStream outk(&file);
 
 //    QByteArray ba;
 //    ba.append(req->readReplyText());
@@ -2093,9 +2097,10 @@ bool MSYandexDisk::local_writeFileContent(const QString &filePath, const QString
 //    int sz=ba.size();
 
 
-//    outk.writeRawData(ba.data(),sz) ;
+    outk.writeRawData(req->readReplyText(),req->readReplyText().size()) ;
 
-//    file.close();
+    file.close();
+#endif
     return true;
 }
 

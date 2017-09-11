@@ -1935,10 +1935,13 @@ afterReauth:
 
     QString filePath=this->workPath+object->path+object->fileName;
 
+#ifndef CCROSS_LIB
     req->url->setQuery(*req->query);
     req->syncDownloadWithGet(filePath);
-
-//    req->exec();
+#endif
+#ifdef CCROSS_LIB
+    req->exec();
+#endif
 
 
     if(req->replyErrorText.contains("Host requires authentication")){
@@ -1955,8 +1958,9 @@ afterReauth:
     if(this->testReplyBodyForError(req->readReplyText())){
 
         if(object->remote.objectType==MSRemoteFSObject::Type::file){
-
-            //this->local_writeFileContent(filePath,req);
+#ifdef CCROSS_LIB
+            this->local_writeFileContent(filePath,req);
+#endif
         }
     }
     else{

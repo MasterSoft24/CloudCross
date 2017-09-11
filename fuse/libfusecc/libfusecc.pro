@@ -66,7 +66,9 @@ SOURCES += libfusecc.cpp \
     ../../src/Dropbox/msdropbox.cpp \
     ../../src/YandexDisk/msyandexdisk.cpp \
     ../../src/MailRu/msmailru.cpp \
-    msnetworkcookiejar.cpp
+    msnetworkcookiejar.cpp \
+    ../../src/common/qmultibuffer.cpp \
+    ../../src/common/mssyncthread.cpp
 
 HEADERS += libfusecc.h\
         libfusecc_global.h \
@@ -84,7 +86,9 @@ HEADERS += libfusecc.h\
     ../../src/Dropbox/msdropbox.h \
     ../../src/YandexDisk/msyandexdisk.h \
     ../../src/MailRu/msmailru.h \
-    msnetworkcookiejar.h
+    msnetworkcookiejar.h \
+    ../../include/qmultibuffer.h \
+    ../../include/mssyncthread.h
 
 unix {
     target.path = /usr/lib
@@ -93,3 +97,14 @@ unix {
 
 
 LIBS +=  -lcurl
+
+
+# DEFINITIONS
+
+DEFINES += GOOGLEDRIVE_CHUNK_SIZE=100*1024*1024 # max chunk size (minimum is a 262144 bytes)
+DEFINES += ONEDRIVE_CHUNK_SIZE=10158080 #must be a multiplies of 32K
+DEFINES += DROPBOX_CHUNK_SIZE=150*1024*1024
+
+
+
+

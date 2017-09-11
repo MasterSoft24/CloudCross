@@ -6,7 +6,7 @@
     Copyright (C) 2017  Master Soft LLC.
     All rights reserved.
 
-* /
+*/
 
 /*
     CloudCross: Opensource program for syncronization of local files and folders with clouds

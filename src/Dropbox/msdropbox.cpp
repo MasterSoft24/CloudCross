@@ -1606,8 +1606,12 @@ bool MSDropbox::remote_file_get(MSFSObject* object){
     QString filePath=this->workPath+object->path+object->fileName;
 
     QByteArray ba;
-    //req->post(ba);
+#ifdef CCROSS_LIB
+    req->post(ba);
+#endif
+#ifndef CCROSS_LIB
     req->syncDownloadWithPost(filePath,ba);
+#endif
 
 
 
@@ -1615,7 +1619,9 @@ bool MSDropbox::remote_file_get(MSFSObject* object){
 
         if(object->remote.objectType==MSRemoteFSObject::Type::file){
 
-           // this->local_writeFileContent(filePath,req);
+#ifdef CCROSS_LIB
+            this->local_writeFileContent(filePath,req);
+#endif
             // set remote "change time" for local file
 
             utimbuf tb;

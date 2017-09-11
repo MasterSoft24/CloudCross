@@ -61,9 +61,11 @@ afterReauth:
 
     req->addHeader("Authorization","Bearer "+this->access_token);
 
-
-    //req->download(object->remote.data["@content.downloadUrl"].toString(), this->workPath + object->path + object->fileName);
+#ifdef CCROSS_LIB
+    req->download(object->remote.data["@content.downloadUrl"].toString(), this->workPath + object->path + object->fileName);
+#else
     req->syncDownloadWithGet(this->workPath + object->path + object->fileName);
+#endif
 
     QString c = req->readReplyText();
 

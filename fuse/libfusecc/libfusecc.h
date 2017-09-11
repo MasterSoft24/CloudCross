@@ -10,7 +10,7 @@
 
 #include "include/msrequest.h"
 #include "include/msproviderspool.h"
-
+#include "include/qmultibuffer.h"
 
 #include "ccseparatethread.h"
 

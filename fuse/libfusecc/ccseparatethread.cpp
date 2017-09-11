@@ -97,8 +97,8 @@ bool CCSeparateThread::command_doSync(){
 
     }
 
-    cp->syncFileList = work;
-    cp->doSync();
+    //cp->syncFileList = work;
+    cp->doSync(work);
 
     cp->syncFileList.clear();
 
