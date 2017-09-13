@@ -37,12 +37,20 @@
 #include <QObject>
 #include <include/mscloudprovider.h>
 #include "include/mssyncthread.h"
-
+#include "include/qmultibuffer.h"
 
 
 class MSGoogleDrive : public MSCloudProvider
 {
 public:
+
+    typedef struct ExtraData{
+
+        QString id;
+        QString mimeType;
+        QString exportLinks;
+
+    }_extraData;
 
 
     // create hash table from remote json file records

@@ -42,6 +42,7 @@ class MSFSObject
 {
 public:
     MSFSObject();
+    ~MSFSObject();
 
     enum ObjectState{
                 ChangedRemote=1,

@@ -81,7 +81,7 @@ public:
     QEventLoop* loop;
 #endif
     QString requestMethod; // get, post, put, post-multipart etc
-    QFile* outFile;
+    QFile *outFile;
     QDataStream* outFileStream;
 
 

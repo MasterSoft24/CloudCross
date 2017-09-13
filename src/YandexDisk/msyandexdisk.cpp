@@ -102,8 +102,9 @@ Q_UNUSED(provider)
 
 
     if(!req->replyOK()){
-        delete(req);
+
         req->printReplyError();
+        delete(req);
         this->providerAuthStatus=false;
         emit providerAuthComplete();
         return false;

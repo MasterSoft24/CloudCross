@@ -42,5 +42,11 @@ MSLocalFSObject::MSLocalFSObject()
     this->exist=false;
 }
 
+MSLocalFSObject::~MSLocalFSObject()
+{
+    md5Hash.clear();
+    mimeType.clear();
+}
+
 
 

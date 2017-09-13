@@ -52,7 +52,7 @@ MSRequest::MSRequest(QNetworkProxy *proxy)
     //this->cookieJar=0;
 
     this->lastReply=0;
-    this->outFile=0;
+    this->outFile=nullptr;
 
     this->requesProcessed = false;
 
@@ -963,6 +963,9 @@ void MSRequest::syncDownloadWithGet( QString path){
     connect(replySync, SIGNAL(finished()),this->loop, SLOT(quit()));
     this->loop->exec();
 
+
+
+
     delete(replySync);
     //this->loop->exit(0);
     //loop.deleteLater();
@@ -1059,77 +1062,6 @@ void MSRequest::put(const QByteArray &data){
 
 
 
-
-
-
-
-
-
-
-    QtCUrl cUrl;
-    QStringList headers;
-    QtCUrl::Options opt;
-
-    QString sss = toUrlEncoded(this->url->url());
-
-//    if(this->query->queryItems().size() > 0){
-
-        opt[CURLOPT_URL] = this->url->toString() + "?" +(this->query->toString());
-//    }
-//    else{
-//        opt[CURLOPT_URL] = toUrlEncoded(this->url->url());
-//    }
-
-    opt[CURLOPT_CUSTOMREQUEST] = "PUT";
-//    opt[CURLOPT_UPLOAD] = 1;
-    //opt[CURLOPT_INFILESIZE_LARGE] = data.size();
-
-    opt[CURLOPT_POSTFIELDS] = (data);
-    opt[CURLOPT_POSTFIELDSIZE] = (data).size();
-
-
-//    if(this->query->queryItems().size() > 0){
-
-//        opt[CURLOPT_POSTFIELDS] = this->toUrlEncoded(this->query->toString());
-
-//    }
-
-    if(!this->hasRawHeader("Content-Type")){
-
-        if(!this->notUseContentType){
-            //headers << "Content-Type:    application/x-www-form-urlencoded";
-        }
-    }
-
-    if(this->rawHeaderList().size() > 0){
-
-
-        for(int i = 0; i < this->rawHeaderList().size(); i++){
-
-
-            QString ss= QString(this->rawHeaderList().at(i)) + QString(":  ") + this->rawHeader(this->rawHeaderList().at(i));
-            headers << ss;
-        }
-
-    }
-
-    opt[CURLOPT_HTTPHEADER] = headers;
-
-
-    cUrl.exec(opt);
-
-    if (cUrl.lastError().isOk()) {
-
-        this->replyError = QNetworkReply::NetworkError::NoError;
-        this->replyText = QByteArray(cUrl.buffer(), cUrl.buffer().size());
-
-    }
-    else {
-        this->replyError = QNetworkReply::NetworkError::ContentGoneError;
-        qDebug() << (QString("MSRequest - PUT Error: %1\nBuffer: %2").arg(cUrl.lastError().text()).arg(cUrl.errorBuffer()));
-        qDebug()<< cUrl.buffer();
-    }
-
 #endif
 
 #ifndef CCROSS_LIB
@@ -1145,6 +1077,7 @@ void MSRequest::put(const QByteArray &data){
     this->loop->exec();
 
     delete(replySync);
+
     //this->loop->exit(0);
     //loop.deleteLater();
 
@@ -1399,15 +1332,15 @@ void MSRequest::requestFinished(QNetworkReply *reply){
 
     //log("REQUEST FINISHED SLOT ");
 
-    if(this->outFile!=0){
+    if(this->outFile!=nullptr){
 
         this->outFile->write(this->currentReply->readAll());
         this->outFile->close();
         delete(this->outFile);
-        this->outFile=0;
+        this->outFile=nullptr;
     }
 
-    this->lastReply=reply;
+    //this->lastReply=reply;
     this->replyHeaders=reply->rawHeaderPairs();
     this->replyText=reply->readAll();
     this->replyError=reply->error();

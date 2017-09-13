@@ -1065,6 +1065,7 @@ int main(int argc, char *argv[])
     if(parser->isParamExist("fuse-mount")){
 
         fuseMount(currentProvider,providers->workPath,parser->getParamByName("fuse-mount")[0] );
+        delete(providers);
         return 0;
     }
 
@@ -1087,11 +1088,13 @@ int main(int argc, char *argv[])
             providers->addProvider(cp);
 
             if(! providers->loadTokenFile("GoogleDrive")){
+                delete(providers);
                 return 1;
             }
 
             if(!providers->refreshToken("GoogleDrive")){
                 qStdOut()<<"Unauthorized access. Aborted."<<endl;
+                delete(providers);
                 return 1;
             }
 
@@ -1115,11 +1118,13 @@ int main(int argc, char *argv[])
             providers->addProvider(cp);
 
             if(! providers->loadTokenFile("Dropbox")){
+                delete(providers);
                 return 1;
             }
 
             if(!providers->refreshToken("Dropbox")){
                 qStdOut()<<"Unauthorized access. Aborted."<<endl;
+                delete(providers);
                 return 1;
             }
 
@@ -1127,6 +1132,7 @@ int main(int argc, char *argv[])
             QStringList p=parser->getParamByName("direct-upload");
             if(p.size()<2){
                 qStdOut()<<"Option --direct-upload. Missing required argument"<<endl;
+                delete(providers);
                 return 1;
             }
             cp->directUpload(p[0],p[1]);
@@ -1144,17 +1150,20 @@ int main(int argc, char *argv[])
             providers->addProvider(cp);
 
             if(! providers->loadTokenFile("YandexDisk")){
+                delete(providers);
                 return 1;
             }
 
             if(!providers->refreshToken("YandexDisk")){
                 qStdOut()<<"Unauthorized access. Aborted."<<endl;
+                delete(providers);
                 return 1;
             }
 
             QStringList p=parser->getParamByName("direct-upload");
             if(p.size()<2){
                 qStdOut()<<"Option --direct-upload. Missing required argument"<<endl;
+                delete(providers);
                 return 1;
             }
             cp->directUpload(p[0],p[1]);
@@ -1172,17 +1181,20 @@ int main(int argc, char *argv[])
             providers->addProvider(cp);
 
             if(! providers->loadTokenFile("MailRu")){
+                delete(providers);
                 return 1;
             }
 
             if(!providers->refreshToken("MailRu")){
                 qStdOut()<<"Unauthorized access. Aborted."<<endl;
+                delete(providers);
                 return 1;
             }
 
             QStringList p=parser->getParamByName("direct-upload");
             if(p.size()<2){
                 qStdOut()<<"Option --direct-upload. Missing required argument"<<endl;
+                delete(providers);
                 return 1;
             }
             cp->directUpload(p[0],p[1]);
@@ -1200,17 +1212,20 @@ int main(int argc, char *argv[])
             providers->addProvider(cp);
 
             if(! providers->loadTokenFile("OneDrive")){
+                delete(providers);
                 return 1;
             }
 
             if(!providers->refreshToken("OneDrive")){
                 qStdOut()<<"Unauthorized access. Aborted."<<endl;
+                delete(providers);
                 return 1;
             }
 
             QStringList p=parser->getParamByName("direct-upload");
             if(p.size()<2){
                 qStdOut()<<"Option --direct-upload. Missing required argument"<<endl;
+                delete(providers);
                 return 1;
             }
             cp->directUpload(p[0],p[1]);
@@ -1225,6 +1240,8 @@ int main(int argc, char *argv[])
         }
 
         qStdOut() << "Direct uploading completed"<<endl;
+
+        delete(providers);
 
         return 0;
     }

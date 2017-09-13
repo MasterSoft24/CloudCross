@@ -1620,8 +1620,9 @@ bool MSMailRu::readRemote(const QString &path, QNetworkCookieJar* cookie)
     if(!req->replyOK()){
         //delete req->cookieJarObject;
         //this->cookies->deleteLater();//delete(this->cookies);
-        delete(req);
+
         req->printReplyError();
+        delete(req);
         return false;
     }
 

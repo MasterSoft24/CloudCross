@@ -123,8 +123,9 @@ bool MSDropbox::onAuthFinished(const QString &html, MSCloudProvider *provider){
 
 
     if(!req->replyOK()){
-        delete(req);
+
         req->printReplyError();
+        delete(req);
         this->providerAuthStatus=false;
         emit providerAuthComplete();
         return false;
@@ -291,8 +292,9 @@ bool MSDropbox::createHashFromRemote(){
 
 
     if(!req->replyOK()){
-        delete(req);
+
         req->printReplyError();
+        delete(req);
         return false;
     }
 

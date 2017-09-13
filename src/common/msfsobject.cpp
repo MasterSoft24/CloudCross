@@ -38,6 +38,13 @@ MSFSObject::MSFSObject()
 
 }
 
+MSFSObject::~MSFSObject()
+{
+    while(this->remote.data.count()) {
+        this->remote.data.erase(this->remote.data.begin());
+    }
+}
+
 
 void MSFSObject::getLocalMimeType(const QString &path){
 

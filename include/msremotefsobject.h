@@ -41,6 +41,7 @@ class MSRemoteFSObject
 {
 public:
     MSRemoteFSObject();
+    ~MSRemoteFSObject();
 
     enum Type{
                none=0,

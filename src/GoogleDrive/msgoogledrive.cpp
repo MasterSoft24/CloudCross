@@ -1132,6 +1132,8 @@ bool MSGoogleDrive::createSyncFileList(){
         return false;
     }
 
+    this->driveJSONFileList.clear();
+
     qStdOut()<<"Reading local files and folders" <<endl;
 
     if(!this->readLocal(this->workPath)){
@@ -1168,11 +1170,6 @@ bool MSGoogleDrive::createSyncFileList(){
         connect(t3,SIGNAL(finished()),thr3,SLOT(deleteLater()));
         connect(thr3,SIGNAL(finished()),t3,SLOT(quit()));
 
-
-//        QHash<QString,MSFSObject> L1;
-//        QHash<QString,MSFSObject> L2;
-//        QHash<QString,MSFSObject> L3;
-
         for(int i=0;i<keys.size();i+=3){
 
             if(i<=keys.size()-1){
@@ -1196,10 +1193,6 @@ bool MSGoogleDrive::createSyncFileList(){
         t1->wait();
         t2->wait();
         t3->wait();
-
-//        while (this->threadsRunning->available()<3) {
-
-//        }
 
 
     }
@@ -1433,69 +1426,12 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
     QHash<QString,MSFSObject>::iterator lf;
 
-    //QString thrName = this->thread()->objectName();
-
-//    if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
-
-//        // create new folder structure on remote
-
-//        qStdOut()<<"Checking folder structure on remote" <<endl;
-
-//        QHash<QString,MSFSObject> localFolders=this->filelist_getFSObjectsByTypeLocal(MSLocalFSObject::Type::folder);
-//        localFolders=this->filelist_getFSObjectsByState(localFolders,MSFSObject::ObjectState::NewLocal);
-
-//        lf=localFolders.begin();
-
-//        while(lf != localFolders.end()){
-
-//            this->remote_createDirectory(lf.key());
-
-//            lf++;
-//        }
-//    }
-//    else{
-
-//        // create new folder structure on local
-
-//        qStdOut()<<"Checking folder structure on local" <<endl;
-
-//        QHash<QString,MSFSObject> remoteFolders=this->filelist_getFSObjectsByTypeRemote(MSRemoteFSObject::Type::folder);
-//        remoteFolders=this->filelist_getFSObjectsByState(remoteFolders,MSFSObject::ObjectState::NewRemote);
-
-//        lf=remoteFolders.begin();
-
-//        while(lf != remoteFolders.end()){
-
-//            this->local_createDirectory(this->workPath+lf.key());
-
-//            lf++;
-//        }
-
-//        // trash local folder
-//        QHash<QString,MSFSObject> trashFolders=this->filelist_getFSObjectsByTypeLocal(MSLocalFSObject::Type::folder);
-//        trashFolders=this->filelist_getFSObjectsByState(trashFolders,MSFSObject::ObjectState::DeleteRemote);
-
-//        lf=trashFolders.begin();
-
-//        while(lf != trashFolders.end()){
-
-
-//            this->local_removeFolder(lf.key());
-
-//            lf++;
-//        }
-
-//    }
-
-
-
-
     // FORCING UPLOAD OR DOWNLOAD FILES AND FOLDERS
     if(this->getFlag("force")){
 
         if(this->getOption("force")=="download"){
 
-            qStdOut()<<"Start downloading in force mode" <<endl;
+            qStdOut()<<QString("Start downloading in force mode") <<endl;
 
             lf=fsObjectList.begin();
 
@@ -1511,7 +1447,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(obj.remote.objectType == MSRemoteFSObject::Type::file){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Forced downloading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Forced downloading.") <<endl;
 
                         this->remote_file_get(&obj);
                     }
@@ -1523,7 +1459,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
         else{
             if(this->getOption("force")=="upload"){
 
-                qStdOut()<<"Start uploading in force mode" <<endl;
+                qStdOut()<<QString("Start uploading in force mode") <<endl;
 
                 lf=fsObjectList.begin();
 
@@ -1543,7 +1479,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                             if(obj.local.objectType == MSLocalFSObject::Type::file){
 
-                                qStdOut()<< obj.path<<obj.fileName <<" Forced uploading." <<endl;
+                                qStdOut()<< obj.path<<obj.fileName <<QString(" Forced uploading.") <<endl;
 
                                 this->remote_file_update(&obj);
                             }
@@ -1552,7 +1488,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                             if(obj.local.objectType == MSLocalFSObject::Type::file){
 
-                                qStdOut()<< obj.path<<obj.fileName <<" Forced uploading." <<endl;
+                                qStdOut()<< obj.path<<obj.fileName <<QString(" Forced uploading.") <<endl;
 
                                 this->remote_file_insert(&obj);
                             }
@@ -1577,7 +1513,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
         this->saveStateFile();
 
-            qStdOut()<<"Syncronization end" <<endl;
+            qStdOut()<<QString("Syncronization end") <<endl;
 
             return;
     }
@@ -1586,7 +1522,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
     // SYNC FILES AND FOLDERS
 
-    qStdOut()<<"Start syncronization" <<endl;
+    qStdOut()<<QString("Start syncronization") <<endl;
 
     lf=fsObjectList.begin();
 
@@ -1603,7 +1539,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
             case MSFSObject::ObjectState::ChangedLocal:
 
-                qStdOut()<< obj.path<<obj.fileName <<" Changed local. Uploading." <<endl;
+                qStdOut()<< obj.path<<obj.fileName <<QString(" Changed local. Uploading.") <<endl;
 
                 this->remote_file_update(&obj);
 
@@ -1613,7 +1549,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                 if((obj.local.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                    qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
+                    qStdOut()<< obj.path<<obj.fileName <<QString(" New local. Uploading.") <<endl;
 
                     this->remote_file_insert(&obj);
 
@@ -1622,14 +1558,14 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New local. Uploading.") <<endl;
 
                         this->remote_file_insert(&obj);
 
                     }
                     else{
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete remote. Delete local." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete remote. Delete local.") <<endl;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1647,7 +1583,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
             case MSFSObject::ObjectState::ChangedRemote:
 
-                qStdOut()<< obj.path<<obj.fileName <<" Changed remote. Downloading." <<endl;
+                qStdOut()<< obj.path<<obj.fileName <<QString(" Changed remote. Downloading.") <<endl;
 
                 this->remote_file_get(&obj);
 
@@ -1660,13 +1596,13 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete local. Deleting remote." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete local. Deleting remote.") <<endl;
 
                         this->remote_file_trash(&obj);
 
                     }
                     else{
-                        qStdOut()<< obj.path<<obj.fileName <<" New remote. Downloading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New remote. Downloading.") <<endl;
 
                         this->remote_file_get(&obj);
                     }
@@ -1677,13 +1613,13 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete local. Deleting remote." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete local. Deleting remote.") <<endl;
 
                         this->remote_file_trash(&obj);
                     }
                     else{
 
-                        qStdOut()<< obj.path<<obj.fileName <<" New remote. Downloading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New remote. Downloading.") <<endl;
 
                         this->remote_file_get(&obj);
                     }
@@ -1696,14 +1632,14 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                 if((obj.remote.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                    qStdOut()<< obj.path<<obj.fileName <<" New remote. Downloading." <<endl;
+                    qStdOut()<< obj.path<<obj.fileName <<QString(" New remote. Downloading.") <<endl;
 
                     this->remote_file_get(&obj);
 
                     break;
                 }
 
-                qStdOut()<< obj.fileName <<" Delete local. Deleting remote." <<endl;
+                qStdOut()<< obj.fileName <<QString(" Delete local. Deleting remote.") <<endl;
 
                 this->remote_file_trash(&obj);
 
@@ -1715,12 +1651,12 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New local. Uploading.") <<endl;
 
                         this->remote_file_insert(&obj);
                     }
                     else{
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete remote. Deleting local." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete remote. Deleting local.") <<endl;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1735,14 +1671,14 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New local. Uploading.") <<endl;
 
                         this->remote_file_insert(&obj);
 
                     }
                     else{
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete remote. Deleting local." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete remote. Deleting local.") <<endl;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1772,7 +1708,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
     this->saveStateFile();
 
-    qStdOut()<<"Syncronization end" <<endl;
+    qStdOut()<<QString("Syncronization end") <<endl;
 }
 
 
@@ -1944,6 +1880,7 @@ afterReauth:
 #endif
 
 
+
     if(req->replyErrorText.contains("Host requires authentication")){
         delete(req);
         this->refreshToken();
@@ -2106,6 +2043,10 @@ afterReauth:
         return false;
     }
 
+    QMultiBuffer mb;
+    mb.append(&file);
+    mb.open(QIODevice::ReadOnly);
+
     req->addHeader("Content-Length",QString::number(metaData.length()).toLocal8Bit());
 
     req->post(metaData);
@@ -2136,6 +2077,10 @@ afterReauth:
 
     QString uploadURI = req->getReplyHeader(QByteArray("Location"));//   header(QNetworkRequest::LocationHeader).toString();
 
+    req->replyText.clear();
+    delete(req->url);
+
+    delete(req->query);
     delete(req);
 
     if( file.size() > GOOGLEDRIVE_CHUNK_SIZE){// multi-chunk upload
@@ -2173,19 +2118,21 @@ afterReauth:
             //----------------------
 
             req->query = new QUrlQuery(req->url->query());// extract query string and setup his separately
-            QString tst = "bytes "+QString::number(cursorPosition).toLocal8Bit()+"-"+QString::number(cursorPosition+blsz-1).toLocal8Bit()+"/"+QString::number(fSize).toLocal8Bit();
 
             req->addHeader("Authorization",                     QString("Bearer "+this->access_token));
             req->addHeader("Content-Length",                    QString::number(blsz));
             req->addHeader("Content-Range",                     "bytes "+QString::number(cursorPosition).toLocal8Bit()+"-"+QString::number(cursorPosition+blsz-1).toLocal8Bit()+"/"+QString::number(fSize).toLocal8Bit());
 
-            file.seek(cursorPosition);
+            //file.seek(cursorPosition);
+            mb.seek(cursorPosition);
 
-            req->put(file.read(GOOGLEDRIVE_CHUNK_SIZE));
+            req->put(&mb);
+//            req->put(file.read(GOOGLEDRIVE_CHUNK_SIZE));
 
             if(!req->replyOK()){
 
                 if(req->replyErrorText.contains("Host requires authentication")){
+                    delete(req->query);
                     delete(req);
                     this->refreshToken();
                     req = new MSRequest(this->proxyServer);
@@ -2196,6 +2143,7 @@ afterReauth:
                 }
 
                 req->printReplyError();
+                delete(req->query);
                 delete(req);
                 return false;
             }
@@ -2204,10 +2152,12 @@ afterReauth:
 
             if((unsigned long long)cursorPosition > (unsigned long long)fSize){
 
+                delete(req->query);
                 delete(req);
                 break;
             }
 
+            delete(req->query);
             delete(req);
 
         }while (true);
@@ -2226,13 +2176,15 @@ afterReauth2:
         req->addHeader("Content-Type",                      object->local.mimeType);
         req->addHeader("Content-Length",                      QString::number(file.size()));
 
-        req->put(file.readAll());
+        req->put(&mb);
+//        req->put(file.readAll());
 
         file.close();
 
         if(!req->replyOK()){
 
             if(req->replyErrorText.contains("Host requires authentication")){
+                delete(req->query);
                 delete(req);
                 this->refreshToken();
                 req = new MSRequest(this->proxyServer);
@@ -2254,6 +2206,9 @@ afterReauth2:
             delete(req);
             return false;
         }
+
+        req->replyText.clear();
+        delete(req->url);
 
         delete(req->query);
         delete(req);

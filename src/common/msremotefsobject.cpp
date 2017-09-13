@@ -40,3 +40,8 @@ MSRemoteFSObject::MSRemoteFSObject()
     this->md5Hash="";
     this->exist=false;
 }
+
+MSRemoteFSObject::~MSRemoteFSObject()
+{
+    md5Hash.clear();
+}
