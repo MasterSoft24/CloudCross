@@ -326,6 +326,8 @@ bool MSGoogleDrive::createHashFromRemote(){
 
     req->addQueryItem("access_token",           this->access_token);
 
+    req->addQueryItem("q","trashed=false");
+
     req->exec();
 
 
@@ -361,6 +363,7 @@ bool MSGoogleDrive::createHashFromRemote(){
 
         req->addQueryItem("access_token",           this->access_token);
         req->addQueryItem("maxResults",           "1000");
+        req->addQueryItem("q","trashed=false");
 
         QString nextPageToken=job["nextPageToken"].toString();
 
@@ -409,28 +412,50 @@ bool MSGoogleDrive::createHashFromRemote(){
 
 QString MSGoogleDrive::getRoot(){
 
-    QHash<QString,QJsonValue>::iterator i=driveJSONFileList.begin();
-    QJsonValue v;
 
-    QHash<QString,QJsonValue> out;
+    MSRequest* req = new MSRequest(this->proxyServer);
+    req->setRequestUrl("https://www.googleapis.com/drive/v2/files/root/children");
+    req->setMethod("get");
 
-    while(i != driveJSONFileList.end()){
+    req->addQueryItem("maxResults", "2");
+    req->addHeader("Authorization","Bearer "+this->access_token);
 
-        v= i.value();
+    req->exec();
 
-        bool isRoot=v.toObject()["parents"].toArray()[0].toObject()["isRoot"].toBool();
+    QString list=req->readReplyText();
 
-        if(isRoot){
+    QJsonDocument jsonList = QJsonDocument::fromJson(list.toUtf8());
 
-            return v.toObject()["parents"].toArray()[0].toObject()["id"].toString();
+    QJsonObject job = jsonList.object();
 
-        }
+    QString sl = job["items"].toArray()[0].toObject()["selfLink"].toString();
 
-       i++;
+    return sl.mid(sl.indexOf("/files/")+7,
+                            sl.indexOf("/children") - sl.indexOf("/files/") -7);
 
-    }
 
-    return "";
+//    QHash<QString,QJsonValue>::iterator i=driveJSONFileList.begin();
+//    QJsonValue v;
+
+//    QHash<QString,QJsonValue> out;
+
+//    while(i != driveJSONFileList.end()){
+
+//        v= i.value();
+
+//        bool isRoot=v.toObject()["parents"].toArray()[0].toObject()["isRoot"].toBool();
+
+//        if(isRoot){
+
+//            QString yy = v.toObject()["parents"].toArray()[0].toObject()["id"].toString();
+
+//        }
+
+//       i++;
+
+//    }
+
+//    return "";
 
 }
 
@@ -469,7 +494,7 @@ QHash<QString,QJsonValue> MSGoogleDrive::get(const QString &parentId, int target
         //bool    oTrashed=   v.toObject()["labels"].toArray()[0].toObject()["trashed"].toBool();
         bool    oTrashed=   v.toObject()["labels"].toObject()["trashed"].toBool();
 
-        if(oParentId==parentId){
+        if(oParentId == parentId){
 
             if(files && !foldersAndFiles){
 
