@@ -573,17 +573,24 @@ bool MSGoogleDrive::readRemote(const QString &parentId, const QString &currentPa
         MSFSObject fsObject;
         fsObject.path=currentPath;
 
-        fsObject.remote.md5Hash=o["md5Checksum"].toString();
+        fsObject.remote.md5Hash = o["md5Checksum"].toString();
 
-        fsObject.remote.fileSize=  o["fileSize"].toString().toInt();
-        fsObject.remote.data=o;
-        fsObject.remote.exist=true;
+        fsObject.remote.fileSize = o["fileSize"].toString().toInt();
 
-        fsObject.state=MSFSObject::ObjectState::NewRemote;
+        fsObject.remote.extraData.insert("id",o["id"].toString());
+        fsObject.remote.extraData.insert("mimeType",o["mimeType"].toString());
+        fsObject.remote.extraData.insert("exportLinks",o["exportLinks"].toObject());
+
+
+
+        //fsObject.remote.data = o;
+        fsObject.remote.exist = true;
+
+        fsObject.state = MSFSObject::ObjectState::NewRemote;
 
         if(this->getFlag("convertDoc") && this->filterGoogleDocsMimeTypes(o["mimeType"].toString())){
 
-            fsObject.isDocFormat=true;
+            fsObject.isDocFormat = true;
 
         }
 
@@ -1415,7 +1422,12 @@ void MSGoogleDrive::filelist_populateChanges(const MSFSObject &changedFSObject){
 
     if(object != this->syncFileList.end()){
         object.value().local=changedFSObject.local;
-        object.value().remote.data=changedFSObject.remote.data;
+
+        object.value().remote.extraData.insert("id", changedFSObject.remote.extraData.find("id").value());
+        object.value().remote.extraData.insert("mimeType", changedFSObject.remote.extraData.find("mimeType").value());
+        object.value().remote.extraData.insert("exportLinks", changedFSObject.remote.extraData.find("exportLinks").value());
+
+        //object.value().remote.data=changedFSObject.remote.data;
     }
 
 }
@@ -1788,7 +1800,7 @@ bool MSGoogleDrive::remote_file_get(MSFSObject* object){
         return true;
     }
 
-    QString id=object->remote.data["id"].toString();
+    QString id = object->remote.extraData.find("id").value().toString();// object->remote.data["id"].toString();
 
     MSRequest *req = new MSRequest(this->proxyServer);
 
@@ -1806,7 +1818,8 @@ afterReauth:
 
         QString ftype= object->fileName.right(object->fileName.size()- object->fileName.lastIndexOf(".")-1)  ;
 
-        if(object->remote.data["mimeType"].toString()=="application/vnd.google-apps.spreadsheet"){
+        if(  object->remote.extraData.find("id").value().toString() == "application/vnd.google-apps.spreadsheet"){
+
             object->local.mimeType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
             if(object->local.exist== false){
@@ -1814,7 +1827,8 @@ afterReauth:
             }
 
 
-            req->setRequestUrl(object->remote.data["exportLinks"].toObject()[object->local.mimeType].toString());
+//            req->setRequestUrl(object->remote.data["exportLinks"].toObject()[object->local.mimeType].toString());
+            req->setRequestUrl(qvariant_cast <QJsonObject>(object->remote.extraData.find("exportLinks").value())[object->local.mimeType].toString()  );
 
             req->addQueryItem("id",id);
 
@@ -1827,14 +1841,17 @@ afterReauth:
 
         }
 
-        if(object->remote.data["mimeType"].toString()=="application/vnd.google-apps.document"){
+//        if(object->remote.data["mimeType"].toString()=="application/vnd.google-apps.document"){
+          if(object->remote.extraData.find("mimeType").value().toString() ==" application/vnd.google-apps.document"){
+
             object->local.mimeType="application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
             if(object->local.exist== false){
                 object->fileName=object->fileName+".docx";
             }
 
-            req->setRequestUrl(object->remote.data["exportLinks"].toObject()[object->local.mimeType].toString());
+//            req->setRequestUrl(object->remote.data["exportLinks"].toObject()[object->local.mimeType].toString());
+            req->setRequestUrl(qvariant_cast <QJsonObject>(object->remote.extraData.find("exportLinks").value())[object->local.mimeType].toString()  );
 
             req->addQueryItem("id",id);
 
@@ -1846,14 +1863,17 @@ afterReauth:
             }
         }
 
-        if(object->remote.data["mimeType"].toString()=="application/vnd.google-apps.presentation"){
+//        if(object->remote.data["mimeType"].toString()=="application/vnd.google-apps.presentation"){
+        if(object->remote.extraData.find("mimeType").value().toString() == "application/vnd.google-apps.presentation"){
+
             object->local.mimeType="application/vnd.openxmlformats-officedocument.presentationml.presentation";
 
             if(object->local.exist== false){
                 object->fileName=object->fileName+".pptx";
             }
 
-            req->setRequestUrl(object->remote.data["exportLinks"].toObject()[object->local.mimeType].toString());
+//            req->setRequestUrl(object->remote.data["exportLinks"].toObject()[object->local.mimeType].toString());
+            req->setRequestUrl(qvariant_cast <QJsonObject>(object->remote.extraData.find("exportLinks").value())[object->local.mimeType].toString()  );
 
             req->addQueryItem("id",id);
             req->addQueryItem("exportFormat","pptx");
@@ -1926,7 +1946,7 @@ bool MSGoogleDrive::remote_file_insert(MSFSObject *object){
     MSFSObject po=this->filelist_getParentFSObject(*object);
     QString parentID="";
     if(po.path != ""){
-        parentID= po.remote.data["id"].toString();
+        parentID= po.remote.extraData.find("id").value().toString();//  po.remote.data["id"].toString();
     }
 
     MSRequest *req = new MSRequest(this->proxyServer);
@@ -2210,6 +2230,7 @@ afterReauth2:
         req->replyText.clear();
         delete(req->url);
 
+
         delete(req->query);
         delete(req);
 
@@ -2236,12 +2257,12 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
 
     //QString bound="ccross-data";
 
-    QString id=object->remote.data["id"].toString();
+    QString id = object->remote.extraData.find("id").value().toString();//  object->remote.data["id"].toString();
 
     MSFSObject po=this->filelist_getParentFSObject(*object);
     QString parentID="";
     if(po.path != ""){
-        parentID= po.remote.data["id"].toString();
+        parentID = po.remote.extraData.find("id").value().toString();//  po.remote.data["id"].toString();
     }
 
 
@@ -2278,7 +2299,8 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
     //make file metadata in json representation
     QJsonObject metaJson;
 
-    metaJson.insert("id",object->remote.data["id"].toString());
+    //metaJson.insert("id",object->remote.data["id"].toString());
+    metaJson.insert("id" , object->remote.extraData.find("id").value().toString());
 
     if(parentID != ""){
         // create parents section
@@ -2491,7 +2513,12 @@ bool MSGoogleDrive::remote_file_makeFolder(MSFSObject *object){
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject job = json.object();
     object->local.newRemoteID=job["id"].toString();
-    object->remote.data=job;
+
+    object->remote.extraData.insert("id",job["id"].toString());
+    object->remote.extraData.insert("mimeType",job["mimeType"].toString());
+    object->remote.extraData.insert("exportLinks",job["exportLinks"].toObject());
+
+    //object->remote.data=job;
     object->remote.exist=true;
 
     if(job["id"].toString()==""){
@@ -2567,7 +2594,12 @@ bool MSGoogleDrive::remote_file_makeFolder(MSFSObject *object, const QString &pa
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject job = json.object();
     object->local.newRemoteID=job["id"].toString();
-    object->remote.data=job;
+
+    object->remote.extraData.insert("id",job["id"].toString());
+    object->remote.extraData.insert("mimeType",job["mimeType"].toString());
+    object->remote.extraData.insert("exportLinks",job["exportLinks"].toObject());
+
+   // object->remote.data=job;
     object->remote.exist=true;
 
     if(job["id"].toString()==""){
@@ -2591,7 +2623,7 @@ bool MSGoogleDrive::remote_file_trash(MSFSObject *object){
         return true;
     }
 
-    QString id=object->remote.data["id"].toString();
+    QString id = object->remote.extraData.find("id").value().toString();//   object->remote.data["id"].toString();
 
     MSRequest *req = new MSRequest(this->proxyServer);
 
@@ -2658,7 +2690,8 @@ bool MSGoogleDrive::remote_createDirectory(const QString &path){
             if(this->filelist_FSObjectHasParent(f.value())){
 
                 MSFSObject parObj=this->filelist_getParentFSObject(f.value());
-                this->remote_file_makeFolder(&f.value(),parObj.remote.data["id"].toString());
+//                this->remote_file_makeFolder(&f.value(),parObj.remote.data["id"].toString());
+                this->remote_file_makeFolder(&f.value(),parObj.remote.extraData.find("id").value().toString());
 
             }
             else{
@@ -2944,7 +2977,7 @@ bool MSGoogleDrive::directUpload(const QString &url, const QString &remotePath){
     }
 
     if(po.path != ""){
-        parentID= po.remote.data["id"].toString();
+        parentID = po.remote.extraData.find("id").value().toString();//   po.remote.data["id"].toString();
     }
 
     req = new MSRequest(this->proxyServer);

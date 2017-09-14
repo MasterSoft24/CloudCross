@@ -44,15 +44,6 @@ class MSGoogleDrive : public MSCloudProvider
 {
 public:
 
-    typedef struct ExtraData{
-
-        QString id;
-        QString mimeType;
-        QString exportLinks;
-
-    }_extraData;
-
-
     // create hash table from remote json file records
     bool createHashFromRemote();
     // get slice from remote files hash table by parent and some other conditions

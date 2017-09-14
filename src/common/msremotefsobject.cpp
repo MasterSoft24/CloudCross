@@ -44,4 +44,5 @@ MSRemoteFSObject::MSRemoteFSObject()
 MSRemoteFSObject::~MSRemoteFSObject()
 {
     md5Hash.clear();
+    extraData.clear();
 }

@@ -36,6 +36,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonValue>
+#include <QHash>
+#include <QVariant>
 
 class MSRemoteFSObject
 {
@@ -48,6 +50,9 @@ public:
                file=1,
                folder=2
              };
+
+
+    QHash<QString,QVariant> extraData; // replacement for a <QJsonObject data> field
 
     bool exist;
     Type objectType;
