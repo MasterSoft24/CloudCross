@@ -153,6 +153,9 @@ public:
     void syncDownloadWithPost( QString path, QByteArray data);
     void postMultipart(QHttpMultiPart* multipart);
 
+    static void setReplyHeader(QString headerName, QString headerValue);
+
+
     void deleteResource();
 
     bool replyOK();

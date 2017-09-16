@@ -1,6 +1,6 @@
 ## CloudCross FUSE Project
 
-ATTENTION: This project have an ==alpha status==. You must be carefull when  you're worked with it.
+ATTENTION: This project have an ==alpha status==. You must be careful when  you'll worked with it.
 
 
 Project have a two parts:

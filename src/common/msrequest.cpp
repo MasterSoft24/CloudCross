@@ -35,7 +35,9 @@
 #include <QDebug>
 
 
+typedef size_t(*hdr_callback)(char *buffer, size_t size,size_t nitems, void *userdata);
 
+size_t header_callback(char *buffer, size_t size,size_t nitems, void *userdata);
 
 MSRequest::MSRequest(QNetworkProxy *proxy)
 {
@@ -153,6 +155,7 @@ void MSRequest::addHeader(const QByteArray &headerName, const QByteArray &header
 
 QString MSRequest::getReplyHeader(const QByteArray &headerName){
 
+#ifndef CCROSS_LIB
     for(int i = 0; i < this->replyHeaders.size(); i++){
 
         QPair<QByteArray,QByteArray> h = this->replyHeaders[i];
@@ -165,6 +168,24 @@ QString MSRequest::getReplyHeader(const QByteArray &headerName){
     }
 
     return "";
+#else
+
+    for(int i = 0; i < this->cUrlObject.replyHeaders.size(); i++){
+
+        QPair<QByteArray,QByteArray> h = this->cUrlObject.replyHeaders[i];
+
+        if(QString(h.first) == QString(headerName)){
+
+            return QString(h.second);
+        }
+
+    }
+
+    return "";
+
+#endif
+
+
 
 }
 
@@ -369,6 +390,12 @@ void MSRequest::setCURLOptions(const QByteArray &payload){
 
     this->cUrlObject.requestOptions[CURLOPT_USERAGENT] = "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:15.0) Gecko/20100101 Firefox/15.0.1";
 
+
+    hdr_callback hcb = header_callback;
+
+    cUrlObject.requestOptions[CURLOPT_HEADERDATA] = (qlonglong)&(this->cUrlObject);
+    //cUrlObject.headerFunction =;
+
     if(this->requestMethod != "get"){
 
         if((this->requestMethod == "put") || (this->requestMethod == "delete")){
@@ -498,6 +525,31 @@ void MSRequest::setCURLOptions(const QByteArray &payload){
                     cUrlObject.requestOptions[CURLOPT_POSTFIELDSIZE] = collect.size();
                     this->requestHeaders.remove("Content-Length");
                     //this->requestHeaders.insert("Content-Length",QString::number(collect.size()));
+
+                }
+                else{ // if it is a post with payload
+
+                    //__________
+                    QString p = "";
+
+                    QHash<QString,QString>::iterator i = this->queryItems.begin();
+
+                    for(;i != this->queryItems.end();i++){
+
+                        if( p != ""){
+                            p += "&";
+                        }
+                        p += i.key()+"="+ cUrlObject.escape(i.value());
+                    }
+                    cUrlObject.requestOptions[CURLOPT_URL] = (toUrlEncoded(this->requestURL.toLocal8Bit()+"?"+p.toLocal8Bit()));
+                    //__________
+
+                    QByteArray collect = /*pr.toLocal8Bit() +*/ payload;
+
+
+                    cUrlObject.requestOptions[CURLOPT_POSTFIELDS] = collect;
+                    cUrlObject.requestOptions[CURLOPT_POSTFIELDSIZE] = collect.size();
+
 
                 }
 
@@ -1022,6 +1074,12 @@ void MSRequest::postMultipart(QHttpMultiPart *multipart){
 
 }
 
+void MSRequest::setReplyHeader(QString headerName, QString headerValue){
+
+
+
+}
+
 
 
 
@@ -1105,6 +1163,16 @@ size_t readCallback(void *ptr, size_t size, size_t nmemb, void *stream){
 
 //  return retcode;
 }
+
+
+size_t header_callback(char *buffer, size_t size,size_t nitems, void *userdata){
+
+    QByteArray hba(buffer, size*nitems);
+    MSRequest::setReplyHeader(hba,"fuck");
+
+}
+
+
 #endif
 
 void MSRequest::put(QIODevice *data){

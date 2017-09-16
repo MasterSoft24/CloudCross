@@ -2215,8 +2215,9 @@ afterReauth:
 afterReauth2:
 
         req->setRequestUrl(uploadURI);
+#ifndef CCROSS_LIB
         req->query = new QUrlQuery(req->url->query());// extract query string and setup his separately
-
+#endif
         req->addHeader("Authorization",                     QString("Bearer "+this->access_token));
         req->addHeader("Content-Type",                      object->local.mimeType);
         req->addHeader("Content-Length",                      QString::number(file.size()));

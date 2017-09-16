@@ -30,6 +30,8 @@
 #include <QLinkedList>
 #include <QByteArray>
 #include <QIODevice>
+#include <QList>
+#include <QPair>
 class QTextCodec;
 
 
@@ -44,12 +46,17 @@ public:
     // Changes for a CloudCross MSRequest class
 
     typedef size_t (*ReaderPtr)(void*, size_t , size_t , void*);
+    typedef size_t (*HeaderPtr)(char*, size_t ,size_t, void*);
+
 
     Options requestOptions;
+
+    QList<QPair<QByteArray,QByteArray>> replyHeaders;
 
     QString escape(QString str);
     //    QByteArray escape(QByteArray str);
 
+     HeaderPtr headerFunction;
 
     class Code {
     public:
@@ -57,6 +64,8 @@ public:
         QString text() { return curl_easy_strerror(_code); }
         inline CURLcode code() { return _code; }
         inline bool isOk() { return _code == CURLE_OK; }
+
+
 
 
 
@@ -93,13 +102,19 @@ private:
     Code _lastCode;
     QTextCodec* _textCodec;
     QLinkedList<curl_slist*> _slist;
+
+
+
+
 };
 
 Q_DECLARE_METATYPE(QtCUrl::WriterPtr)
 Q_DECLARE_METATYPE(QtCUrl::ReaderPtr)
+Q_DECLARE_METATYPE(QtCUrl::HeaderPtr)
 Q_DECLARE_METATYPE(std::string*)
 Q_DECLARE_METATYPE(char*)
 Q_DECLARE_METATYPE(void*)
 //Q_DECLARE_METATYPE(QIODevice*)
+Q_DECLARE_METATYPE(QtCUrl*)
 
 #endif // QTCURL_H

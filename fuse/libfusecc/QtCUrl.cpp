@@ -57,6 +57,34 @@ int writer(char* data, size_t size, size_t nmemb, std::string* buffer) {
 }
 
 
+size_t header(char* buffer, size_t size,size_t nitems, void* userdata){
+
+    if(userdata == nullptr){
+        return nitems * size;
+    }
+
+    QtCUrl* curlPtr = (QtCUrl*)userdata;
+
+    QString s (QByteArray(buffer,nitems));
+
+    if(s.indexOf(":") == -1){
+
+        return nitems * size;
+    }
+
+    QString name = s.left(s.indexOf(":"));
+    QString val = s.mid(s.indexOf(":")+1).trimmed();
+
+    QPair<QByteArray,QByteArray> hv(name.toLocal8Bit(),val.toLocal8Bit());
+
+    curlPtr->replyHeaders.append(hv);
+
+    //((QtCUrl::HeaderPtr)userdata)(buffer,size,nitems,userdata);
+    return nitems * size;
+   // return
+}
+
+
 #ifdef QTCURL_DEBUG
 int trace(CURL *handle, curl_infotype type, unsigned char *data, size_t size, void *userp)
 {
@@ -132,6 +160,8 @@ void QtCUrl::setOptions(Options& opt) {
     defaults[CURLOPT_WRITEDATA].setValue(&_buffer);
     //defaults[CURLOPT_WRITEDATA].setValue(replyBuffer);
 
+    defaults[CURLOPT_HEADERFUNCTION].setValue(&header);
+
 #ifdef QTCURL_DEBUG
     curl_easy_setopt(_curl, CURLOPT_VERBOSE, 1);
     curl_easy_setopt(_curl, CURLOPT_DEBUGFUNCTION, trace);
@@ -195,8 +225,14 @@ void QtCUrl::setOptions(Options& opt) {
             if (typeName == "QtCUrl::WriterPtr") {
                 curl_easy_setopt(_curl, i.key(), value.value<WriterPtr>());
             }
+            else if (typeName == "QtCUrl::HeaderPtr") {
+                curl_easy_setopt(_curl, i.key(), value.value<HeaderPtr>());
+            }
             else if (typeName == "QtCUrl::ReaderPtr") {
                 curl_easy_setopt(_curl, i.key(), value.value<ReaderPtr>());
+            }
+            else if (typeName == "QtCurl*") {
+                curl_easy_setopt(_curl, i.key(), value.value<QtCUrl*>());
             }
             else if (typeName == "std::string*") {
                 curl_easy_setopt(_curl, i.key(), value.value<std::string*>());
