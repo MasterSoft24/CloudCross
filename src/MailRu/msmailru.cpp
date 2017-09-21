@@ -303,7 +303,7 @@ QString MSMailRu::remote_dispatcher(const QString &target){
 
     if(!req->replyOK()){
         req->printReplyError();
-        this->cookies->deleteLater();//delete(this->cookies);
+        //this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         return "";
     }
@@ -323,7 +323,7 @@ QString MSMailRu::remote_dispatcher(const QString &target){
     QString serverURL=job["body"].toObject()[target].toArray()[0].toObject()["url"].toString();
 
     req->deleteLater();
-    //this->cookies->deleteLater();//delete(this->cookies);
+    ////this->cookies->deleteLater();//delete(this->cookies);
 
     return serverURL;
 
@@ -361,7 +361,7 @@ bool MSMailRu::remote_file_get(MSFSObject *object){
 
     if(!req->replyOK()){
         req->printReplyError();
-        this->cookies->deleteLater();//delete(this->cookies);
+        //this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         return false;
     }
@@ -423,14 +423,14 @@ bool MSMailRu::remote_file_get(MSFSObject *object){
 
 
             qStdOut() << "Service error. "<< req->replyErrorText;
-            this->cookies->deleteLater();//delete(this->cookies);
+            //this->cookies->deleteLater();//delete(this->cookies);
             delete(req);
             return false;
 
     }
 
 
-    this->cookies->deleteLater();//delete(this->cookies);
+    //this->cookies->deleteLater();//delete(this->cookies);
     delete(req);
     return true;
 
@@ -674,7 +674,7 @@ bool MSMailRu::remote_file_makeFolder(MSFSObject *object){
             if(r == true){
 
                 this->remote_file_makeFolder(object);
-                this->cookies->deleteLater();//delete(this->cookies);
+                ////this->cookies->deleteLater();//delete(this->cookies);
                 delete(req);
                 return true;
 
@@ -684,7 +684,7 @@ bool MSMailRu::remote_file_makeFolder(MSFSObject *object){
         }
 
         req->printReplyError();
-        this->cookies->deleteLater();//delete(this->cookies);
+        //this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         return false;
     }
@@ -697,7 +697,7 @@ bool MSMailRu::remote_file_makeFolder(MSFSObject *object){
     QJsonObject job = json.object();
     int status=job["status"].toInt();
 
-    this->cookies->deleteLater();//delete(this->cookies);
+    ////this->cookies->deleteLater();//delete(this->cookies);
     delete(req);
 
     if(status == 200){
@@ -746,7 +746,7 @@ bool MSMailRu::remote_file_trash(MSFSObject *object){
 
     if(!req->replyOK()){
         req->printReplyError();
-        this->cookies->deleteLater();//delete(this->cookies);
+        //this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         return false;
     }
@@ -759,7 +759,7 @@ bool MSMailRu::remote_file_trash(MSFSObject *object){
     QJsonObject job = json.object();
     int status=job["status"].toInt();
 
-    this->cookies->deleteLater();//delete(this->cookies);
+    //this->cookies->deleteLater();//delete(this->cookies);
     delete(req);
 
     if(status == 200){
@@ -1044,67 +1044,13 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
     QHash<QString,MSFSObject>::iterator lf;
 
-//    if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
-
-//        // create new folder structure on remote
-
-//        qStdOut()<<"Checking folder structure on remote" <<endl;
-
-//        QHash<QString,MSFSObject> localFolders=this->filelist_getFSObjectsByTypeLocal(MSLocalFSObject::Type::folder);
-//        localFolders=this->filelist_getFSObjectsByState(localFolders,MSFSObject::ObjectState::NewLocal);
-
-//        lf=localFolders.begin();
-
-//        while(lf != localFolders.end()){
-
-//            this->remote_createDirectory(lf.key());
-
-//            lf++;
-//        }
-//    }
-//    else{
-
-//        // create new folder structure on local
-
-//        qStdOut()<<"Checking folder structure on local" <<endl;
-
-//        QHash<QString,MSFSObject> remoteFolders=this->filelist_getFSObjectsByTypeRemote(MSRemoteFSObject::Type::folder);
-//        remoteFolders=this->filelist_getFSObjectsByState(remoteFolders,MSFSObject::ObjectState::NewRemote);
-
-//        lf=remoteFolders.begin();
-
-//        while(lf != remoteFolders.end()){
-
-//            this->local_createDirectory(this->workPath+lf.key());
-
-//            lf++;
-//        }
-
-//        // trash local folder
-//        QHash<QString,MSFSObject> trashFolders=this->filelist_getFSObjectsByTypeLocal(MSLocalFSObject::Type::folder);
-//        trashFolders=this->filelist_getFSObjectsByState(trashFolders,MSFSObject::ObjectState::DeleteRemote);
-
-//        lf=trashFolders.begin();
-
-//        while(lf != trashFolders.end()){
-
-
-//            this->local_removeFolder(lf.key());
-
-//            lf++;
-//        }
-
-//    }
-
-
-
 
     // FORCING UPLOAD OR DOWNLOAD FILES AND FOLDERS
     if(this->getFlag("force")){
 
         if(this->getOption("force")=="download"){
 
-            qStdOut()<<"Start downloading in force mode" <<endl;
+            qStdOut()<<QString("Start downloading in force mode") <<endl;
 
             lf=fsObjectList.begin();
 
@@ -1121,7 +1067,7 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(obj.remote.objectType == MSRemoteFSObject::Type::file){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Forced downloading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Forced downloading.") <<endl;
 
                         this->remote_file_get(&obj);
                     }
@@ -1133,7 +1079,7 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
         else{
             if(this->getOption("force")=="upload"){
 
-                qStdOut()<<"Start uploading in force mode" <<endl;
+                qStdOut()<<QString("Start uploading in force mode") <<endl;
 
                 lf=fsObjectList.begin();
 
@@ -1151,7 +1097,7 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                             if(obj.local.objectType == MSLocalFSObject::Type::file){
 
-                                qStdOut()<< obj.path<<obj.fileName <<" Forced uploading." <<endl;
+                                qStdOut()<< obj.path<<obj.fileName <<QString(" Forced uploading.") <<endl;
 
                                 this->remote_file_update(&obj);
                             }
@@ -1160,7 +1106,7 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                             if(obj.local.objectType == MSLocalFSObject::Type::file){
 
-                                qStdOut()<< obj.path<<obj.fileName <<" Forced uploading." <<endl;
+                                qStdOut()<< obj.path<<obj.fileName <<QString(" Forced uploading.") <<endl;
 
                                 this->remote_file_insert(&obj);
                             }
@@ -1188,7 +1134,7 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
 
 
-            qStdOut()<<"Syncronization end" <<endl;
+            qStdOut()<<QString("Syncronization end") <<endl;
 
             return;
     }
@@ -1197,7 +1143,7 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
     // SYNC FILES AND FOLDERS
 
-    qStdOut()<<"Start syncronization" <<endl;
+    qStdOut()<<QString("Start syncronization") <<endl;
 
     lf=fsObjectList.begin();
 
@@ -1214,7 +1160,7 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
             case MSFSObject::ObjectState::ChangedLocal:
 
-                qStdOut()<< obj.path<<obj.fileName <<" Changed local. Uploading." <<endl;
+                qStdOut()<< obj.path<<obj.fileName <<QString(" Changed local. Uploading.") <<endl;
 
                 this->remote_file_update(&obj);
 
@@ -1224,7 +1170,7 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                 if((obj.local.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                    qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
+                    qStdOut()<< obj.path<<obj.fileName <<QString(" New local. Uploading.") <<endl;
 
                     this->remote_file_insert(&obj);
 
@@ -1233,14 +1179,14 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New local. Uploading.") <<endl;
 
                         this->remote_file_insert(&obj);
 
                     }
                     else{
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete remote. Delete local." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete remote. Delete local.") <<endl;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1258,7 +1204,7 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
             case MSFSObject::ObjectState::ChangedRemote:
 
-                qStdOut()<< obj.path<<obj.fileName <<" Changed remote. Downloading." <<endl;
+                qStdOut()<< obj.path<<obj.fileName <<QString(" Changed remote. Downloading.") <<endl;
 
                 this->remote_file_get(&obj);
 
@@ -1271,13 +1217,13 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete local. Deleting remote." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete local. Deleting remote.") <<endl;
 
                         this->remote_file_trash(&obj);
 
                     }
                     else{
-                        qStdOut()<< obj.path<<obj.fileName <<" New remote. Downloading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New remote. Downloading.") <<endl;
 
                         this->remote_file_get(&obj);
                     }
@@ -1288,13 +1234,13 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete local. Deleting remote." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete local. Deleting remote.") <<endl;
 
                         this->remote_file_trash(&obj);
                     }
                     else{
 
-                        qStdOut()<< obj.path<<obj.fileName <<" New remote. Downloading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New remote. Downloading.") <<endl;
 
                         this->remote_file_get(&obj);
                     }
@@ -1307,14 +1253,14 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                 if((obj.remote.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                    qStdOut()<< obj.path<<obj.fileName <<" New remote. Downloading." <<endl;
+                    qStdOut()<< obj.path<<obj.fileName <<QString(" New remote. Downloading.") <<endl;
 
                     this->remote_file_get(&obj);
 
                     break;
                 }
 
-                qStdOut()<< obj.fileName <<" Delete local. Deleting remote." <<endl;
+                qStdOut()<< obj.fileName <<QString(" Delete local. Deleting remote.") <<endl;
 
                 this->remote_file_trash(&obj);
 
@@ -1326,12 +1272,12 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New local. Uploading.") <<endl;
 
                         this->remote_file_insert(&obj);
                     }
                     else{
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete remote. Deleting local." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete remote. Deleting local.") <<endl;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1346,14 +1292,14 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New local. Uploading.") <<endl;
 
                         this->remote_file_insert(&obj);
 
                     }
                     else{
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete remote. Deleting local." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete remote. Deleting local.") <<endl;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1386,7 +1332,7 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
 
 
-        qStdOut()<<"Syncronization end" <<endl;
+        qStdOut()<<QString("Syncronization end")<<endl;
 
 }
 
@@ -1584,7 +1530,7 @@ bool MSMailRu::readRemote(const QString &path, QNetworkCookieJar* cookie)
 
             qStdOut()<<"Authentication failed. Possibly you need re-auth or login and passwrd is incorrect" <<endl;
 
-            this->cookies->deleteLater();//delete(this->cookies);
+            //this->cookies->deleteLater();//delete(this->cookies);
             return providerAuthStatus;
         }
     }
@@ -1619,7 +1565,7 @@ bool MSMailRu::readRemote(const QString &path, QNetworkCookieJar* cookie)
 
     if(!req->replyOK()){
         //delete req->cookieJarObject;
-        //this->cookies->deleteLater();//delete(this->cookies);
+        ////this->cookies->deleteLater();//delete(this->cookies);
 
         req->printReplyError();
         delete(req);
@@ -1707,7 +1653,7 @@ bool MSMailRu::readRemote(const QString &path, QNetworkCookieJar* cookie)
 
         }
 
-        //delete this->cookies;;//this->cookies->deleteLater();//delete(this->cookies);
+        //delete this->cookies;;////this->cookies->deleteLater();//delete(this->cookies);
 //        try{
 //            if(!req->cookieJarObject->isCookieRemoved()){
 
@@ -2296,7 +2242,7 @@ bool MSMailRu::directUpload(const QString &url, const QString &remotePath){
 
         //error file not found
         qStdOut()<<"Unable to open of "+filePath <<endl;
-        this->cookies->deleteLater();//delete(this->cookies);
+        //this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         return false;
     }
@@ -2313,7 +2259,7 @@ bool MSMailRu::directUpload(const QString &url, const QString &remotePath){
 
     if(!req->replyOK()){
         req->printReplyError();
-        this->cookies->deleteLater();//delete(this->cookies);
+        //this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         return false;
     }
@@ -2364,7 +2310,7 @@ bool MSMailRu::directUpload(const QString &url, const QString &remotePath){
 
 
         req->printReplyError();
-        this->cookies->deleteLater();//delete(this->cookies);
+        //this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         return false;
     }
@@ -2377,7 +2323,7 @@ bool MSMailRu::directUpload(const QString &url, const QString &remotePath){
 
     file.remove();
 
-    this->cookies->deleteLater();//delete(this->cookies);
+    //this->cookies->deleteLater();//delete(this->cookies);
     delete(req);
 
     if(status == 200){

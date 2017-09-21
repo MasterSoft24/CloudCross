@@ -1,5 +1,5 @@
 
-# CloudCross v1.4.0
+# CloudCross v1.4.1
 
 Kamensky Vladimir
 
@@ -60,6 +60,9 @@ For detailed usage instructions see https://cloudcross.mastersoft24.ru/#usage
 	
 	
 ## Change log:
+
+### v1.4.1
+- 
 
 ### v1.4.0
 - OneDrive support added.
@@ -126,7 +129,7 @@ For detailed usage instructions see https://cloudcross.mastersoft24.ru/#usage
 
 
 
-# CloudCross v1.4.0
+# CloudCross v1.4.1
 
 Каменский Владимир
 
@@ -182,6 +185,9 @@ CloudCross позволяет синхронизировать только ча
 	
 	
 ## История изменений:
+
+### v1.4.1
+- 
 
 ### v1.4.0
 - Добавлена поддержка OneDrive

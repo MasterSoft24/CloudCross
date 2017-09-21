@@ -97,7 +97,10 @@ bool CCSeparateThread::command_doSync(){
 
     }
 
-    //cp->syncFileList = work;
+    //????????????
+    cp->syncFileList = work;
+    cp->checkFolderStructures();
+    //????????????
     cp->doSync(work);
 
     cp->syncFileList.clear();

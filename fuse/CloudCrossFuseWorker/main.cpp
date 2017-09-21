@@ -529,7 +529,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
     if(stat(fname.toStdString().c_str(), &buffer) == 0){//file exists in cache
 
 
-        if(buffer.st_size == 0){// file don't cached yet
+        if((buffer.st_size == 0)&&(o.local.exist == false)){// file don't cached yet
 
             if(false){
                 FILE* f = fopen(fname.toStdString().c_str(),"rb");

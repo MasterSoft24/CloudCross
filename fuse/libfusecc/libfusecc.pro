@@ -24,7 +24,7 @@ win32{
 }
 
 
-DEFINES +=CCROSS_LIB
+DEFINES += CCROSS_LIB
 
 
 QT       += network

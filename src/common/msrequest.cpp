@@ -84,9 +84,15 @@ MSRequest::~MSRequest(){
 #ifndef CCROSS_LIB
     delete(this->loop);
     delete(this->manager);
+    delete(this->query);
+    delete(this->url);
+    this->replyText.clear();
+    this->replyHeaders.clear();
 
 #else
    // delete(this->cookieJarObject);
+
+
 #endif
     //QNetworkRequest::~QNetworkRequest();
 }

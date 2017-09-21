@@ -401,7 +401,22 @@ bool MSGoogleDrive::createHashFromRemote(){
 
         job = jsonList.object();
 
+        if(job["nextPageToken"].toString() == ""){ // last part of data
+
+
+            QJsonArray items=job["items"].toArray();
+
+            for(int i=0;i<items.size();i++){
+
+                driveJSONFileList.insert(items[i].toObject()["id"].toString(),items[i]);
+
+            }
+        }
+
+
     }while(job["nextPageToken"].toString()!=""); //while(false);
+
+
 
     delete(req);
     return true;
@@ -2123,9 +2138,9 @@ afterReauth:
     QString uploadURI = req->getReplyHeader(QByteArray("Location"));//   header(QNetworkRequest::LocationHeader).toString();
 
     req->replyText.clear();
-    delete(req->url);
+     ;
 
-    delete(req->query);
+    // delete(req->query);
     delete(req);
 
     if( file.size() > GOOGLEDRIVE_CHUNK_SIZE){// multi-chunk upload
@@ -2161,9 +2176,9 @@ afterReauth:
             }
 
             //----------------------
-
+#ifndef CCROSS_LIB
             req->query = new QUrlQuery(req->url->query());// extract query string and setup his separately
-
+#endif
             req->addHeader("Authorization",                     QString("Bearer "+this->access_token));
             req->addHeader("Content-Length",                    QString::number(blsz));
             req->addHeader("Content-Range",                     "bytes "+QString::number(cursorPosition).toLocal8Bit()+"-"+QString::number(cursorPosition+blsz-1).toLocal8Bit()+"/"+QString::number(fSize).toLocal8Bit());
@@ -2177,7 +2192,7 @@ afterReauth:
             if(!req->replyOK()){
 
                 if(req->replyErrorText.contains("Host requires authentication")){
-                    delete(req->query);
+                    // delete(req->query);
                     delete(req);
                     this->refreshToken();
                     req = new MSRequest(this->proxyServer);
@@ -2188,7 +2203,7 @@ afterReauth:
                 }
 
                 req->printReplyError();
-                delete(req->query);
+                // delete(req->query);
                 delete(req);
                 return false;
             }
@@ -2197,12 +2212,12 @@ afterReauth:
 
             if((unsigned long long)cursorPosition > (unsigned long long)fSize){
 
-                delete(req->query);
+                // delete(req->query);
                 delete(req);
                 break;
             }
 
-            delete(req->query);
+            // delete(req->query);
             delete(req);
 
         }while (true);
@@ -2230,7 +2245,7 @@ afterReauth2:
         if(!req->replyOK()){
 
             if(req->replyErrorText.contains("Host requires authentication")){
-                delete(req->query);
+                // delete(req->query);
                 delete(req);
                 this->refreshToken();
                 req = new MSRequest(this->proxyServer);
@@ -2241,23 +2256,23 @@ afterReauth2:
             }
 
             req->printReplyError();
-            delete(req->query);
+            // delete(req->query);
             delete(req);
             return false;
         }
 
         if(!this->testReplyBodyForError(req->readReplyText())){
             qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-            delete(req->query);
+            // delete(req->query);
             delete(req);
             return false;
         }
 
         req->replyText.clear();
-        delete(req->url);
+         ;
 
 
-        delete(req->query);
+        // delete(req->query);
         delete(req);
 
     }
@@ -2419,8 +2434,10 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
             }
 
             //----------------------
-
+#ifndef CCROSS_LIB
             req->query = new QUrlQuery(req->url->query());// extract query string and setup his separately
+#endif
+
             QString tst = "bytes "+QString::number(cursorPosition).toLocal8Bit()+"-"+QString::number(cursorPosition+blsz-1).toLocal8Bit()+"/"+QString::number(fSize).toLocal8Bit();
 
             req->addHeader("Authorization",                     QString("Bearer "+this->access_token));
@@ -2455,8 +2472,9 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
         req = new MSRequest(this->proxyServer);
 
         req->setRequestUrl(uploadURI);
+#ifndef CCROSS_LIB
         req->query = new QUrlQuery(req->url->query());// extract query string and setup his separately
-
+#endif
         req->addHeader("Authorization",                     QString("Bearer "+this->access_token));
         req->addHeader("Content-Type",                      object->local.mimeType);
         req->addHeader("Content-Length",                      QString::number(file.size()));
@@ -2467,19 +2485,19 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
 
         if(!req->replyOK()){
             req->printReplyError();
-            delete(req->query);
+            // delete(req->query);
             delete(req);
             return false;
         }
 
         if(!this->testReplyBodyForError(req->readReplyText())){
             qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-            delete(req->query);
+            // delete(req->query);
             delete(req);
             return false;
         }
 
-        delete(req->query);
+        // delete(req->query);
         delete(req);
 
     }

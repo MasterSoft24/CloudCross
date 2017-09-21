@@ -1020,67 +1020,13 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
     QHash<QString,MSFSObject>::iterator lf;
 
-//    if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
-
-//        // create new folder structure on remote
-
-//        qStdOut()<<"Checking folder structure on remote" <<endl;
-
-//        QHash<QString,MSFSObject> localFolders=this->filelist_getFSObjectsByTypeLocal(MSLocalFSObject::Type::folder);
-//        localFolders=this->filelist_getFSObjectsByState(localFolders,MSFSObject::ObjectState::NewLocal);
-
-//        lf=localFolders.begin();
-
-//        while(lf != localFolders.end()){
-
-//            this->remote_createDirectory(lf.key());
-
-//            lf++;
-//        }
-//    }
-//    else{
-
-//        // create new folder structure on local
-
-//        qStdOut()<<"Checking folder structure on local" <<endl;
-
-//        QHash<QString,MSFSObject> remoteFolders=this->filelist_getFSObjectsByTypeRemote(MSRemoteFSObject::Type::folder);
-//        remoteFolders=this->filelist_getFSObjectsByState(remoteFolders,MSFSObject::ObjectState::NewRemote);
-
-//        lf=remoteFolders.begin();
-
-//        while(lf != remoteFolders.end()){
-
-//            this->local_createDirectory(this->workPath+lf.key());
-
-//            lf++;
-//        }
-
-//        // trash local folder
-//        QHash<QString,MSFSObject> trashFolders=this->filelist_getFSObjectsByTypeLocal(MSLocalFSObject::Type::folder);
-//        trashFolders=this->filelist_getFSObjectsByState(trashFolders,MSFSObject::ObjectState::DeleteRemote);
-
-//        lf=trashFolders.begin();
-
-//        while(lf != trashFolders.end()){
-
-
-//            this->local_removeFolder(lf.key());
-
-//            lf++;
-//        }
-
-//    }
-
-
-
 
     // FORCING UPLOAD OR DOWNLOAD FILES AND FOLDERS
     if(this->getFlag("force")){
 
         if(this->getOption("force")=="download"){
 
-            qStdOut()<<"Start downloading in force mode" <<endl;
+            qStdOut()<<QString("Start downloading in force mode") <<endl;
 
             lf=fsObjectList.begin();
 
@@ -1096,7 +1042,7 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(obj.remote.objectType == MSRemoteFSObject::Type::file){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Forced downloading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Forced downloading.") <<endl;
 
                         this->remote_file_get(&obj);
                     }
@@ -1108,7 +1054,7 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
         else{
             if(this->getOption("force")=="upload"){
 
-                qStdOut()<<"Start uploading in force mode" <<endl;
+                qStdOut()<<QString("Start uploading in force mode") <<endl;
 
                 lf=fsObjectList.begin();
 
@@ -1126,7 +1072,7 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                             if(obj.local.objectType == MSLocalFSObject::Type::file){
 
-                                qStdOut()<< obj.path<<obj.fileName <<" Forced uploading." <<endl;
+                                qStdOut()<< obj.path<<obj.fileName <<QString(" Forced uploading.") <<endl;
 
                                 this->remote_file_update(&obj);
                             }
@@ -1135,7 +1081,7 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                             if(obj.local.objectType == MSLocalFSObject::Type::file){
 
-                                qStdOut()<< obj.path<<obj.fileName <<" Forced uploading." <<endl;
+                                qStdOut()<< obj.path<<obj.fileName <<QString(" Forced uploading.") <<endl;
 
                                 this->remote_file_insert(&obj);
                             }
@@ -1162,7 +1108,7 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
 
 
-            qStdOut()<<"Syncronization end" <<endl;
+            qStdOut()<<QString("Syncronization end") <<endl;
 
             return;
     }
@@ -1171,7 +1117,7 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
     // SYNC FILES AND FOLDERS
 
-    qStdOut()<<"Start syncronization" <<endl;
+    qStdOut()<<QString("Start syncronization") <<endl;
 
     lf=fsObjectList.begin();
 
@@ -1188,7 +1134,7 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
             case MSFSObject::ObjectState::ChangedLocal:
 
-                qStdOut()<< obj.path<<obj.fileName <<" Changed local. Uploading." <<endl;
+                qStdOut()<< obj.path<<obj.fileName <<QString(" Changed local. Uploading.") <<endl;
 
                 this->remote_file_update(&obj);
 
@@ -1198,7 +1144,7 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                 if((obj.local.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                    qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
+                    qStdOut()<< obj.path<<obj.fileName <<QString(" New local. Uploading.") <<endl;
 
                     this->remote_file_insert(&obj);
 
@@ -1207,14 +1153,14 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New local. Uploading.") <<endl;
 
                         this->remote_file_insert(&obj);
 
                     }
                     else{
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete remote. Delete local." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete remote. Delete local.") <<endl;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1232,7 +1178,7 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
             case MSFSObject::ObjectState::ChangedRemote:
 
-                qStdOut()<< obj.path<<obj.fileName <<" Changed remote. Downloading." <<endl;
+                qStdOut()<< obj.path<<obj.fileName <<QString(" Changed remote. Downloading.") <<endl;
 
                 this->remote_file_get(&obj);
 
@@ -1245,13 +1191,13 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete local. Deleting remote." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete local. Deleting remote.") <<endl;
 
                         this->remote_file_trash(&obj);
 
                     }
                     else{
-                        qStdOut()<< obj.path<<obj.fileName <<" New remote. Downloading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New remote. Downloading.") <<endl;
 
                         this->remote_file_get(&obj);
                     }
@@ -1262,13 +1208,13 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete local. Deleting remote." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete local. Deleting remote.") <<endl;
 
                         this->remote_file_trash(&obj);
                     }
                     else{
 
-                        qStdOut()<< obj.path<<obj.fileName <<" New remote. Downloading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New remote. Downloading.") <<endl;
 
                         this->remote_file_get(&obj);
                     }
@@ -1281,14 +1227,14 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                 if((obj.remote.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                    qStdOut()<< obj.path<<obj.fileName <<" New remote. Downloading." <<endl;
+                    qStdOut()<< obj.path<<obj.fileName <<QString(" New remote. Downloading.") <<endl;
 
                     this->remote_file_get(&obj);
 
                     break;
                 }
 
-                qStdOut()<< obj.fileName <<" Delete local. Deleting remote." <<endl;
+                qStdOut()<< obj.fileName <<QString(" Delete local. Deleting remote.") <<endl;
 
                 this->remote_file_trash(&obj);
 
@@ -1300,12 +1246,12 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New local. Uploading.") <<endl;
 
                         this->remote_file_insert(&obj);
                     }
                     else{
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete remote. Deleting local." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete remote. Deleting local.") <<endl;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1320,14 +1266,14 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New local. Uploading.") <<endl;
 
                         this->remote_file_insert(&obj);
 
                     }
                     else{
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete remote. Deleting local." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete remote. Deleting local.") <<endl;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1360,7 +1306,7 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
 
 
-        qStdOut()<<"Syncronization end" <<endl;
+        qStdOut()<<QString("Syncronization end") <<endl;
 
 }
 
@@ -1631,10 +1577,10 @@ bool MSYandexDisk::remote_file_insert(MSFSObject *object){
 
     req->addHeader("Authorization",                     "OAuth "+this->access_token);
     req->addHeader("Content-Type",                      QString("application/json; charset=UTF-8"));
-#ifndef ZCCROSS_LIB
+#ifndef CCROSS_LIB
     req->addQueryItem("path",                           object->path+object->fileName);
 #else
-    req->addQueryItem("path",                           QString(object->path+object->fileName).replace("/","%2f"));
+    req->addQueryItem("path",                           QString(object->path + object->fileName)/*.replace("/","%2f")*/);
 #endif
 
     req->addQueryItem("overwrite",                           "true");
