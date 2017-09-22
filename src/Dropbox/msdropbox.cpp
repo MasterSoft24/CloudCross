@@ -38,7 +38,6 @@
 #include <QJsonArray>
 
 
-#define DROPBOX_MAX_FILESIZE  8000000
 //  150000000
 
 MSDropbox::MSDropbox() :
@@ -105,7 +104,7 @@ bool MSDropbox::auth(){
 //=======================================================================================
 
 
-bool MSDropbox::onAuthFinished(QString html, MSCloudProvider *provider){
+bool MSDropbox::onAuthFinished(const QString &html, MSCloudProvider *provider){
 
     Q_UNUSED(provider)
 
@@ -124,8 +123,9 @@ bool MSDropbox::onAuthFinished(QString html, MSCloudProvider *provider){
 
 
     if(!req->replyOK()){
-        delete(req);
+
         req->printReplyError();
+        delete(req);
         this->providerAuthStatus=false;
         emit providerAuthComplete();
         return false;
@@ -164,7 +164,7 @@ bool MSDropbox::onAuthFinished(QString html, MSCloudProvider *provider){
 
 //=======================================================================================
 
-void MSDropbox::saveTokenFile(QString path){
+void MSDropbox::saveTokenFile(const QString &path){
 
     QFile key(path+"/"+this->tokenFileName);
     key.open(QIODevice::WriteOnly | QIODevice::Text);
@@ -177,7 +177,7 @@ void MSDropbox::saveTokenFile(QString path){
 
 //=======================================================================================
 
-bool MSDropbox::loadTokenFile(QString path){
+bool MSDropbox::loadTokenFile(const QString &path){
 
     QFile key(path+"/"+this->tokenFileName);
 
@@ -209,7 +209,7 @@ bool MSDropbox::loadTokenFile(QString path){
 
 void MSDropbox::loadStateFile(){
 
-    QFile key(this->workPath+"/"+this->stateFileName);
+    QFile key(this->credentialsPath+"/"+this->stateFileName);
 
     if(!key.open(QIODevice::ReadOnly))
     {
@@ -250,7 +250,7 @@ void MSDropbox::saveStateFile(){
     jso.insert("last_sync",jts);
     state.setObject(jso);
 
-    QFile key(this->workPath+"/"+this->stateFileName);
+    QFile key(this->credentialsPath+"/"+this->stateFileName);
     key.open(QIODevice::WriteOnly | QIODevice::Text);
     QTextStream outk(&key);
     outk << state.toJson();
@@ -292,8 +292,9 @@ bool MSDropbox::createHashFromRemote(){
 
 
     if(!req->replyOK()){
-        delete(req);
+
         req->printReplyError();
+        delete(req);
         return false;
     }
 
@@ -473,12 +474,20 @@ bool MSDropbox::readRemote(){ //QString parentId,QString currentPath
     return true;
 }
 
+bool MSDropbox::_readRemote(const QString &rootPath){
+
+    Q_UNUSED(rootPath);
+
+    return this->readRemote();
+
+}
+
 
 
 //=======================================================================================
 
 
-bool MSDropbox::isFile(QJsonValue remoteObject){
+bool MSDropbox::isFile(const QJsonValue &remoteObject){
     if(remoteObject.toObject()[".tag"].toString()=="file"){
         return true;
     }
@@ -487,7 +496,7 @@ bool MSDropbox::isFile(QJsonValue remoteObject){
 
 //=======================================================================================
 
-bool MSDropbox::isFolder(QJsonValue remoteObject){
+bool MSDropbox::isFolder(const QJsonValue &remoteObject){
     if(remoteObject.toObject()[".tag"].toString()=="folder"){
         return true;
     }
@@ -602,7 +611,75 @@ bool MSDropbox::createSyncFileList(){
 // this->remote_createDirectory((this->syncFileList.values()[0].path+this->syncFileList.values()[0].fileName));
 
 
-    this->doSync();
+    // make separately lists of objects
+    QList<QString> keys = this->syncFileList.uniqueKeys();
+
+    if(keys.size()>3){// split list to few parts
+
+        this->threadsRunning = new QSemaphore(3);
+
+        QThread* t1 = new QThread(this);
+        QThread* t2 = new QThread();
+        QThread* t3 = new QThread(this);
+
+        MSSyncThread* thr1 = new MSSyncThread(nullptr,this);
+        thr1->moveToThread(t1);
+        connect(t1,SIGNAL(started()),thr1,SLOT(run()));
+        connect(t1,SIGNAL(finished()),thr1,SLOT(deleteLater()));
+        connect(thr1,SIGNAL(finished()),t1,SLOT(quit()));
+
+        MSSyncThread* thr2 = new MSSyncThread(nullptr,this);
+        thr2->moveToThread(t2);
+        connect(t2,SIGNAL(started()),thr2,SLOT(run()));
+        connect(t2,SIGNAL(finished()),thr2,SLOT(deleteLater()));
+        connect(thr2,SIGNAL(finished()),t2,SLOT(quit()));
+
+        MSSyncThread* thr3 = new MSSyncThread(nullptr,this);
+        thr3->moveToThread(t3);
+        connect(t3,SIGNAL(started()),thr3,SLOT(run()));
+        connect(t3,SIGNAL(finished()),thr3,SLOT(deleteLater()));
+        connect(thr3,SIGNAL(finished()),t3,SLOT(quit()));
+
+
+//        QHash<QString,MSFSObject> L1;
+//        QHash<QString,MSFSObject> L2;
+//        QHash<QString,MSFSObject> L3;
+
+        for(int i=0;i<keys.size();i+=3){
+
+            if(i<=keys.size()-1){
+                thr1->threadSyncList.insert(keys[i],this->syncFileList.find(keys[i]).value());
+            }
+            if(i+1 <= keys.size()-1){
+                thr2->threadSyncList.insert(keys[i+1],this->syncFileList.find(keys[i+1]).value());
+            }
+            if(i+2 <= keys.size()-1){
+                thr3->threadSyncList.insert(keys[i+2],this->syncFileList.find(keys[i+2]).value());
+            }
+
+        }
+        //this->doSync(L2);
+
+        this->checkFolderStructures();
+
+        t1->start();
+        t2->start();
+        t3->start();
+        t1->wait();
+        t2->wait();
+        t3->wait();
+
+//        while (this->threadsRunning->available()<3) {
+
+//        }
+
+
+    }
+    else{// sync as is
+
+        this->checkFolderStructures();
+        this->doSync(this->syncFileList);
+    }
 
     return true;
 }
@@ -610,7 +687,7 @@ bool MSDropbox::createSyncFileList(){
 //=======================================================================================
 
 
-bool MSDropbox::readLocal(QString path){
+bool MSDropbox::readLocal(const QString &path){
 
 
 
@@ -661,7 +738,116 @@ bool MSDropbox::readLocal(QString path){
 
 
 
-            if(i!=this->syncFileList.end()){// if object exists in Google Drive
+            if(i!=this->syncFileList.end()){// if object exists in a cloud
+
+                MSFSObject* fsObject = &(i.value());
+
+
+                fsObject->local.fileSize=  fi.size();
+                //fsObject->local.md5Hash= this->fileChecksum(Path,QCryptographicHash::Md5);
+                fsObject->local.exist=true;
+                fsObject->getLocalMimeType(this->workPath);
+
+                if(fi.isDir()){
+                    fsObject->local.objectType=MSLocalFSObject::Type::folder;
+                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000 * 1000;// /1000 added 20.08.17 *1000 added 3.09.17
+                }
+                else{
+
+                    fsObject->local.objectType=MSLocalFSObject::Type::file;
+                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000 * 1000;// /1000 added 20.08.17 *1000 added 3.09.17
+
+                }
+
+
+                fsObject->isDocFormat=false;
+
+
+                fsObject->state=this->filelist_defineObjectState(fsObject->local,fsObject->remote);
+
+            }
+            else{
+
+                MSFSObject fsObject;
+
+                fsObject.state=MSFSObject::ObjectState::NewLocal;
+
+                if(relPath.lastIndexOf("/")==0){
+                    fsObject.path="/";
+                }
+                else{
+                    fsObject.path=QString(relPath).left(relPath.lastIndexOf("/"))+"/";
+                }
+
+                fsObject.fileName=fi.fileName();
+                fsObject.getLocalMimeType(this->workPath);
+
+                fsObject.local.fileSize=  fi.size();
+                //fsObject.local.md5Hash= this->fileChecksum(Path,QCryptographicHash::Md5);
+                fsObject.local.exist=true;
+
+                if(fi.isDir()){
+                    fsObject.local.objectType=MSLocalFSObject::Type::folder;
+                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000 * 1000;// /1000 added 20.08.17 *1000 added 3.09.17
+                }
+                else{
+
+                    fsObject.local.objectType=MSLocalFSObject::Type::file;
+                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000 * 1000;// /1000 added 20.08.17; *1000 added 3.09.17
+
+                }
+
+                fsObject.state=this->filelist_defineObjectState(fsObject.local,fsObject.remote);
+
+                fsObject.isDocFormat=false;
+
+
+                this->syncFileList.insert(relPath,fsObject);
+
+            }
+
+        }
+
+        return true;
+}
+
+
+//=======================================================================================
+
+
+bool MSDropbox::readLocalSingle(const QString &path){
+
+    QFileInfo fi(path);
+
+            QString Path = fi.absoluteFilePath();
+            QString relPath=fi.absoluteFilePath().replace(this->workPath,"");
+
+            if(! this->filterServiceFileNames(relPath)){// skip service files and dirs
+
+                return false;
+            }
+
+
+            if(this->getFlag("useInclude") && this->includeList != ""){//  --use-include
+
+                if( this->filterIncludeFileNames(relPath)){
+
+                    return false;
+                }
+            }
+            else{// use exclude by default
+
+                if(this->excludeList != ""){
+                    if(! this->filterExcludeFileNames(relPath)){
+
+                        return false;
+                    }
+                }
+            }
+
+            QHash<QString,MSFSObject>::iterator i=this->syncFileList.find(relPath);
+
+            if(i!=this->syncFileList.end()){// if object exists in a cloud
 
                 MSFSObject* fsObject = &(i.value());
 
@@ -729,8 +915,6 @@ bool MSDropbox::readLocal(QString path){
 
             }
 
-        }
-
         return true;
 }
 
@@ -739,7 +923,7 @@ bool MSDropbox::readLocal(QString path){
 //=======================================================================================
 
 
-MSFSObject::ObjectState MSDropbox::filelist_defineObjectState(MSLocalFSObject local, MSRemoteFSObject remote){
+MSFSObject::ObjectState MSDropbox::filelist_defineObjectState(const MSLocalFSObject &local, const MSRemoteFSObject &remote){
 
 
     if((local.exist)&&(remote.exist)){ //exists both files
@@ -753,7 +937,7 @@ MSFSObject::ObjectState MSDropbox::filelist_defineObjectState(MSLocalFSObject lo
 //        else{
 
             // compare last modified date for local and remote
-            if(local.modifiedDate==remote.modifiedDate){
+            if(local.modifiedDate == remote.modifiedDate){
 
                 return MSFSObject::ObjectState::Sync;
 
@@ -813,7 +997,7 @@ MSFSObject::ObjectState MSDropbox::filelist_defineObjectState(MSLocalFSObject lo
 //=======================================================================================
 
 
-void MSDropbox::doSync(){
+void MSDropbox::checkFolderStructures(){
 
     QHash<QString,MSFSObject>::iterator lf;
 
@@ -871,17 +1055,26 @@ void MSDropbox::doSync(){
 
 
 
+}
+
+//=======================================================================================
+
+
+void MSDropbox::doSync(QHash<QString, MSFSObject> fsObjectList){
+
+    QHash<QString,MSFSObject>::iterator lf;
+
 
     // FORCING UPLOAD OR DOWNLOAD FILES AND FOLDERS
     if(this->getFlag("force")){
 
         if(this->getOption("force")=="download"){
 
-            qStdOut()<<"Start downloading in force mode" <<endl;
+            qStdOut()<<QString("Start downloading in force mode") <<endl;
 
-            lf=this->syncFileList.begin();
+            lf=fsObjectList.begin();
 
-            for(;lf != this->syncFileList.end();lf++){
+            for(;lf != fsObjectList.end();lf++){
 
                 MSFSObject obj=lf.value();
 
@@ -894,7 +1087,7 @@ void MSDropbox::doSync(){
 
                     if(obj.remote.objectType == MSRemoteFSObject::Type::file){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Forced downloading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Forced downloading.") <<endl;
 
                         this->remote_file_get(&obj);
                     }
@@ -906,11 +1099,11 @@ void MSDropbox::doSync(){
         else{
             if(this->getOption("force")=="upload"){
 
-                qStdOut()<<"Start uploading in force mode" <<endl;
+                qStdOut()<<QString("Start uploading in force mode") <<endl;
 
-                lf=this->syncFileList.begin();
+                lf=fsObjectList.begin();
 
-                for(;lf != this->syncFileList.end();lf++){
+                for(;lf != fsObjectList.end();lf++){
 
                     MSFSObject obj=lf.value();
 
@@ -924,7 +1117,7 @@ void MSDropbox::doSync(){
 
                             if(obj.local.objectType == MSLocalFSObject::Type::file){
 
-                                qStdOut()<< obj.path<<obj.fileName <<" Forced uploading." <<endl;
+                                qStdOut()<< obj.path<<obj.fileName <<QString(" Forced uploading.") <<endl;
 
                                 this->remote_file_update(&obj);
                             }
@@ -933,7 +1126,7 @@ void MSDropbox::doSync(){
 
                             if(obj.local.objectType == MSLocalFSObject::Type::file){
 
-                                qStdOut()<< obj.path<<obj.fileName <<" Forced uploading." <<endl;
+                                qStdOut()<< obj.path<<obj.fileName <<QString(" Forced uploading.") <<endl;
 
                                 this->remote_file_insert(&obj);
                             }
@@ -961,7 +1154,7 @@ void MSDropbox::doSync(){
 
 
 
-            qStdOut()<<"Syncronization end" <<endl;
+            qStdOut()<<QString("Syncronization end") <<endl;
 
             return;
     }
@@ -970,11 +1163,11 @@ void MSDropbox::doSync(){
 
     // SYNC FILES AND FOLDERS
 
-    qStdOut()<<"Start syncronization" <<endl;
+    qStdOut()<<QString("Start syncronization") <<endl;
 
-    lf=this->syncFileList.begin();
+    lf=fsObjectList.begin();
 
-    for(;lf != this->syncFileList.end();lf++){
+    for(;lf != fsObjectList.end();lf++){
 
         MSFSObject obj=lf.value();
 
@@ -987,7 +1180,7 @@ void MSDropbox::doSync(){
 
             case MSFSObject::ObjectState::ChangedLocal:
 
-                qStdOut()<< obj.path<<obj.fileName <<" Changed local. Uploading." <<endl;
+                qStdOut()<< obj.path<<obj.fileName <<QString(" Changed local. Uploading.") <<endl;
 
                 this->remote_file_update(&obj);
 
@@ -997,7 +1190,7 @@ void MSDropbox::doSync(){
 
                 if((obj.local.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                    qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
+                    qStdOut()<< obj.path<<obj.fileName <<QString(" New local. Uploading.") <<endl;
 
                     this->remote_file_insert(&obj);
 
@@ -1006,14 +1199,14 @@ void MSDropbox::doSync(){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New local. Uploading.") <<endl;
 
                         this->remote_file_insert(&obj);
 
                     }
                     else{
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete remote. Delete local." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete remote. Delete local.") <<endl;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1031,7 +1224,7 @@ void MSDropbox::doSync(){
 
             case MSFSObject::ObjectState::ChangedRemote:
 
-                qStdOut()<< obj.path<<obj.fileName <<" Changed remote. Downloading." <<endl;
+                qStdOut()<< obj.path<<obj.fileName <<QString(" Changed remote. Downloading.") <<endl;
 
                 this->remote_file_get(&obj);
 
@@ -1044,13 +1237,13 @@ void MSDropbox::doSync(){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete local. Deleting remote." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete local. Deleting remote.") <<endl;
 
                         this->remote_file_trash(&obj);
 
                     }
                     else{
-                        qStdOut()<< obj.path<<obj.fileName <<" New remote. Downloading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New remote. Downloading.") <<endl;
 
                         this->remote_file_get(&obj);
                     }
@@ -1061,13 +1254,13 @@ void MSDropbox::doSync(){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete local. Deleting remote." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete local. Deleting remote.") <<endl;
 
                         this->remote_file_trash(&obj);
                     }
                     else{
 
-                        qStdOut()<< obj.path<<obj.fileName <<" New remote. Downloading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New remote. Downloading.") <<endl;
 
                         this->remote_file_get(&obj);
                     }
@@ -1080,14 +1273,14 @@ void MSDropbox::doSync(){
 
                 if((obj.remote.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                    qStdOut()<< obj.path<<obj.fileName <<" New remote. Downloading." <<endl;
+                    qStdOut()<< obj.path<<obj.fileName <<QString(" New remote. Downloading.") <<endl;
 
                     this->remote_file_get(&obj);
 
                     break;
                 }
 
-                qStdOut()<< obj.fileName <<" Delete local. Deleting remote." <<endl;
+                qStdOut()<< obj.fileName <<QString(" Delete local. Deleting remote.") <<endl;
 
                 this->remote_file_trash(&obj);
 
@@ -1099,12 +1292,12 @@ void MSDropbox::doSync(){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New local. Uploading.") <<endl;
 
                         this->remote_file_insert(&obj);
                     }
                     else{
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete remote. Deleting local." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete remote. Deleting local.") <<endl;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1119,14 +1312,14 @@ void MSDropbox::doSync(){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New local. Uploading.") <<endl;
 
                         this->remote_file_insert(&obj);
 
                     }
                     else{
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete remote. Deleting local." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete remote. Deleting local.") <<endl;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1164,13 +1357,13 @@ void MSDropbox::doSync(){
 }
 
 
-bool MSDropbox::remote_file_generateIDs(int count) {
-// absolete
+//bool MSDropbox::remote_file_generateIDs(int count) {
+//// absolete
 
-    // fix warning message
-    count++;
-    return false;
-}
+//    // fix warning message
+//    count++;
+//    return false;
+//}
 
 QHash<QString,MSFSObject>   MSDropbox::filelist_getFSObjectsByState(MSFSObject::ObjectState state) {
 
@@ -1252,7 +1445,7 @@ QHash<QString,MSFSObject>   MSDropbox::filelist_getFSObjectsByTypeRemote(MSRemot
 
 //=======================================================================================
 
-bool MSDropbox::filelist_FSObjectHasParent(MSFSObject fsObject){
+bool MSDropbox::filelist_FSObjectHasParent(const MSFSObject &fsObject){
     if(fsObject.path=="/"){
         return false;
     }
@@ -1273,7 +1466,7 @@ bool MSDropbox::filelist_FSObjectHasParent(MSFSObject fsObject){
 
 
 
-MSFSObject MSDropbox::filelist_getParentFSObject(MSFSObject fsObject){
+MSFSObject MSDropbox::filelist_getParentFSObject(const MSFSObject &fsObject){
 
     QString parentPath;
 
@@ -1299,7 +1492,7 @@ MSFSObject MSDropbox::filelist_getParentFSObject(MSFSObject fsObject){
 }
 
 
-void MSDropbox::filelist_populateChanges(MSFSObject changedFSObject){
+void MSDropbox::filelist_populateChanges(const MSFSObject &changedFSObject){
 
     QHash<QString,MSFSObject>::iterator object=this->syncFileList.find(changedFSObject.path+changedFSObject.fileName);
 
@@ -1311,7 +1504,7 @@ void MSDropbox::filelist_populateChanges(MSFSObject changedFSObject){
 
 
 
-bool MSDropbox::testReplyBodyForError(QString body) {
+bool MSDropbox::testReplyBodyForError(const QString &body) {
 
     if(body.contains("\"error\": {")){
 
@@ -1325,7 +1518,7 @@ bool MSDropbox::testReplyBodyForError(QString body) {
 }
 
 
-QString MSDropbox::getReplyErrorString(QString body) {
+QString MSDropbox::getReplyErrorString(const QString &body) {
 
     QJsonDocument json = QJsonDocument::fromJson(body.toUtf8());
     QJsonObject job = json.object();
@@ -1355,19 +1548,28 @@ bool MSDropbox::remote_file_get(MSFSObject* object){
     req->setMethod("post");
 
     req->addHeader("Authorization","Bearer "+this->access_token);
-    req->addHeader("Dropbox-API-Arg","{\"path\": \""+id+"\"}");
-
-    QByteArray ba;
-    req->post(ba);
+    req->addHeader("Dropbox-API-Arg","{\"path\":\""+id+"\"}");
+    req->addHeader("Content-Type",QByteArray()); // this line needed for requests with libcurl version of MSRequest
 
     QString filePath=this->workPath+object->path+object->fileName;
+
+    QByteArray ba;
+#ifdef CCROSS_LIB
+    req->post(ba);
+#endif
+#ifndef CCROSS_LIB
+    req->syncDownloadWithPost(filePath,ba);
+#endif
+
 
 
     if(this->testReplyBodyForError(req->readReplyText())){
 
         if(object->remote.objectType==MSRemoteFSObject::Type::file){
 
+#ifdef CCROSS_LIB
             this->local_writeFileContent(filePath,req);
+#endif
             // set remote "change time" for local file
 
             utimbuf tb;
@@ -1426,7 +1628,8 @@ bool MSDropbox::remote_file_insert(MSFSObject *object){
     QFile file(filePath);
 
     qint64 fSize=file.size();
-    int passCount=fSize/DROPBOX_MAX_FILESIZE;// count of 150MB blocks
+//    unsigned int passCount=(unsigned int)((unsigned int)fSize / (unsigned int)DROPBOX_CHUNK_SIZE);// count of 150MB blocks
+
 
     if (!file.open(QIODevice::ReadOnly)){
 
@@ -1455,7 +1658,7 @@ bool MSDropbox::remote_file_insert(MSFSObject *object){
 
     req=new MSRequest(this->proxyServer);
 
-    if(passCount==0){// onepass and finalize uploading
+    if( file.size() <= DROPBOX_CHUNK_SIZE){// onepass and finalize uploading
 
             req->setRequestUrl("https://content.dropboxapi.com/2/files/upload_session/finish");
             req->addHeader("Authorization",                     "Bearer "+this->access_token);
@@ -1476,13 +1679,16 @@ bool MSDropbox::remote_file_insert(MSFSObject *object){
             doc.insert("commit",commit);
 
             req->addHeader("Dropbox-API-Arg",QJsonDocument(doc).toJson(QJsonDocument::Compact) );//QJsonDocument(doc).toJson()
-            QByteArray ba;
+//            QByteArray ba;
 
-            ba.append(file.read(fSize));
+//            ba.append(file.read(fSize));
+
+
+            req->addHeader("Content-Length",QString::number(file.size()).toLocal8Bit());
+
+            req->post(file.read(fSize));
+
             file.close();
-
-            req->addHeader("Content-Length",QString::number(ba.length()).toLocal8Bit());
-            req->post(ba);
 
             if(!req->replyOK()){
                 req->printReplyError();
@@ -1490,17 +1696,53 @@ bool MSDropbox::remote_file_insert(MSFSObject *object){
                 return false;
             }
 
-                if(!this->testReplyBodyForError(req->readReplyText())){
-                    qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                    return false;
-                }
+            if(!this->testReplyBodyForError(req->readReplyText())){
+                qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+                return false;
+            }
+
+            //  changing a local file timestamp to timestamp of remote file to make it equals for correct SYNC status processing
+            // This code was added for FUSE
+
+            QString content = req->readReplyText();
+
+            QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+            QJsonObject job = json.object();
+
+            utimbuf tb;
+            tb.actime=(this->toMilliseconds(job["client_modified"].toString(),true))/1000;;
+            tb.modtime=(this->toMilliseconds(job["client_modified"].toString(),true))/1000;;
+
+            utime(filePath.toStdString().c_str(),&tb);
+            //------------------------------------------------------------------------------------------------------------------
+
 
     }
     else{ // multipass uploading
 
         int cursorPosition=0;
+        int blsz=0;
+        qint64 fSize = file.size();
 
-        for(int i=0;i<passCount;i++){
+        //for(int i=0;i<passCount;i++){
+        do{
+
+            if(cursorPosition == 0){
+
+                blsz=DROPBOX_CHUNK_SIZE;
+            }
+            else{
+
+                if(fSize - cursorPosition < DROPBOX_CHUNK_SIZE){
+
+                    blsz=fSize - cursorPosition;
+                }
+                else{
+
+                    blsz=DROPBOX_CHUNK_SIZE;
+                }
+
+            }
 
             req->setRequestUrl("https://content.dropboxapi.com/2/files/upload_session/append");
             req->addHeader("Authorization",                     "Bearer "+this->access_token);
@@ -1512,14 +1754,15 @@ bool MSDropbox::remote_file_insert(MSFSObject *object){
 
 
             req->addHeader("Dropbox-API-Arg",QJsonDocument(*cursor1).toJson(QJsonDocument::Compact) );//QJsonDocument(doc).toJson()
-            QByteArray* ba1=new QByteArray();
+            //QByteArray* ba1=new QByteArray();
 
             file.seek(cursorPosition);
-            ba1->append(file.read(DROPBOX_MAX_FILESIZE));
+            //ba1->append(file.read(DROPBOX_CHUNK_SIZE));
 
 
-            req->addHeader("Content-Length",QString::number(ba1->length()).toLocal8Bit());
-            req->post(*ba1);
+
+            req->addHeader("Content-Length",QString::number(blsz).toLocal8Bit());
+            req->post(file.read(blsz));
 
             if(!req->replyOK()){
                 req->printReplyError();
@@ -1533,12 +1776,19 @@ bool MSDropbox::remote_file_insert(MSFSObject *object){
                 }
 
             delete(req);
-            delete(ba1);
+
             delete(cursor1);
-            cursorPosition += DROPBOX_MAX_FILESIZE;
+            cursorPosition += blsz;
+
+            if((unsigned long long)cursorPosition > (unsigned long long)fSize - DROPBOX_CHUNK_SIZE){
+
+                req=new MSRequest(this->proxyServer);
+                //cursorPosition -= blsz;
+                break;
+            }
 
             req=new MSRequest(this->proxyServer);
-        }
+        }while(true);
 
         // finalize upload
 
@@ -1561,14 +1811,16 @@ bool MSDropbox::remote_file_insert(MSFSObject *object){
         doc.insert("commit",commit);
 
         req->addHeader("Dropbox-API-Arg",QJsonDocument(doc).toJson(QJsonDocument::Compact) );//QJsonDocument(doc).toJson()
-        QByteArray ba;
+        //QByteArray ba;
 
         file.seek(cursorPosition);
-        ba.append(file.read(fSize-cursorPosition));
-        file.close();
+        //ba.append(file.read(fSize-cursorPosition));
 
-        req->addHeader("Content-Length",QString::number(ba.length()).toLocal8Bit());
-        req->post(ba);
+
+        req->addHeader("Content-Length",QString::number(fSize-cursorPosition).toLocal8Bit());
+        req->post(file.read(fSize-cursorPosition));
+
+        file.close();
 
         if(!req->replyOK()){
             req->printReplyError();
@@ -1576,10 +1828,26 @@ bool MSDropbox::remote_file_insert(MSFSObject *object){
             return false;
         }
 
-            if(!this->testReplyBodyForError(req->readReplyText())){
-                qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                return false;
-            }
+        if(!this->testReplyBodyForError(req->readReplyText())){
+            qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+            return false;
+        }
+
+        //  changing a local file timestamp to timestamp of remote file to make it equals for correct SYNC status processing
+        // This code was added for FUSE
+
+        QString content = req->readReplyText();
+
+        QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+        QJsonObject job = json.object();
+
+        utimbuf tb;
+        tb.actime=(this->toMilliseconds(job["client_modified"].toString(),true))/1000;;
+        tb.modtime=(this->toMilliseconds(job["client_modified"].toString(),true))/1000;;
+
+        utime(filePath.toStdString().c_str(),&tb);
+        //------------------------------------------------------------------------------------------------------------------
+
 
     }
 
@@ -1633,7 +1901,7 @@ bool MSDropbox::remote_file_update(MSFSObject *object){
     QFile file(filePath);
 
     qint64 fSize=file.size();
-    int passCount=fSize/DROPBOX_MAX_FILESIZE;// count of 150MB blocks
+    //int passCount=fSize/DROPBOX_CHUNK_SIZE;// count of 150MB blocks
 
     if (!file.open(QIODevice::ReadOnly)){
 
@@ -1654,13 +1922,15 @@ bool MSDropbox::remote_file_update(MSFSObject *object){
 
     if(sessID==""){
         qStdOut()<< "Error when upload "+filePath+" on remote" <<endl;
+        delete(req);
+        return false;
     }
 
     delete(req);
 
     req=new MSRequest(this->proxyServer);
 
-    if(passCount==0){// onepass and finalize uploading
+    if(file.size() <= DROPBOX_CHUNK_SIZE){// onepass and finalize uploading
 
             req->setRequestUrl("https://content.dropboxapi.com/2/files/upload_session/finish");
             req->addHeader("Authorization",                     "Bearer "+this->access_token);
@@ -1681,13 +1951,15 @@ bool MSDropbox::remote_file_update(MSFSObject *object){
             doc.insert("commit",commit);
 
             req->addHeader("Dropbox-API-Arg",QJsonDocument(doc).toJson(QJsonDocument::Compact) );//QJsonDocument(doc).toJson()
-            QByteArray ba;
+//            QByteArray ba;
 
-            ba.append(file.read(fSize));
+//            ba.append(file.read(fSize));
+
+
+            req->addHeader("Content-Length",QString::number(file.size()).toLocal8Bit());
+            req->post(file.read(fSize));
+
             file.close();
-
-            req->addHeader("Content-Length",QString::number(ba.length()).toLocal8Bit());
-            req->post(ba);
 
             if(!req->replyOK()){
                 req->printReplyError();
@@ -1695,17 +1967,54 @@ bool MSDropbox::remote_file_update(MSFSObject *object){
                 return false;
             }
 
-                if(!this->testReplyBodyForError(req->readReplyText())){
-                    qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                    return false;
-                }
+            if(!this->testReplyBodyForError(req->readReplyText())){
+                qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+                 return false;
+            }
+
+            //  changing a local file timestamp to timestamp of remote file to make it equals for correct SYNC status processing
+            // This code was added for FUSE
+
+            QString content = req->readReplyText();
+
+            QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+            QJsonObject job = json.object();
+
+            utimbuf tb;
+            tb.actime=(this->toMilliseconds(job["client_modified"].toString(),true))/1000;;
+            tb.modtime=(this->toMilliseconds(job["client_modified"].toString(),true))/1000;;
+
+            utime(filePath.toStdString().c_str(),&tb);
+            //------------------------------------------------------------------------------------------------------------------
+
 
     }
     else{ // multipass uploading
 
         int cursorPosition=0;
+        int blsz=0;
+        qint64 fSize = file.size();
 
-        for(int i=0;i<passCount;i++){
+//        for(int i=0;i<passCount;i++){
+        do{
+
+            if(cursorPosition == 0){
+
+                blsz=DROPBOX_CHUNK_SIZE;
+            }
+            else{
+
+                if(fSize - cursorPosition < DROPBOX_CHUNK_SIZE){
+
+                    blsz=fSize - cursorPosition;
+                }
+                else{
+
+                    blsz=DROPBOX_CHUNK_SIZE;
+                }
+
+            }
+
 
             req->setRequestUrl("https://content.dropboxapi.com/2/files/upload_session/append");
             req->addHeader("Authorization",                     "Bearer "+this->access_token);
@@ -1717,14 +2026,14 @@ bool MSDropbox::remote_file_update(MSFSObject *object){
 
 
             req->addHeader("Dropbox-API-Arg",QJsonDocument(*cursor1).toJson(QJsonDocument::Compact) );//QJsonDocument(doc).toJson()
-            QByteArray* ba1=new QByteArray();
+            //QByteArray* ba1=new QByteArray();
 
             file.seek(cursorPosition);
-            ba1->append(file.read(DROPBOX_MAX_FILESIZE));
+            //ba1->append(file.read(DROPBOX_CHUNK_SIZE));
 
 
-            req->addHeader("Content-Length",QString::number(ba1->length()).toLocal8Bit());
-            req->post(*ba1);
+            req->addHeader("Content-Length",QString::number(blsz).toLocal8Bit());
+            req->post(file.read(blsz));
 
             if(!req->replyOK()){
                 req->printReplyError();
@@ -1738,12 +2047,20 @@ bool MSDropbox::remote_file_update(MSFSObject *object){
                 }
 
             delete(req);
-            delete(ba1);
+
             delete(cursor1);
-            cursorPosition += DROPBOX_MAX_FILESIZE;
+            cursorPosition += blsz;
+
+            if((unsigned long long)cursorPosition > (unsigned long long)fSize - DROPBOX_CHUNK_SIZE){
+
+                req=new MSRequest(this->proxyServer);
+                //cursorPosition -= blsz;
+                break;
+            }
 
             req=new MSRequest(this->proxyServer);
-        }
+
+        }while (true);
 
         // finalize upload
 
@@ -1766,14 +2083,16 @@ bool MSDropbox::remote_file_update(MSFSObject *object){
         doc.insert("commit",commit);
 
         req->addHeader("Dropbox-API-Arg",QJsonDocument(doc).toJson(QJsonDocument::Compact) );//QJsonDocument(doc).toJson()
-        QByteArray ba;
+        //QByteArray ba;
 
         file.seek(cursorPosition);
-        ba.append(file.read(fSize-cursorPosition));
-        file.close();
+        //ba.append(file.read(fSize-cursorPosition));
 
-        req->addHeader("Content-Length",QString::number(ba.length()).toLocal8Bit());
-        req->post(ba);
+
+        req->addHeader("Content-Length",QString::number(fSize-cursorPosition).toLocal8Bit());
+        req->post(file.read(fSize-cursorPosition));
+
+        file.close();
 
         if(!req->replyOK()){
             req->printReplyError();
@@ -1781,10 +2100,26 @@ bool MSDropbox::remote_file_update(MSFSObject *object){
             return false;
         }
 
-            if(!this->testReplyBodyForError(req->readReplyText())){
-                qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-                return false;
-            }
+        if(!this->testReplyBodyForError(req->readReplyText())){
+            qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+            return false;
+        }
+
+        //  changing a local file timestamp to timestamp of remote file to make it equals for correct SYNC status processing
+        // This code was added for FUSE
+
+        QString content = req->readReplyText();
+
+        QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+        QJsonObject job = json.object();
+
+        utimbuf tb;
+        tb.actime=(this->toMilliseconds(job["client_modified"].toString(),true))/1000;;
+        tb.modtime=(this->toMilliseconds(job["client_modified"].toString(),true))/1000;;
+
+        utime(filePath.toStdString().c_str(),&tb);
+        //------------------------------------------------------------------------------------------------------------------
+
 
     }
 
@@ -1877,11 +2212,11 @@ bool MSDropbox::remote_file_makeFolder(MSFSObject *object){
 
 //=======================================================================================
 
-void MSDropbox::remote_file_makeFolder(MSFSObject *object, QString parentID){
+void MSDropbox::remote_file_makeFolder(MSFSObject *object, const QString &parentID){
 // obsolete
     // fixed warning message
-    object=object;
-    parentID+="";
+    Q_UNUSED(object);
+    Q_UNUSED(parentID);
 }
 
 //=======================================================================================
@@ -1948,7 +2283,7 @@ bool MSDropbox::remote_file_trash(MSFSObject *object){
 
 //=======================================================================================
 
-bool MSDropbox::remote_createDirectory(QString path){
+bool MSDropbox::remote_createDirectory(const QString &path){
 
     if(this->getFlag("dryRun")){
         return true;
@@ -1995,7 +2330,7 @@ bool MSDropbox::remote_createDirectory(QString path){
 // ============= LOCAL FUNCTIONS BLOCK =============
 //=======================================================================================
 
-void MSDropbox::local_createDirectory(QString path){
+void MSDropbox::local_createDirectory(const QString &path){
 
     if(this->getFlag("dryRun")){
         return;
@@ -2008,7 +2343,7 @@ void MSDropbox::local_createDirectory(QString path){
 
 //=======================================================================================
 
-void MSDropbox::local_removeFile(QString path){
+void MSDropbox::local_removeFile(const QString &path){
 
     if(this->getFlag("dryRun")){
         return;
@@ -2022,6 +2357,13 @@ void MSDropbox::local_removeFile(QString path){
 
     QString origPath=this->workPath+path;
     QString trashedPath=this->workPath+"/"+this->trashFileName+path;
+
+    // create trashed folder structure if it's needed
+    QFileInfo tfi(trashedPath);
+    QDir tfs(tfi.absolutePath().replace(this->workPath,""));
+    if(!tfs.exists()){
+        tfs.mkdir(this->workPath + tfi.absolutePath().replace(this->workPath,""));
+    }
 
     QFile f;
     f.setFileName(origPath);
@@ -2037,7 +2379,7 @@ void MSDropbox::local_removeFile(QString path){
 
 //=======================================================================================
 
-void MSDropbox::local_removeFolder(QString path){
+void MSDropbox::local_removeFolder(const QString &path){
 
     if(this->getFlag("dryRun")){
         return;
@@ -2051,6 +2393,13 @@ void MSDropbox::local_removeFolder(QString path){
 
     QString origPath=this->workPath+path;
     QString trashedPath=this->workPath+"/"+this->trashFileName+path;
+
+    // create trashed folder structure if it's needed
+    QFileInfo tfi(trashedPath);
+    QDir tfs(tfi.absolutePath().replace(this->workPath,""));
+    if(!tfs.exists()){
+        tfs.mkdir(this->workPath + tfi.absolutePath().replace(this->workPath,""));
+    }
 
     QDir f;
     f.setPath(origPath);
@@ -2066,7 +2415,7 @@ void MSDropbox::local_removeFolder(QString path){
 
 
 
-bool MSDropbox::directUpload(QString url, QString remotePath){
+bool MSDropbox::directUpload(const QString &url, const QString &remotePath){
 
     // download file into temp file ---------------------------------------------------------------
 
@@ -2149,7 +2498,7 @@ bool MSDropbox::directUpload(QString url, QString remotePath){
     QFile file(filePath);
 
     qint64 fSize=file.size();
-    int passCount=fSize/DROPBOX_MAX_FILESIZE;// count of 150MB blocks
+    int passCount=fSize/DROPBOX_CHUNK_SIZE;// count of 150MB blocks
 
     if (!file.open(QIODevice::ReadOnly)){
 
@@ -2238,7 +2587,7 @@ bool MSDropbox::directUpload(QString url, QString remotePath){
             QByteArray* ba1=new QByteArray();
 
             file.seek(cursorPosition);
-            ba1->append(file.read(DROPBOX_MAX_FILESIZE));
+            ba1->append(file.read(DROPBOX_CHUNK_SIZE));
 
 
             req->addHeader("Content-Length",QString::number(ba1->length()).toLocal8Bit());
@@ -2260,7 +2609,7 @@ bool MSDropbox::directUpload(QString url, QString remotePath){
             delete(req);
             delete(ba1);
             delete(cursor1);
-            cursorPosition += DROPBOX_MAX_FILESIZE;
+            cursorPosition += DROPBOX_CHUNK_SIZE;
 
             req=new MSRequest(this->proxyServer);
         }

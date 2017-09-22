@@ -55,6 +55,11 @@
 #include <QSysInfo>
 #include <sys/utsname.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <sys/un.h>
+#include <unistd.h>
 
 
 
@@ -75,14 +80,11 @@
 
 #define APP_NAME "CloudCross"
 
-enum ProviderType{
 
-    Google,
-    Dropbox,
-    Yandex,
-    Mailru,
-    OneDrive
-};
+#define USG "ccfd-WhfNxPk-544h-gaQmZog39q" // for use in fuse
+
+
+
 
 
 void printVersion(){
@@ -757,6 +759,65 @@ void infoOneDrive(MSProvidersPool* providers){
 
 
 
+
+// ============= FUSE =======================
+
+bool fuseMount(ProviderType prov,QString workPath,QString mountPoint){
+
+    struct sockaddr_un name;
+    char buf[1000];
+
+    memset(&name, '0', sizeof(name));
+
+    name.sun_family = AF_UNIX;
+
+    snprintf(name.sun_path, 200, "%s", "/tmp/ccfd.sock");
+
+    int s=socket(PF_UNIX,SOCK_STREAM,0);
+
+    if(s== -1){
+        return false;
+    }
+
+    int r=connect(s, (struct sockaddr *)&name, sizeof(struct sockaddr_un));
+
+    if(r<0){
+        perror ("connect");
+        return false;
+    }
+
+    int sz= read(s,&buf[0],100);
+
+    if(sz >0){
+        QString reply=&buf[0];
+
+        if(reply.contains("HELLO")){
+
+            // try to start worker
+            snprintf(&buf[0], 1000, "%s^%d^%s^%s", "new_mount",prov,workPath.toStdString().c_str(),mountPoint.toStdString().c_str());
+            write(s,&buf[0],1000);
+
+            sz= read(s,&buf[0],100);
+
+            if(sz >0){
+
+                return true;
+            }
+            else{
+                return false;
+            }
+
+        }
+    }
+
+    return false;
+}
+
+
+
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////
 
 
@@ -940,6 +1001,8 @@ int main(int argc, char *argv[])
     parser->insertOption(19,"--cloud-space");
     parser->insertOption(20,"--filter-type 1");
 
+    parser->insertOption(20,"--fuse-mount 1");
+
 
     //...............
 
@@ -997,6 +1060,19 @@ int main(int argc, char *argv[])
     }
 
 
+    //===================== FUSE SECTION ======================
+
+    if(parser->isParamExist("fuse-mount")){
+
+        fuseMount(currentProvider,providers->workPath,parser->getParamByName("fuse-mount")[0] );
+        delete(providers);
+        return 0;
+    }
+
+    //=========================================================
+
+
+
     if(parser->isParamExist("direct-upload")){
 
         qStdOut() << "Start direct uploading..."<<endl;
@@ -1012,11 +1088,13 @@ int main(int argc, char *argv[])
             providers->addProvider(cp);
 
             if(! providers->loadTokenFile("GoogleDrive")){
+                delete(providers);
                 return 1;
             }
 
             if(!providers->refreshToken("GoogleDrive")){
                 qStdOut()<<"Unauthorized access. Aborted."<<endl;
+                delete(providers);
                 return 1;
             }
 
@@ -1040,11 +1118,13 @@ int main(int argc, char *argv[])
             providers->addProvider(cp);
 
             if(! providers->loadTokenFile("Dropbox")){
+                delete(providers);
                 return 1;
             }
 
             if(!providers->refreshToken("Dropbox")){
                 qStdOut()<<"Unauthorized access. Aborted."<<endl;
+                delete(providers);
                 return 1;
             }
 
@@ -1052,6 +1132,7 @@ int main(int argc, char *argv[])
             QStringList p=parser->getParamByName("direct-upload");
             if(p.size()<2){
                 qStdOut()<<"Option --direct-upload. Missing required argument"<<endl;
+                delete(providers);
                 return 1;
             }
             cp->directUpload(p[0],p[1]);
@@ -1069,17 +1150,20 @@ int main(int argc, char *argv[])
             providers->addProvider(cp);
 
             if(! providers->loadTokenFile("YandexDisk")){
+                delete(providers);
                 return 1;
             }
 
             if(!providers->refreshToken("YandexDisk")){
                 qStdOut()<<"Unauthorized access. Aborted."<<endl;
+                delete(providers);
                 return 1;
             }
 
             QStringList p=parser->getParamByName("direct-upload");
             if(p.size()<2){
                 qStdOut()<<"Option --direct-upload. Missing required argument"<<endl;
+                delete(providers);
                 return 1;
             }
             cp->directUpload(p[0],p[1]);
@@ -1097,17 +1181,20 @@ int main(int argc, char *argv[])
             providers->addProvider(cp);
 
             if(! providers->loadTokenFile("MailRu")){
+                delete(providers);
                 return 1;
             }
 
             if(!providers->refreshToken("MailRu")){
                 qStdOut()<<"Unauthorized access. Aborted."<<endl;
+                delete(providers);
                 return 1;
             }
 
             QStringList p=parser->getParamByName("direct-upload");
             if(p.size()<2){
                 qStdOut()<<"Option --direct-upload. Missing required argument"<<endl;
+                delete(providers);
                 return 1;
             }
             cp->directUpload(p[0],p[1]);
@@ -1125,17 +1212,20 @@ int main(int argc, char *argv[])
             providers->addProvider(cp);
 
             if(! providers->loadTokenFile("OneDrive")){
+                delete(providers);
                 return 1;
             }
 
             if(!providers->refreshToken("OneDrive")){
                 qStdOut()<<"Unauthorized access. Aborted."<<endl;
+                delete(providers);
                 return 1;
             }
 
             QStringList p=parser->getParamByName("direct-upload");
             if(p.size()<2){
                 qStdOut()<<"Option --direct-upload. Missing required argument"<<endl;
+                delete(providers);
                 return 1;
             }
             cp->directUpload(p[0],p[1]);
@@ -1150,6 +1240,8 @@ int main(int argc, char *argv[])
         }
 
         qStdOut() << "Direct uploading completed"<<endl;
+
+        delete(providers);
 
         return 0;
     }

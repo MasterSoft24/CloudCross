@@ -47,6 +47,12 @@
 
 #include <QTcpServer>
 
+
+#include <QThread>
+#include <QSemaphore>
+
+
+
 #include "msfsobject.h"
 #include "msidslist.h"
 #include "msrequest.h"
@@ -72,6 +78,7 @@ public:
 
     QString currentPath;// directory where program was run
     QString workPath;// path set with -p option
+    QString credentialsPath; // path to provider credentials. At common case this path is same as workPath
 
     enum CloudObjects{
                         Files=1,
@@ -87,6 +94,8 @@ public:
 
     MSCloudProvider(QObject* parent=0);
 
+    QSemaphore *threadsRunning;
+
     QString providerName;
 
     QString tokenFileName;
@@ -101,10 +110,10 @@ public:
     SyncStrategy strategy; // sync strategy
 
 
-    MSIDsList ids_list;
+    //MSIDsList ids_list;
 
 
-    bool setProxyServer(QString type, QString proxy);
+    bool setProxyServer(const QString &type, const QString &proxy);
 
     //Filters
     bool filterServiceFileNames(const QString &path);
@@ -113,41 +122,49 @@ public:
 
 
     virtual bool auth() = 0;
-    virtual void saveTokenFile(QString path) =0 ;
-    virtual bool loadTokenFile(QString path)=0;
+    virtual void saveTokenFile(const QString &path) =0 ;
+    virtual bool loadTokenFile(const QString &path)=0;
     virtual void loadStateFile()=0;
     virtual void saveStateFile()=0;
     virtual bool refreshToken()=0;
-    virtual MSFSObject::ObjectState filelist_defineObjectState(MSLocalFSObject local, MSRemoteFSObject remote)=0;
-    virtual void doSync()=0;
-    virtual bool remote_file_generateIDs(int count) =0 ;
+    virtual MSFSObject::ObjectState filelist_defineObjectState(const MSLocalFSObject &local, const MSRemoteFSObject &remote)=0;
 
-    virtual QHash<QString,MSFSObject>   filelist_getFSObjectsByState(MSFSObject::ObjectState state) =0;
-    virtual QHash<QString,MSFSObject>   filelist_getFSObjectsByState(QHash<QString,MSFSObject> fsObjectList,MSFSObject::ObjectState state) =0;
-    virtual QHash<QString,MSFSObject>   filelist_getFSObjectsByTypeLocal(MSLocalFSObject::Type type)=0;
-    virtual QHash<QString,MSFSObject>   filelist_getFSObjectsByTypeRemote(MSRemoteFSObject::Type type)=0;
-    virtual bool                        filelist_FSObjectHasParent(MSFSObject fsObject)=0;
-    virtual MSFSObject                  filelist_getParentFSObject(MSFSObject fsObject)=0;
-    virtual void                        filelist_populateChanges(MSFSObject changedFSObject)=0;
+    virtual void checkFolderStructures()=0;
+
+    virtual void doSync(QHash<QString,MSFSObject> fsObjectList)=0;
+    //virtual bool remote_file_generateIDs(int count) =0 ;
+
+    virtual bool _readRemote(const QString &rootPath) = 0;
+    virtual bool readLocal(const QString &path) = 0;
+    virtual bool readLocalSingle(const QString &path) = 0;
+
+
+    virtual QHash<QString,MSFSObject>   filelist_getFSObjectsByState( MSFSObject::ObjectState state) =0;
+    virtual QHash<QString,MSFSObject>   filelist_getFSObjectsByState(QHash<QString,MSFSObject> fsObjectList,  MSFSObject::ObjectState state) =0;
+    virtual QHash<QString,MSFSObject>   filelist_getFSObjectsByTypeLocal( MSLocalFSObject::Type type)=0;
+    virtual QHash<QString,MSFSObject>   filelist_getFSObjectsByTypeRemote( MSRemoteFSObject::Type type)=0;
+    virtual bool                        filelist_FSObjectHasParent(const MSFSObject &fsObject)=0;
+    virtual MSFSObject                  filelist_getParentFSObject(const MSFSObject &fsObject)=0;
+    virtual void                        filelist_populateChanges(const MSFSObject &changedFSObject)=0;
 //    virtual void                        filelist_populateChanges(QHash<QString,MSFSObject> changedFSObjectList)=0;
 
 
-    bool local_writeFileContent(QString filePath, MSRequest *req);
+    bool local_writeFileContent(const QString &filePath, MSRequest *req);
 
 
-    void local_createDirectory(QString path);
-    virtual void local_removeFile(QString path) =0;
-    virtual void local_removeFolder(QString path) =0;
+    void local_createDirectory(const QString &path);
+    virtual void local_removeFile(const QString &path) =0;
+    virtual void local_removeFolder(const QString &path) =0;
     //void local_createDirectory(QString path);
 
 
-    QString fileChecksum(QString &fileName, QCryptographicHash::Algorithm hashAlgorithm);
+    QString fileChecksum(const QString &fileName, QCryptographicHash::Algorithm hashAlgorithm);
 
     QString generateRandom(int count);
 
     // converts to milliseconds in UTC timezone
     qint64 toMilliseconds(QDateTime dateTime, bool isUTC=false);
-    qint64 toMilliseconds(QString dateTimeString, bool isUTC=false);
+    qint64 toMilliseconds(const QString &dateTimeString, bool isUTC=false);
 
 
     // Modify Mode Flags
@@ -163,17 +180,24 @@ public:
     QString includeList;
     QString excludeList;
 
-    void setFlag(QString flagName, bool flagVal);
-    bool getFlag(QString flagName);
+    QHash<QString,MSFSObject> syncFileList;
 
-    QString getOption(QString optionName);
+    void setFlag(const QString &flagName, bool flagVal);
+    bool getFlag(const QString &flagName);
 
-    virtual bool testReplyBodyForError(QString body) = 0;
-    virtual QString getReplyErrorString(QString body) = 0;
+    QString getOption(const QString &optionName);
 
-    virtual bool directUpload(QString url,QString remotePath) =0;
+    virtual bool testReplyBodyForError(const QString &body) = 0;
+    virtual QString getReplyErrorString(const QString &body) = 0;
+
+    virtual bool directUpload(const QString &url,const QString &remotePath) =0;
 
 
+
+
+    // ======= REMOTE FUNCTIONS BLOCK =======
+
+    virtual bool remote_file_get(MSFSObject *object) =0;
 
 
     QTcpServer* oauthListener;
@@ -192,12 +216,12 @@ public slots:
     //void onAuthComplete(QString code);
 
 
-    virtual bool onAuthFinished(QString html, MSCloudProvider *provider)=0;
+    virtual bool onAuthFinished(const QString &html, MSCloudProvider *provider)=0;
 
 signals:
 
-    void oAuthCodeRecived(QString code,MSCloudProvider* provider);
-    void oAuthError(QString code,MSCloudProvider* provider);
+    void oAuthCodeRecived(const QString &code,MSCloudProvider* provider);
+    void oAuthError(const QString &code,MSCloudProvider* provider);
 
 
     void providerAuthComplete();

@@ -48,6 +48,18 @@
 #include <QNetworkCookie>
 #include <QJsonObject>
 #include <QNetworkProxy>
+#include <QCoreApplication>
+#include <QProcess>
+#include <QPair>
+#include <QHash>
+
+#include <QHttpMultiPart>
+
+#ifdef CCROSS_LIB
+#include "QtCUrl.h"
+#include "msnetworkcookiejar.h"
+#endif
+
 
 //#define PRINT_DEBUG_INFO
 
@@ -60,18 +72,24 @@ public:
     ~MSRequest();
 
 //private:
-
+#ifndef ZCCROSS_LIB
     QUrl* url;
     QUrlQuery* query;
     QNetworkAccessManager* manager;
 
-    QString requestMethod; // get, post, put, post-multipart etc
-    QEventLoop* loop;
 
-    QFile* outFile;
+    QEventLoop* loop;
+#endif
+    QString requestMethod; // get, post, put, post-multipart etc
+    QFile *outFile;
     QDataStream* outFileStream;
 
+
+    bool requesProcessed;
+
 public:
+
+    bool setQueryForDownload; // used in syncDownloadWithGet();
 
     QNetworkReply* lastReply;// deprecated
     QNetworkReply* currentReply;// deprecated
@@ -86,30 +104,58 @@ public:
 
     QList<QPair<QByteArray,QByteArray>> replyHeaders;
 
-    void printDebugInfo_request(QNetworkRequest req);
+    void printDebugInfo_request(const QNetworkRequest &req);
     void printDebugInfo_response(QNetworkReply *reply);
+
+
+#ifdef CCROSS_LIB
+    QString toUrlEncoded(const QString &p);
+    //static size_t readCallback(void *ptr, size_t size, size_t nmemb, void *stream);
+
+    QtCUrl cUrlObject;
+    QHash<QString,QString> queryItems;
+    QHash<QString,QString> requestHeaders;
+    QString requestURL;
+    //QFile cookieJarFile;
+
+    // methods
+
+    void setCURLOptions(const QByteArray &payload=QByteArray());
+    void setCURLOptions(QIODevice* payloadPtr);
+
+#endif
 
 
     QByteArray readReplyText();
 
 
-    bool setMethod(QString method);
-    void setRequestUrl(QString url);
-    void addQueryItem(QString itemName, QString itemValue );
+    bool setMethod(const QString &method);
+    void setRequestUrl(const QString &url);
+    void addQueryItem(const QString &itemName, const QString &itemValue );
 
-    void addHeader(QString headerName, QString headerValue);
-    void addHeader(QByteArray headerName, QByteArray headerValue);
+    void addHeader(const QString &headerName, const QString &headerValue);
+    void addHeader(const QByteArray &headerName, const QByteArray &headerValue);
+    QString getReplyHeader(const QByteArray &headerName);
 
     void exec();
-    void post(QByteArray data);
-    void put(QByteArray data);
+    void post(const QByteArray &data);
+    void post(QIODevice *data);
+    void put(const QByteArray &data);
     void put(QIODevice* data);
     void methodCharger(QNetworkRequest req);
-    void methodCharger(QNetworkRequest req,QString path);
-    void raw_exec(QString reqestURL);
+    void methodCharger(QNetworkRequest req, const QString &path);
+    void raw_exec(const QString &reqestURL);
 
-    void download(QString url);
-    void download(QString url,QString path);
+    void download(const QString &url);
+    void download(const QString &url, const QString &path);
+
+    void syncDownloadWithGet(QString path);
+    void syncDownloadWithPost( QString path, QByteArray data);
+    void postMultipart(QHttpMultiPart* multipart);
+
+    static void setReplyHeader(QString headerName, QString headerValue);
+
+
     void deleteResource();
 
     bool replyOK();
@@ -122,11 +168,20 @@ public:
 
     // cookie functions block
 
-    QNetworkCookieJar* cookieJar;
 
+
+#ifndef CCROSS_LIB
+    QNetworkCookieJar* cookieJar;
     void MSsetCookieJar(QNetworkCookieJar *cookie);
+#else
+    MSNetworkCookieJar* cookieJarObject;
+    void MSsetCookieJar(MSNetworkCookieJar *cookie);
+    MSNetworkCookieJar *getCookieJar();
+#endif
     QJsonObject cookieToJSON();
-    bool cookieFromJSON(QJsonObject cookie);
+    bool cookieFromJSON(const QJsonObject &cookie);
+
+    void log(QString mes);
 
 private slots:
 
@@ -135,6 +190,8 @@ private slots:
     void doDownloadProgress(qint64 avail,qint64 total);
 
     void doReadyRead();
+
+    void doRequestFinished();
 
 };
 

@@ -103,7 +103,7 @@ MSOptParser::MSOptParser(QObject *parent) : QObject(parent)
 }
 
 
-void MSOptParser::insertOption(int num,QString optString){
+void MSOptParser::insertOption(int num, const QString &optString){
 
     optItem item;
     QStringList list=optString.split(" ",QString::SkipEmptyParts);
@@ -140,7 +140,7 @@ void MSOptParser::insertOption(int num,QString optString){
 }
 
 
-void MSOptParser::parse(QStringList list){
+void MSOptParser::parse(const QStringList &list){
 
     for(int i=0;i<list.size();i++){
         QString co=list[i];
@@ -159,7 +159,7 @@ void MSOptParser::parse(QStringList list){
 }
 
 
-QString MSOptParser::getShort(QStringList list){
+QString MSOptParser::getShort(const QStringList &list){
 
     if(QString(list[0].trimmed().at(1))!=("-")){
         return list[0];
@@ -168,7 +168,7 @@ QString MSOptParser::getShort(QStringList list){
 }
 
 
-QString MSOptParser::getLong(QStringList list){
+QString MSOptParser::getLong(const QStringList &list){
 
     if((QString(list[0].trimmed()).size()<3)&&(QString(list[1].trimmed()).size()<3)){
         return "";
@@ -185,7 +185,7 @@ QString MSOptParser::getLong(QStringList list){
 }
 
 
-int MSOptParser::getParamCount(QStringList list){
+int MSOptParser::getParamCount(const QStringList &list){
 
     bool ok;
 
@@ -289,7 +289,7 @@ bool MSOptParser::getArg(){
 }
 
 
-QStringList MSOptParser::getParamByName(QString paramName){
+QStringList MSOptParser::getParamByName(const QString &paramName){
 
     QStringList p;
 
@@ -351,7 +351,7 @@ QStringList MSOptParser::getParamByName(QString paramName){
 }
 
 
-bool MSOptParser::isParamExist(QString paramName){
+bool MSOptParser::isParamExist(const QString &paramName){
 
     for(int i=0;i<this->input.size();i++){
 

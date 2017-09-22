@@ -1,5 +1,5 @@
 
-# CloudCross v1.4.0
+# CloudCross v1.4.1
 
 Kamensky Vladimir
 
@@ -50,7 +50,7 @@ Next,basic install sequence is:
 3. Go to unpacked folder.
 4. mkdir build
 5. cd build
-6. qmake-qt5 ../CloudCross.pro
+6. qmake ../CloudCross.pro
 7. make
 
 As a result, in build directory will be ccross file appears
@@ -60,6 +60,13 @@ For detailed usage instructions see https://cloudcross.mastersoft24.ru/#usage
 	
 	
 ## Change log:
+
+### v1.4.1
+- New option --filter-type was added.
+- .include and .exclude files can contains now a regular expressions in Perl style or a wildcards. (thanks to [@futuarmo](https://github.com/futuarmo))
+- Closed few issues #27, #26, #24, #14, #15
+- Added a multi-threaded uploading/downloading.
+- Many enhancements for a reduced memory utilization.
 
 ### v1.4.0
 - OneDrive support added.
@@ -126,7 +133,7 @@ For detailed usage instructions see https://cloudcross.mastersoft24.ru/#usage
 
 
 
-# CloudCross v1.4.0
+# CloudCross v1.4.1
 
 Каменский Владимир
 
@@ -172,7 +179,7 @@ CloudCross позволяет синхронизировать только ча
 3. Перейдите в распакованую папку.
 4. mkdir build
 5. cd build
-6. qmake-qt5 ../CloudCross.pro
+6. qmake ../CloudCross.pro
 7. make
 
 В результате в папке build появится файл ccross
@@ -182,6 +189,13 @@ CloudCross позволяет синхронизировать только ча
 	
 	
 ## История изменений:
+
+### v1.4.1
+- Добавлена опция --filter-type.
+- .include и .exclude файлы теперь могут содержать не только wildcards но и регулярки в Perl - стиле. (thanks to [@futuarmo](https://github.com/futuarmo))
+- Закрыты несколько багов #27, #26, #24, #14, #15
+- Добавлена возможность многопоточной загрузки/выгрузки файлов.
+- Множество исправлений и улучшени для уменьшения использования памяти.
 
 ### v1.4.0
 - Добавлена поддержка OneDrive

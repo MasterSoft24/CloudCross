@@ -42,8 +42,7 @@
 #include <utime.h>
 #include <sys/time.h>
 
-#define ONEDRIVE_MAX_FILESIZE  10000 //61865984
-
+#include "include/mssyncthread.h"
 
 
 class MSOneDrive : public MSCloudProvider
@@ -65,60 +64,63 @@ public:
     bool remote_file_generateIDs(int count);
     // create folder on remote
     bool remote_file_makeFolder(MSFSObject* object);
-    void remote_file_makeFolder(MSFSObject* object,QString parentID);
+    void remote_file_makeFolder(MSFSObject* object, const QString &parentID);
     // trash file or folder on remote
     bool remote_file_trash(MSFSObject* object);
     // create directory on remote, recursively if nesessary
-    bool remote_createDirectory(QString path);
+    bool remote_createDirectory(const QString &path);
 
 
 
     //=== LOCAL FUNCTION BLOCK ===
 
     // create directory on local, recursively if nesessary
-    void local_createDirectory(QString path);
-    void local_removeFile(QString path);
-    void local_removeFolder(QString path);
+    void local_createDirectory(const QString &path);
+    void local_removeFile(const QString &path);
+    void local_removeFolder(const QString &path);
 
 
 
     bool auth();
-    void saveTokenFile(QString path) ;
-    bool loadTokenFile(QString path);
+    void saveTokenFile(const QString &path) ;
+    bool loadTokenFile(const QString &path);
     void loadStateFile();
     void saveStateFile();
     bool refreshToken();
-    MSFSObject::ObjectState filelist_defineObjectState(MSLocalFSObject local, MSRemoteFSObject remote);
-    void doSync();
+    MSFSObject::ObjectState filelist_defineObjectState(const MSLocalFSObject &local, const MSRemoteFSObject &remote);
+    void checkFolderStructures();
+    void doSync(QHash<QString,MSFSObject> fsObjectList);
 
 
     QHash<QString,MSFSObject>   filelist_getFSObjectsByState(MSFSObject::ObjectState state) ;
     QHash<QString,MSFSObject>   filelist_getFSObjectsByState(QHash<QString,MSFSObject> fsObjectList,MSFSObject::ObjectState state) ;
     QHash<QString,MSFSObject>   filelist_getFSObjectsByTypeLocal(MSLocalFSObject::Type type);
     QHash<QString,MSFSObject>   filelist_getFSObjectsByTypeRemote(MSRemoteFSObject::Type type);
-    bool                        filelist_FSObjectHasParent(MSFSObject fsObject);
-    MSFSObject                  filelist_getParentFSObject(MSFSObject fsObject);
-    void                        filelist_populateChanges(MSFSObject changedFSObject);
+    bool                        filelist_FSObjectHasParent(const MSFSObject &fsObject);
+    MSFSObject                  filelist_getParentFSObject(const MSFSObject &fsObject);
+    void                        filelist_populateChanges(const MSFSObject &changedFSObject);
 
 
 
-    bool testReplyBodyForError(QString body) ;
-    QString getReplyErrorString(QString body) ;
+    bool testReplyBodyForError(const QString &body) ;
+    QString getReplyErrorString(const QString &body) ;
 
 
     bool createHashFromRemote();
-    bool readRemote(QString rootPath);//QString parentId,QString currentPath
-    bool readLocal(QString path);
+    bool readRemote(const QString &rootPath);//QString parentId,QString currentPath
+    bool _readRemote(const QString &rootPath);
+    bool readLocal(const QString &path);
+    bool readLocalSingle(const QString &path);
 
-    bool isFolder(QJsonValue remoteObject);
-    bool isFile(QJsonValue remoteObject);
+    bool isFolder(const QJsonValue &remoteObject);
+    bool isFile(const QJsonValue &remoteObject);
 
     bool createSyncFileList();
 
     // sync local and remote filesystems hash table
-    QHash<QString,MSFSObject> syncFileList;
+    //QHash<QString,MSFSObject> syncFileList;
 
-    bool directUpload(QString url,QString remotePath);
+    bool directUpload(const QString &url, const QString &remotePath);
 
 
 
@@ -128,7 +130,7 @@ public:
 
 public slots:
 
-   bool onAuthFinished(QString html, MSCloudProvider *provider);
+   bool onAuthFinished(const QString &html, MSCloudProvider *provider);
 
 
 

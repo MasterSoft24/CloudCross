@@ -68,9 +68,9 @@ private:
 
     QStringList  input;
     QStringList::iterator iit;
-    QString getShort(QStringList list);
-    QString getLong(QStringList list);
-    int getParamCount(QStringList list);
+    QString getShort(const QStringList &list);
+    QString getLong(const QStringList &list);
+    int getParamCount(const QStringList &list);
 
 public:
     explicit MSOptParser(QObject *parent = 0);
@@ -80,14 +80,14 @@ public:
     int erorrNum=0;
     QString errorString;
 
-    void insertOption(int num, QString optString);
-    void parse(QStringList list);
+    void insertOption(int num, const QString &optString);
+    void parse(const QStringList &list);
     int get(); // return 0 if no matches found, -1 if error and value of num member if arg found
 
     bool getArg();
 
-    QStringList getParamByName(QString paramName);// get named parameters value (if this parameter is exists) from input parameters list
-    bool isParamExist(QString paramName);// test exist named param or not
+    QStringList getParamByName(const QString &paramName);// get named parameters value (if this parameter is exists) from input parameters list
+    bool isParamExist(const QString &paramName);// test exist named param or not
 
 signals:
 

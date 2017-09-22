@@ -60,11 +60,26 @@ bool MSMailRu::auth(){
 
     MSRequest* req=new MSRequest(this->proxyServer);
 
+//    try{
+
+//        delete this->cookies;
+
+//    }
+//    catch(...){
+
+//    }
+
     this->cookies=new QNetworkCookieJar();
+
+#ifdef CCROSS_LIB
+
+    this->cookieList.insert(this->cookies->name, this->cookies);
+#endif
 
     req->MSsetCookieJar(this->cookies);
 
     req->setRequestUrl("http://auth.mail.ru/cgi-bin/auth?lang=ru_RU&from=authpopup");
+//    req->setRequestUrl("https://auth.mail.ru/cgi-bin/auth");
     req->setMethod("post");
 
     req->addQueryItem("page",           "https://cloud.mail.ru/?from=promo");
@@ -73,6 +88,7 @@ bool MSMailRu::auth(){
     req->addQueryItem("Login",          this->login);
     req->addQueryItem("Password",       this->password);
     req->addQueryItem("new_auth_form",  "1");
+
 
     req->exec();
 
@@ -134,7 +150,12 @@ bool MSMailRu::auth(){
 
 
         //this->cookies=new QNetworkCookieJar(req->manager->cookieJar());
+#ifndef CCROSS_LIB
         this->cookies=(req->manager->cookieJar());
+#else
+
+        this->cookies=(req->getCookieJar());
+#endif
 
         //this->readRemote("/");
 
@@ -157,7 +178,7 @@ bool MSMailRu::auth(){
 //=======================================================================================
 
 
-void MSMailRu::saveTokenFile(QString path)
+void MSMailRu::saveTokenFile(const QString &path)
 {
     QFile key(path+"/"+this->tokenFileName);
     key.open(QIODevice::WriteOnly | QIODevice::Text);
@@ -169,7 +190,7 @@ void MSMailRu::saveTokenFile(QString path)
 //=======================================================================================
 
 
-bool MSMailRu::loadTokenFile(QString path)
+bool MSMailRu::loadTokenFile(const QString &path)
 {
     QFile key(path+"/"+this->tokenFileName);
 
@@ -205,7 +226,7 @@ bool MSMailRu::loadTokenFile(QString path)
 
 void MSMailRu::loadStateFile()
 {
-    QFile key(this->workPath+"/"+this->stateFileName);
+    QFile key(this->credentialsPath+"/"+this->stateFileName);
 
     if(!key.open(QIODevice::ReadOnly))
     {
@@ -246,7 +267,7 @@ void MSMailRu::saveStateFile()
     jso.insert("last_sync",jts);
     state.setObject(jso);
 
-    QFile key(this->workPath+"/"+this->stateFileName);
+    QFile key(this->credentialsPath+"/"+this->stateFileName);
     key.open(QIODevice::WriteOnly | QIODevice::Text);
     QTextStream outk(&key);
     outk << state.toJson();
@@ -264,7 +285,7 @@ bool MSMailRu::refreshToken()
 
 //=======================================================================================
 
-QString MSMailRu::remote_dispatcher(QString target){
+QString MSMailRu::remote_dispatcher(const QString &target){
 
     this->auth();
 
@@ -282,13 +303,19 @@ QString MSMailRu::remote_dispatcher(QString target){
 
     if(!req->replyOK()){
         req->printReplyError();
+        //this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         return "";
     }
 
     QString content=req->readReplyText();
 
-    this->cookies=req->manager->cookieJar();
+#ifndef CCROSS_LIB
+        this->cookies=(req->manager->cookieJar());
+#else
+
+        this->cookies=(req->getCookieJar());
+#endif
 
 
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
@@ -296,6 +323,7 @@ QString MSMailRu::remote_dispatcher(QString target){
     QString serverURL=job["body"].toObject()[target].toArray()[0].toObject()["url"].toString();
 
     req->deleteLater();
+    ////this->cookies->deleteLater();//delete(this->cookies);
 
     return serverURL;
 
@@ -333,13 +361,20 @@ bool MSMailRu::remote_file_get(MSFSObject *object){
 
     if(!req->replyOK()){
         req->printReplyError();
+        //this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         return false;
     }
 
     QString content=req->readReplyText();
 
-    this->cookies=req->manager->cookieJar();
+#ifndef CCROSS_LIB
+        this->cookies=(req->manager->cookieJar());
+#else
+
+        this->cookies=(req->getCookieJar());
+#endif
+
     req_prev=req;
 
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
@@ -388,12 +423,14 @@ bool MSMailRu::remote_file_get(MSFSObject *object){
 
 
             qStdOut() << "Service error. "<< req->replyErrorText;
+            //this->cookies->deleteLater();//delete(this->cookies);
             delete(req);
             return false;
 
     }
 
 
+    //this->cookies->deleteLater();//delete(this->cookies);
     delete(req);
     return true;
 
@@ -407,161 +444,176 @@ bool MSMailRu::remote_file_insert(MSFSObject *object){
 
     if(object->local.objectType==MSLocalFSObject::Type::folder){
 
-        qStdOut()<< object->fileName << " is a folder. Skipped." <<endl;
-        return true;
-    }
+         qStdOut()<< object->fileName << " is a folder. Skipped." <<endl;
+         return true;
+     }
 
-    if(this->getFlag("dryRun")){
-        return true;
-    }
-
-
-    // get shard server address
-    QString url=this->remote_dispatcher("upload");
-
-    MSRequest* req_prev;
-    MSRequest* req=new MSRequest(this->proxyServer);
-
-    QString bound="ccross-data";
-
-    req->MSsetCookieJar(this->cookies);
-
-    // upload file body to intermediate server and recive confirm hash
-
-    req->setRequestUrl(url); //url "https://cloclo3-upload.cloud.mail.ru/upload/"
-    req->setMethod("post");
-
-    req->addHeader("Content-Type", "multipart/form-data; boundary=----"+QString(bound).toLocal8Bit());
-
-    req->addQueryItem("cloud_domain",       "2");
-    req->addQueryItem("fileapi14785802593646",       "");
-
-    req->addQueryItem("x-email",      this->login);
+     if(this->getFlag("dryRun")){
+         return true;
+     }
 
 
-    QByteArray mediaData;
+     // get shard server address
+     QString url=this->remote_dispatcher("upload");
 
-    mediaData.append(QString("------"+bound+"\r\n").toLocal8Bit());
-    mediaData.append(QString("Content-Disposition: form-data; name=\"file\"; filename=\""+object->fileName+"\"\r\n"));
-    mediaData.append(QString("Content-Type: application/octet-stream\r\n\r\n").toLocal8Bit());
-    //mediaData.append(QString("Content-Type: multipart/form-data;\r\n\r\n").toLocal8Bit());
+     MSRequest* req_prev;
+     MSRequest* req=new MSRequest(this->proxyServer);
 
+     QString bound="ccross-data";
 
-    QString filePath=this->workPath+object->path+object->fileName;
+     req->MSsetCookieJar(this->cookies);
 
-    // read file content and put him into request body
-    QFile file(filePath);
-    if (!file.open(QIODevice::ReadOnly)){
+     // upload file body to intermediate server and recive confirm hash
 
-        //error file not found
-        qStdOut()<<"Unable to open of "+filePath <<endl;
-        delete(req);
-        return false;
-    }
-    mediaData.append(file.readAll());
+     req->setRequestUrl(url); //url "https://cloclo3-upload.cloud.mail.ru/upload/"
+     req->setMethod("post");
 
-    file.close();
+     req->addHeader("Content-Type", "multipart/form-data; boundary=----"+QString(bound).toLocal8Bit());
 
-    mediaData.append(QString("\r\n------"+bound+"--\r\n").toLocal8Bit());
+     req->addQueryItem("cloud_domain",       "2");
+     req->addQueryItem("fileapi14785802593646",       "");
 
-    req->addHeader("Content-Length",QString::number(mediaData.length()).toLocal8Bit());
-
-    req->post(mediaData);
+     req->addQueryItem("x-email",      this->login);
 
 
-    if(!req->replyOK()){
-        req->printReplyError();
-        delete(req);
-        return false;
-    }
+     QByteArray mediaData;
+
+     mediaData.append(QString("------"+bound+"\r\n").toLocal8Bit());
+     mediaData.append(QString("Content-Disposition: form-data; name=\"file\"; filename=\""+object->fileName+"\"\r\n"));
+     mediaData.append(QString("Content-Type: application/octet-stream\r\n\r\n").toLocal8Bit());
 
 
-    QStringList arr=QString(req->readReplyText()).split(';'); // at this point we recieve confirmation hash in arr[0] and size of file in arr[1]
+     QString filePath=this->workPath+object->path+object->fileName;
 
-    this->cookies=req->manager->cookieJar();
-    req_prev=req;
+     // read file content and put him into request body
+     QFile file(filePath);
+     if (!file.open(QIODevice::ReadOnly)){
 
-    req=new MSRequest(this->proxyServer);
-
-    req->MSsetCookieJar(this->cookies);
-
-    delete(req_prev);
-
-
-    req->setRequestUrl("https://cloud.mail.ru/api/v2/file/add");
-    req->setMethod("post");
-
-    req->addQueryItem("api",       "2");
-    req->addQueryItem("build",       this->build);
-    req->addQueryItem("conflict",       "strict"); // api does not contains ignore param CLOUDWEB-5028 (7114 too)
-    req->addQueryItem("email",       this->login);
-    req->addQueryItem("home",       object->path+object->fileName);
-    req->addQueryItem("hash",       arr[0]);
-    req->addQueryItem("size",       arr[1].left(arr[1].length() - 2));
-    req->addQueryItem("token",       this->token);
-    req->addQueryItem("x-email",       this->login);
-    req->addQueryItem("x-page-id",       this->x_page_id);
-
-    req->exec();
-
-    if(!req->replyOK()){
-
-        QString content=req->readReplyText();
-
-        QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
-        QJsonObject job = json.object();
-        QString error=job["body"].toObject()["home"].toObject()["error"].toString();
-
-        if(error == "exists"){// need remove and re-upload
-
-            bool r=this->remote_file_trash(object);
-            if(r == true){
-
-                this->remote_file_insert(object);
-                delete(req);
-                return true;
-
-            }
+         //error file not found
+         qStdOut()<<"Unable to open of "+filePath <<endl;
+         delete(req);
+         return false;
+     }
 
 
-        }
+     QMultiBuffer mbuff;
+     mbuff.append(&mediaData);
+     mbuff.append(&file);
+
+     file.close();
+
+     QByteArray ba2(QString("\r\n------"+bound+"--\r\n").toLocal8Bit());
+     mbuff.append(&ba2);
+
+     req->addHeader("Content-Length",QString::number(mbuff.size()).toLocal8Bit());
+
+     mbuff.open(QIODevice::ReadOnly);
+
+     req->post(&mbuff);
+
+     if(!req->replyOK()){
+         req->printReplyError();
+         delete(req);
+         return false;
+     }
+
+
+     QStringList arr=QString(req->readReplyText()).split(';'); // at this point we recieve confirmation hash in arr[0] and size of file in arr[1]
+
+ #ifndef CCROSS_LIB
+         this->cookies=(req->manager->cookieJar());
+ #else
+
+         this->cookies=(req->getCookieJar());
+ #endif
+
+     req_prev=req;
+
+     req=new MSRequest(this->proxyServer);
+
+     req->MSsetCookieJar(this->cookies);
 
 
 
-        req->printReplyError();
-        delete(req);
-        return false;
-    }
 
-    QString content=req->readReplyText();
+     req->setRequestUrl("https://cloud.mail.ru/api/v2/file/add");
+     req->setMethod("post");
 
-    QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
-    QJsonObject job = json.object();
-    int status=job["status"].toInt();
+     req->addQueryItem("api",                "2");
+     req->addQueryItem("build",              this->build);
+     req->addQueryItem("conflict",           "strict"); // api does not contains ignore param CLOUDWEB-5028 (7114 too)
+     req->addQueryItem("email",              this->login);
+     req->addQueryItem("home",               object->path+object->fileName);
 
-    delete(req);
+     req->addQueryItem("hash",               arr[0]);
+     req->addQueryItem("size",               arr[1].left(arr[1].length() - 2));
+     req->addQueryItem("token",              this->token);
+     req->addQueryItem("x-email",            this->login);
+     req->addQueryItem("x-page-id",          this->x_page_id);
 
-    if(status == 200){
+    // req->addHeader("Content-Type", QString("application/x-www-form-urlencoded"));
+     req->exec();
 
-        // set time for local file to tome of remote file to prevent re-downloading
-        utimbuf tb;
-        QString filePath=this->workPath+object->path+object->fileName;
+     if(!req->replyOK()){
+
+         QString content=req->readReplyText();
+
+         QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+         QJsonObject job = json.object();
+         QString error=job["body"].toObject()["home"].toObject()["error"].toString();
+
+         if(error == "exists"){// need remove and re-upload
+
+             bool r=this->remote_file_trash(object);
+             if(r == true){
+
+                 this->remote_file_insert(object);
+                 delete(req);
+                 return true;
+
+             }
 
 
-        double zz=job["time"].toDouble();
-        QDateTime zzd=QDateTime::fromTime_t(zz/1000);
-        //fsObject.remote.modifiedDate=this->toMilliseconds(zzd,true);
+         }
 
-        tb.actime=(this->toMilliseconds(zzd,true))/1000;
-        tb.modtime=(this->toMilliseconds(zzd,true))/1000;
 
-        utime(filePath.toStdString().c_str(),&tb);
 
-        return true;
-    }
-    else{
-        return false;
-    }
+         req->printReplyError();
+         delete(req_prev);
+         delete(req);
+         return false;
+     }
+
+     QString content=req->readReplyText();
+
+     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
+     QJsonObject job = json.object();
+     int status=job["status"].toInt();
+
+     delete(req_prev);
+     delete(req);
+
+     if(status == 200){
+
+         // set time for local file to tome of remote file to prevent re-downloading
+         utimbuf tb;
+         QString filePath=this->workPath+object->path+object->fileName;
+
+
+         double zz=job["time"].toDouble();
+         QDateTime zzd=QDateTime::fromTime_t(zz/1000);
+         //fsObject.remote.modifiedDate=this->toMilliseconds(zzd,true);
+
+         tb.actime=(this->toMilliseconds(zzd,true))/1000;
+         tb.modtime=(this->toMilliseconds(zzd,true))/1000;
+
+         utime(filePath.toStdString().c_str(),&tb);
+
+         return true;
+     }
+     else{
+         return false;
+     }
 
 }
 
@@ -576,11 +628,11 @@ bool MSMailRu::remote_file_update(MSFSObject *object)
 //=======================================================================================
 
 
-bool MSMailRu::remote_file_generateIDs(int count)
-{
-Q_UNUSED(count);
-return true;
-}
+//bool MSMailRu::remote_file_generateIDs(int count)
+//{
+//Q_UNUSED(count);
+//return true;
+//}
 
 //=======================================================================================
 
@@ -622,6 +674,7 @@ bool MSMailRu::remote_file_makeFolder(MSFSObject *object){
             if(r == true){
 
                 this->remote_file_makeFolder(object);
+                ////this->cookies->deleteLater();//delete(this->cookies);
                 delete(req);
                 return true;
 
@@ -631,6 +684,7 @@ bool MSMailRu::remote_file_makeFolder(MSFSObject *object){
         }
 
         req->printReplyError();
+        //this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         return false;
     }
@@ -643,6 +697,7 @@ bool MSMailRu::remote_file_makeFolder(MSFSObject *object){
     QJsonObject job = json.object();
     int status=job["status"].toInt();
 
+    ////this->cookies->deleteLater();//delete(this->cookies);
     delete(req);
 
     if(status == 200){
@@ -657,10 +712,11 @@ bool MSMailRu::remote_file_makeFolder(MSFSObject *object){
 //=======================================================================================
 
 
-void MSMailRu::remote_file_makeFolder(MSFSObject *object, QString parentID)
+void MSMailRu::remote_file_makeFolder(MSFSObject *object, const QString &parentID)
 {
-Q_UNUSED(object)
-parentID="";
+Q_UNUSED(object);
+
+Q_UNUSED(parentID);
 }
 
 //=======================================================================================
@@ -690,6 +746,7 @@ bool MSMailRu::remote_file_trash(MSFSObject *object){
 
     if(!req->replyOK()){
         req->printReplyError();
+        //this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         return false;
     }
@@ -702,6 +759,7 @@ bool MSMailRu::remote_file_trash(MSFSObject *object){
     QJsonObject job = json.object();
     int status=job["status"].toInt();
 
+    //this->cookies->deleteLater();//delete(this->cookies);
     delete(req);
 
     if(status == 200){
@@ -717,7 +775,7 @@ bool MSMailRu::remote_file_trash(MSFSObject *object){
 
 //=======================================================================================
 
-bool MSMailRu::remote_createDirectory(QString path){
+bool MSMailRu::remote_createDirectory(const QString &path){
 
     if(this->getFlag("dryRun")){
         return true;
@@ -759,7 +817,7 @@ bool MSMailRu::remote_createDirectory(QString path){
 //=======================================================================================
 
 
-void MSMailRu::local_createDirectory(QString path){
+void MSMailRu::local_createDirectory(const QString &path){
 
     if(this->getFlag("dryRun")){
         return;
@@ -773,7 +831,7 @@ void MSMailRu::local_createDirectory(QString path){
 //=======================================================================================
 
 
-void MSMailRu::local_removeFile(QString path){
+void MSMailRu::local_removeFile(const QString &path){
 
 
     if(this->getFlag("dryRun")){
@@ -788,6 +846,13 @@ void MSMailRu::local_removeFile(QString path){
 
     QString origPath=this->workPath+path;
     QString trashedPath=this->workPath+"/"+this->trashFileName+path;
+
+    // create trashed folder structure if it's needed
+    QFileInfo tfi(trashedPath);
+    QDir tfs(tfi.absolutePath().replace(this->workPath,""));
+    if(!tfs.exists()){
+        tfs.mkdir(this->workPath + tfi.absolutePath().replace(this->workPath,""));
+    }
 
     QFile f;
     f.setFileName(origPath);
@@ -804,7 +869,7 @@ void MSMailRu::local_removeFile(QString path){
 //=======================================================================================
 
 
-void MSMailRu::local_removeFolder(QString path){
+void MSMailRu::local_removeFolder(const QString &path){
 
 
     if(this->getFlag("dryRun")){
@@ -820,6 +885,13 @@ void MSMailRu::local_removeFolder(QString path){
     QString origPath=this->workPath+path;
     QString trashedPath=this->workPath+"/"+this->trashFileName+path;
 
+    // create trashed folder structure if it's needed
+    QFileInfo tfi(trashedPath);
+    QDir tfs(tfi.absolutePath().replace(this->workPath,""));
+    if(!tfs.exists()){
+        tfs.mkdir(this->workPath + tfi.absolutePath().replace(this->workPath,""));
+    }
+
     QDir f;
     f.setPath(origPath);
     bool res=f.rename(origPath,trashedPath);
@@ -834,7 +906,7 @@ void MSMailRu::local_removeFolder(QString path){
 //=======================================================================================
 
 
-MSFSObject::ObjectState MSMailRu::filelist_defineObjectState(MSLocalFSObject local, MSRemoteFSObject remote){
+MSFSObject::ObjectState MSMailRu::filelist_defineObjectState(const MSLocalFSObject &local, const MSRemoteFSObject &remote){
 
 
     if((local.exist)&&(remote.exist)){ //exists both files
@@ -908,7 +980,7 @@ MSFSObject::ObjectState MSMailRu::filelist_defineObjectState(MSLocalFSObject loc
 //=======================================================================================
 
 
-void MSMailRu::doSync(){
+void MSMailRu::checkFolderStructures(){
 
     QHash<QString,MSFSObject>::iterator lf;
 
@@ -963,8 +1035,14 @@ void MSMailRu::doSync(){
         }
 
     }
+}
+
+//=======================================================================================
 
 
+void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
+
+    QHash<QString,MSFSObject>::iterator lf;
 
 
     // FORCING UPLOAD OR DOWNLOAD FILES AND FOLDERS
@@ -972,11 +1050,11 @@ void MSMailRu::doSync(){
 
         if(this->getOption("force")=="download"){
 
-            qStdOut()<<"Start downloading in force mode" <<endl;
+            qStdOut()<<QString("Start downloading in force mode") <<endl;
 
-            lf=this->syncFileList.begin();
+            lf=fsObjectList.begin();
 
-            for(;lf != this->syncFileList.end();lf++){
+            for(;lf != fsObjectList.end();lf++){
 
                 MSFSObject obj=lf.value();
 
@@ -989,7 +1067,7 @@ void MSMailRu::doSync(){
 
                     if(obj.remote.objectType == MSRemoteFSObject::Type::file){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Forced downloading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Forced downloading.") <<endl;
 
                         this->remote_file_get(&obj);
                     }
@@ -1001,11 +1079,11 @@ void MSMailRu::doSync(){
         else{
             if(this->getOption("force")=="upload"){
 
-                qStdOut()<<"Start uploading in force mode" <<endl;
+                qStdOut()<<QString("Start uploading in force mode") <<endl;
 
-                lf=this->syncFileList.begin();
+                lf=fsObjectList.begin();
 
-                for(;lf != this->syncFileList.end();lf++){
+                for(;lf != fsObjectList.end();lf++){
 
                     MSFSObject obj=lf.value();
 
@@ -1019,7 +1097,7 @@ void MSMailRu::doSync(){
 
                             if(obj.local.objectType == MSLocalFSObject::Type::file){
 
-                                qStdOut()<< obj.path<<obj.fileName <<" Forced uploading." <<endl;
+                                qStdOut()<< obj.path<<obj.fileName <<QString(" Forced uploading.") <<endl;
 
                                 this->remote_file_update(&obj);
                             }
@@ -1028,7 +1106,7 @@ void MSMailRu::doSync(){
 
                             if(obj.local.objectType == MSLocalFSObject::Type::file){
 
-                                qStdOut()<< obj.path<<obj.fileName <<" Forced uploading." <<endl;
+                                qStdOut()<< obj.path<<obj.fileName <<QString(" Forced uploading.") <<endl;
 
                                 this->remote_file_insert(&obj);
                             }
@@ -1056,7 +1134,7 @@ void MSMailRu::doSync(){
 
 
 
-            qStdOut()<<"Syncronization end" <<endl;
+            qStdOut()<<QString("Syncronization end") <<endl;
 
             return;
     }
@@ -1065,11 +1143,11 @@ void MSMailRu::doSync(){
 
     // SYNC FILES AND FOLDERS
 
-    qStdOut()<<"Start syncronization" <<endl;
+    qStdOut()<<QString("Start syncronization") <<endl;
 
-    lf=this->syncFileList.begin();
+    lf=fsObjectList.begin();
 
-    for(;lf != this->syncFileList.end();lf++){
+    for(;lf != fsObjectList.end();lf++){
 
         MSFSObject obj=lf.value();
 
@@ -1082,7 +1160,7 @@ void MSMailRu::doSync(){
 
             case MSFSObject::ObjectState::ChangedLocal:
 
-                qStdOut()<< obj.path<<obj.fileName <<" Changed local. Uploading." <<endl;
+                qStdOut()<< obj.path<<obj.fileName <<QString(" Changed local. Uploading.") <<endl;
 
                 this->remote_file_update(&obj);
 
@@ -1092,7 +1170,7 @@ void MSMailRu::doSync(){
 
                 if((obj.local.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                    qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
+                    qStdOut()<< obj.path<<obj.fileName <<QString(" New local. Uploading.") <<endl;
 
                     this->remote_file_insert(&obj);
 
@@ -1101,14 +1179,14 @@ void MSMailRu::doSync(){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New local. Uploading.") <<endl;
 
                         this->remote_file_insert(&obj);
 
                     }
                     else{
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete remote. Delete local." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete remote. Delete local.") <<endl;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1126,7 +1204,7 @@ void MSMailRu::doSync(){
 
             case MSFSObject::ObjectState::ChangedRemote:
 
-                qStdOut()<< obj.path<<obj.fileName <<" Changed remote. Downloading." <<endl;
+                qStdOut()<< obj.path<<obj.fileName <<QString(" Changed remote. Downloading.") <<endl;
 
                 this->remote_file_get(&obj);
 
@@ -1139,13 +1217,13 @@ void MSMailRu::doSync(){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete local. Deleting remote." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete local. Deleting remote.") <<endl;
 
                         this->remote_file_trash(&obj);
 
                     }
                     else{
-                        qStdOut()<< obj.path<<obj.fileName <<" New remote. Downloading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New remote. Downloading.") <<endl;
 
                         this->remote_file_get(&obj);
                     }
@@ -1156,13 +1234,13 @@ void MSMailRu::doSync(){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete local. Deleting remote." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete local. Deleting remote.") <<endl;
 
                         this->remote_file_trash(&obj);
                     }
                     else{
 
-                        qStdOut()<< obj.path<<obj.fileName <<" New remote. Downloading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New remote. Downloading.") <<endl;
 
                         this->remote_file_get(&obj);
                     }
@@ -1175,14 +1253,14 @@ void MSMailRu::doSync(){
 
                 if((obj.remote.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                    qStdOut()<< obj.path<<obj.fileName <<" New remote. Downloading." <<endl;
+                    qStdOut()<< obj.path<<obj.fileName <<QString(" New remote. Downloading.") <<endl;
 
                     this->remote_file_get(&obj);
 
                     break;
                 }
 
-                qStdOut()<< obj.fileName <<" Delete local. Deleting remote." <<endl;
+                qStdOut()<< obj.fileName <<QString(" Delete local. Deleting remote.") <<endl;
 
                 this->remote_file_trash(&obj);
 
@@ -1194,12 +1272,12 @@ void MSMailRu::doSync(){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New local. Uploading.") <<endl;
 
                         this->remote_file_insert(&obj);
                     }
                     else{
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete remote. Deleting local." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete remote. Deleting local.") <<endl;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1214,14 +1292,14 @@ void MSMailRu::doSync(){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< obj.path<<obj.fileName <<" New local. Uploading." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" New local. Uploading.") <<endl;
 
                         this->remote_file_insert(&obj);
 
                     }
                     else{
 
-                        qStdOut()<< obj.path<<obj.fileName <<" Delete remote. Deleting local." <<endl;
+                        qStdOut()<< obj.path<<obj.fileName <<QString(" Delete remote. Deleting local.") <<endl;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1254,7 +1332,7 @@ void MSMailRu::doSync(){
 
 
 
-        qStdOut()<<"Syncronization end" <<endl;
+        qStdOut()<<QString("Syncronization end")<<endl;
 
 }
 
@@ -1283,7 +1361,7 @@ QHash<QString, MSFSObject> MSMailRu::filelist_getFSObjectsByState(MSFSObject::Ob
 //=======================================================================================
 
 
-QHash<QString, MSFSObject> MSMailRu::filelist_getFSObjectsByState(QHash<QString, MSFSObject> fsObjectList, MSFSObject::ObjectState state){
+QHash<QString, MSFSObject> MSMailRu::filelist_getFSObjectsByState( QHash<QString, MSFSObject> fsObjectList, MSFSObject::ObjectState state){
 
     QHash<QString,MSFSObject> out;
 
@@ -1349,7 +1427,7 @@ QHash<QString, MSFSObject> MSMailRu::filelist_getFSObjectsByTypeRemote(MSRemoteF
 //=======================================================================================
 
 
-bool MSMailRu::filelist_FSObjectHasParent(MSFSObject fsObject){
+bool MSMailRu::filelist_FSObjectHasParent(const MSFSObject &fsObject){
 
     if(fsObject.path=="/"){
         return false;
@@ -1369,7 +1447,7 @@ bool MSMailRu::filelist_FSObjectHasParent(MSFSObject fsObject){
 //=======================================================================================
 
 
-MSFSObject MSMailRu::filelist_getParentFSObject(MSFSObject fsObject){
+MSFSObject MSMailRu::filelist_getParentFSObject(const MSFSObject &fsObject){
 
     QString parentPath;
 
@@ -1397,7 +1475,7 @@ MSFSObject MSMailRu::filelist_getParentFSObject(MSFSObject fsObject){
 //=======================================================================================
 
 
-void MSMailRu::filelist_populateChanges(MSFSObject changedFSObject){
+void MSMailRu::filelist_populateChanges(const MSFSObject &changedFSObject){
 
     QHash<QString,MSFSObject>::iterator object=this->syncFileList.find(changedFSObject.path+changedFSObject.fileName);
 
@@ -1410,7 +1488,7 @@ void MSMailRu::filelist_populateChanges(MSFSObject changedFSObject){
 //=======================================================================================
 
 
-bool MSMailRu::testReplyBodyForError(QString body){
+bool MSMailRu::testReplyBodyForError(const QString &body){
 
     if(body.contains("Error transferring ")){
 
@@ -1425,7 +1503,7 @@ bool MSMailRu::testReplyBodyForError(QString body){
 //=======================================================================================
 
 
-QString MSMailRu::getReplyErrorString(QString body){
+QString MSMailRu::getReplyErrorString(const QString &body){
 
     return body;
 
@@ -1441,7 +1519,7 @@ bool MSMailRu::createHashFromRemote(){
 
 //=======================================================================================
 
-bool MSMailRu::readRemote(QString path,QNetworkCookieJar* cookie)
+bool MSMailRu::readRemote(const QString &path, QNetworkCookieJar* cookie)
 {
 
     if(cookie == NULL){
@@ -1452,6 +1530,7 @@ bool MSMailRu::readRemote(QString path,QNetworkCookieJar* cookie)
 
             qStdOut()<<"Authentication failed. Possibly you need re-auth or login and passwrd is incorrect" <<endl;
 
+            //this->cookies->deleteLater();//delete(this->cookies);
             return providerAuthStatus;
         }
     }
@@ -1485,8 +1564,11 @@ bool MSMailRu::readRemote(QString path,QNetworkCookieJar* cookie)
     req->exec();
 
     if(!req->replyOK()){
-        delete(req);
+        //delete req->cookieJarObject;
+        ////this->cookies->deleteLater();//delete(this->cookies);
+
         req->printReplyError();
+        delete(req);
         return false;
     }
 
@@ -1571,16 +1653,64 @@ bool MSMailRu::readRemote(QString path,QNetworkCookieJar* cookie)
 
         }
 
+        //delete this->cookies;;////this->cookies->deleteLater();//delete(this->cookies);
+//        try{
+//            if(!req->cookieJarObject->isCookieRemoved()){
+
+//                req->cookieJarObject->deleteLater();
+//                req->cookieJarObject = nullptr;
+//            }
+
+//        }
+//        catch(...){
+//            req->cookieJarObject = nullptr;
+//        }
+
+
     delete(req);
 
-    return true;
+        return true;
+}
+
+
+
+bool MSMailRu::_readRemote(const QString &rootPath){
+
+    Q_UNUSED(rootPath);
+    bool r= this->readRemote("/",NULL);
+
+#ifdef CCROSS_LIB
+    // clear a forgotten cookie files
+    QHash<QString,MSNetworkCookieJar*> ql = this ->cookieList;
+    this ->cookieList.clear();
+
+    QHash<QString,MSNetworkCookieJar*>::iterator i = ql.begin();
+
+    for(;i != ql.end();i++){
+
+        QString n = i.value()->name;
+        delete i.value();
+        ql.remove(n);
+        i = ql.begin();
+        if(ql.size() == 0)break;
+    }
+
+    if(ql.size() > 0){// remove last object as well
+        i = ql.begin();
+        QString n = i.value()->name;
+        delete i.value();
+        ql.remove(n);
+    }
+#endif
+
+    return r;
 }
 
 
 //=======================================================================================
 
 
-bool MSMailRu::readLocal(QString path){
+bool MSMailRu::readLocal(const QString &path){
 
 
     QDir dir(path);
@@ -1703,7 +1833,116 @@ bool MSMailRu::readLocal(QString path){
 //=======================================================================================
 
 
-bool MSMailRu::isFolder(QJsonValue remoteObject){
+bool MSMailRu::readLocalSingle(const QString &path){
+
+        QFileInfo fi(path);
+
+
+
+            QString relPath=fi.absoluteFilePath().replace(this->workPath,"");
+
+            if(! this->filterServiceFileNames(relPath)){// skip service files and dirs
+                return false;
+            }
+
+
+            if(this->getFlag("useInclude")){//  --use-include
+
+                if( this->filterIncludeFileNames(relPath)){
+                    return false;
+                }
+            }
+            else{// use exclude by default
+
+                if(! this->filterExcludeFileNames(relPath)){
+                    return false;
+                }
+            }
+
+
+
+            QHash<QString,MSFSObject>::iterator i=this->syncFileList.find(relPath);
+
+
+
+            if(i!=this->syncFileList.end()){// if object exists in Google Drive
+
+                MSFSObject* fsObject = &(i.value());
+
+
+                fsObject->local.fileSize=  fi.size();
+                //fsObject->local.md5Hash= this->fileChecksum(Path,QCryptographicHash::Sha1);
+                fsObject->local.exist=true;
+                fsObject->getLocalMimeType(this->workPath);
+
+                if(fi.isDir()){
+                    fsObject->local.objectType=MSLocalFSObject::Type::folder;
+                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+                }
+                else{
+
+                    fsObject->local.objectType=MSLocalFSObject::Type::file;
+                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+
+                }
+
+
+                fsObject->isDocFormat=false;
+
+
+                fsObject->state=this->filelist_defineObjectState(fsObject->local,fsObject->remote);
+
+            }
+            else{
+
+                MSFSObject fsObject;
+
+                fsObject.state=MSFSObject::ObjectState::NewLocal;
+
+                if(relPath.lastIndexOf("/")==0){
+                    fsObject.path="/";
+                }
+                else{
+                    fsObject.path=QString(relPath).left(relPath.lastIndexOf("/"))+"/";
+                }
+
+                fsObject.fileName=fi.fileName();
+                fsObject.getLocalMimeType(this->workPath);
+
+                fsObject.local.fileSize=  fi.size();
+                //fsObject.local.md5Hash= this->fileChecksum(Path,QCryptographicHash::Sha1);
+                fsObject.local.exist=true;
+
+                if(fi.isDir()){
+                    fsObject.local.objectType=MSLocalFSObject::Type::folder;
+                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+                }
+                else{
+
+                    fsObject.local.objectType=MSLocalFSObject::Type::file;
+                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
+
+                }
+
+                fsObject.state=this->filelist_defineObjectState(fsObject.local,fsObject.remote);
+
+                fsObject.isDocFormat=false;
+
+
+                this->syncFileList.insert(relPath,fsObject);
+
+            }
+
+
+
+        return true;
+
+}
+
+//=======================================================================================
+
+
+bool MSMailRu::isFolder(const QJsonValue &remoteObject){
 
     if(remoteObject.toObject()[".tag"].toString()=="folder"){
         return true;
@@ -1714,7 +1953,7 @@ bool MSMailRu::isFolder(QJsonValue remoteObject){
 //=======================================================================================
 
 
-bool MSMailRu::isFile(QJsonValue remoteObject){
+bool MSMailRu::isFile(const QJsonValue &remoteObject){
 
     if(remoteObject.toObject()[".tag"].toString()=="file"){
         return true;
@@ -1828,8 +2067,76 @@ bool MSMailRu::createSyncFileList(){
 // this->remote_file_makeFolder(&(this->syncFileList.values()[0]));
 // this->remote_createDirectory((this->syncFileList.values()[0].path+this->syncFileList.values()[0].fileName));
 
+    // make separately lists of objects
+    QList<QString> keys = this->syncFileList.uniqueKeys();
 
-    this->doSync();
+    if(keys.size()>=3){// split list to few parts
+
+        this->threadsRunning = new QSemaphore(3);
+
+        QThread* t1 = new QThread(this);
+        QThread* t2 = new QThread();
+        QThread* t3 = new QThread(this);
+
+        MSSyncThread* thr1 = new MSSyncThread(nullptr,this);
+        thr1->moveToThread(t1);
+        connect(t1,SIGNAL(started()),thr1,SLOT(run()));
+        connect(t1,SIGNAL(finished()),thr1,SLOT(deleteLater()));
+        connect(thr1,SIGNAL(finished()),t1,SLOT(quit()));
+
+        MSSyncThread* thr2 = new MSSyncThread(nullptr,this);
+        thr2->moveToThread(t2);
+        connect(t2,SIGNAL(started()),thr2,SLOT(run()));
+        connect(t2,SIGNAL(finished()),thr2,SLOT(deleteLater()));
+        connect(thr2,SIGNAL(finished()),t2,SLOT(quit()));
+
+        MSSyncThread* thr3 = new MSSyncThread(nullptr,this);
+        thr3->moveToThread(t3);
+        connect(t3,SIGNAL(started()),thr3,SLOT(run()));
+        connect(t3,SIGNAL(finished()),thr3,SLOT(deleteLater()));
+        connect(thr3,SIGNAL(finished()),t3,SLOT(quit()));
+
+
+//        QHash<QString,MSFSObject> L1;
+//        QHash<QString,MSFSObject> L2;
+//        QHash<QString,MSFSObject> L3;
+
+        for(int i=0;i<keys.size();i+=3){
+
+            if(i<=keys.size()-1){
+                thr1->threadSyncList.insert(keys[i],this->syncFileList.find(keys[i]).value());
+            }
+            if(i+1 <= keys.size()-1){
+                thr2->threadSyncList.insert(keys[i+1],this->syncFileList.find(keys[i+1]).value());
+            }
+            if(i+2 <= keys.size()-1){
+                thr3->threadSyncList.insert(keys[i+2],this->syncFileList.find(keys[i+2]).value());
+            }
+
+        }
+        //this->doSync(L2);
+
+        this->checkFolderStructures();
+
+        t1->start();
+        t2->start();
+        t3->start();
+        t1->wait();
+        t2->wait();
+        t3->wait();
+
+//        while (this->threadsRunning->available()<3) {
+
+//        }
+
+
+    }
+    else{// sync as is
+
+        this->checkFolderStructures();
+        this->doSync(this->syncFileList);
+    }
+
 
     return true;
 }
@@ -1837,7 +2144,7 @@ bool MSMailRu::createSyncFileList(){
 //=======================================================================================
 
 
-bool MSMailRu::directUpload(QString url, QString remotePath){
+bool MSMailRu::directUpload(const QString &url, const QString &remotePath){
 
     // download file into temp file ---------------------------------------------------------------
 
@@ -1935,6 +2242,7 @@ bool MSMailRu::directUpload(QString url, QString remotePath){
 
         //error file not found
         qStdOut()<<"Unable to open of "+filePath <<endl;
+        //this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         return false;
     }
@@ -1951,6 +2259,7 @@ bool MSMailRu::directUpload(QString url, QString remotePath){
 
     if(!req->replyOK()){
         req->printReplyError();
+        //this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         return false;
     }
@@ -1958,7 +2267,13 @@ bool MSMailRu::directUpload(QString url, QString remotePath){
 
     QStringList arr=QString(req->readReplyText()).split(';'); // at this point we recieve confirmation hash in arr[0] and size of file in arr[1]
 
-    this->cookies=req->manager->cookieJar();
+#ifndef CCROSS_LIB
+        this->cookies=(req->manager->cookieJar());
+#else
+
+        this->cookies=(req->getCookieJar());
+#endif
+
     req_prev=req;
 
     req=new MSRequest(this->proxyServer);
@@ -1995,6 +2310,7 @@ bool MSMailRu::directUpload(QString url, QString remotePath){
 
 
         req->printReplyError();
+        //this->cookies->deleteLater();//delete(this->cookies);
         delete(req);
         return false;
     }
@@ -2007,6 +2323,7 @@ bool MSMailRu::directUpload(QString url, QString remotePath){
 
     file.remove();
 
+    //this->cookies->deleteLater();//delete(this->cookies);
     delete(req);
 
     if(status == 200){
@@ -2067,7 +2384,7 @@ QString MSMailRu::getInfo(){
 
 
 // not used
-bool MSMailRu::onAuthFinished(QString html, MSCloudProvider *provider)
+bool MSMailRu::onAuthFinished(const QString &html, MSCloudProvider *provider)
 {
 Q_UNUSED(html);
 Q_UNUSED(provider);

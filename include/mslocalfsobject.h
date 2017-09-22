@@ -41,6 +41,7 @@ class MSLocalFSObject
 {
 public:
     MSLocalFSObject();
+    ~MSLocalFSObject();
 
     enum Type{
                none=0,

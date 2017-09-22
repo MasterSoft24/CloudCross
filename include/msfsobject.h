@@ -42,6 +42,7 @@ class MSFSObject
 {
 public:
     MSFSObject();
+    ~MSFSObject();
 
     enum ObjectState{
                 ChangedRemote=1,
@@ -65,7 +66,7 @@ public:
     QString fileName;
     bool isDocFormat;
 
-    void getLocalMimeType(QString path);
+    void getLocalMimeType(const QString &path);
 
 };
 

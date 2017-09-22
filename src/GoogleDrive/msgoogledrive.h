@@ -1,8 +1,8 @@
 /*
     CloudCross: Opensource program for syncronization of local files and folders with clouds
 
-    Copyright (C) 2016  Vladimir Kamensky
-    Copyright (C) 2016  Master Soft LLC.
+    Copyright (C) 2016-2017  Vladimir Kamensky
+    Copyright (C) 2016-2017  Master Soft LLC.
     All rights reserved.
 
 
@@ -36,20 +36,20 @@
 
 #include <QObject>
 #include <include/mscloudprovider.h>
-
+#include "include/mssyncthread.h"
+#include "include/qmultibuffer.h"
 
 
 class MSGoogleDrive : public MSCloudProvider
 {
 public:
 
-
     // create hash table from remote json file records
     bool createHashFromRemote();
     // get slice from remote files hash table by parent and some other conditions
-    QHash<QString,QJsonValue> get(QString parentId, int target);
-    bool isFile(QJsonValue remoteObject);
-    bool isFolder(QJsonValue remoteObject);
+    QHash<QString,QJsonValue> get(const QString &parentId, int target);
+    bool isFile(const QJsonValue &remoteObject);
+    bool isFolder(const QJsonValue &remoteObject);
 
 
     QString getRoot();// return root id  of google drive
@@ -67,48 +67,53 @@ public:
     bool remote_file_generateIDs(int count);
     // create folder on remote
     bool remote_file_makeFolder(MSFSObject* object);
-    bool remote_file_makeFolder(MSFSObject* object,QString parentID);
+    bool remote_file_makeFolder(MSFSObject* object,const QString &parentID);
     // trash file or folder on remote
     bool remote_file_trash(MSFSObject* object);
     // create directory on remote, recursively if nesessary
-    bool remote_createDirectory(QString path);
+    bool remote_createDirectory(const QString &path);
 
 
     //=== LOCAL FUNCTION BLOCK ===
 
     // create directory on local, recursively if nesessary
-    void local_createDirectory(QString path);
-    void local_removeFile(QString path);
-    void local_removeFolder(QString path);
+    void local_createDirectory(const QString &path);
+    void local_removeFile(const QString &path);
+    void local_removeFolder(const QString &path);
 
 
 
-    bool readRemote(QString parentId, QString currentPath);
-    bool readLocal(QString path);
+    bool readRemote(const QString &parentId, const QString &currentPath);
+    bool _readRemote(const QString &parentId);
+
+    bool readLocal(const QString &path);
+    bool readLocalSingle(const QString &path);
 
 public:
     MSGoogleDrive();
 
      bool auth();
-     void saveTokenFile(QString path);  // reimplemented from MSCloudProvider
-     bool loadTokenFile(QString path);  // reimplemented from MSCloudProvider
+     void saveTokenFile(const QString &path);  // reimplemented from MSCloudProvider
+     bool loadTokenFile(const QString &path);  // reimplemented from MSCloudProvider
      bool refreshToken();               // reimplemented from MSCloudProvider
      void loadStateFile();              // reimplemented from MSCloudProvider
      void saveStateFile();              // reimplemented from MSCloudProvider
 
-     bool testReplyBodyForError(QString body); // reimplemented from MSCloudProvider
-     QString getReplyErrorString(QString body);   // reimplemented from MSCloudProvider
+     bool testReplyBodyForError(const QString &body); // reimplemented from MSCloudProvider
+     QString getReplyErrorString(const QString &body);   // reimplemented from MSCloudProvider
 
 
      bool createSyncFileList();
 
      QHash<QString,MSFSObject> getRemoteFileList();
 
-     bool filterGoogleDocsMimeTypes(QString mime);
-     bool filterOfficeMimeTypes(QString mime);
+     bool filterGoogleDocsMimeTypes(const QString &mime);
+     bool filterOfficeMimeTypes(const QString &mime);
 
 
-     void doSync();
+     void checkFolderStructures();
+     void doSync(QHash<QString,MSFSObject> fsObjectList);
+
 
      QHash<QString,MSFSObject>      filelist_getFSObjectsByState(MSFSObject::ObjectState state);
 
@@ -118,27 +123,27 @@ public:
 
      QHash<QString,MSFSObject>      filelist_getFSObjectsByTypeRemote(MSRemoteFSObject::Type type);
 
-     MSFSObject::ObjectState        filelist_defineObjectState(MSLocalFSObject local, MSRemoteFSObject remote);
+     MSFSObject::ObjectState        filelist_defineObjectState(const MSLocalFSObject &local, const MSRemoteFSObject &remote);
 
-     bool                           filelist_FSObjectHasParent(MSFSObject fsObject);
+     bool                           filelist_FSObjectHasParent(const MSFSObject &fsObject);
 
-     MSFSObject                     filelist_getParentFSObject(MSFSObject fsObject);
+     MSFSObject                     filelist_getParentFSObject(const MSFSObject &fsObject);
 
-     void                           filelist_populateChanges(MSFSObject changedFSObject);
+     void                           filelist_populateChanges(const MSFSObject &changedFSObject);
 
      // remote files hash table
      QHash<QString,QJsonValue>driveJSONFileList;
 
      // sync local and remote filesystems hash table
-     QHash<QString,MSFSObject> syncFileList;
+     //QHash<QString,MSFSObject> syncFileList;
 
-     bool directUpload(QString url,QString remotePath);
+     bool directUpload(const QString &url, const QString &remotePath);
 
      QString getInfo(); // get info about cloud
 
 public slots:
 
-    bool onAuthFinished(QString html, MSCloudProvider *provider);
+    bool onAuthFinished(const QString &html, MSCloudProvider *provider);
 
 };
 

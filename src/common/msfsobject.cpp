@@ -38,8 +38,15 @@ MSFSObject::MSFSObject()
 
 }
 
+MSFSObject::~MSFSObject()
+{
+    while(this->remote.data.count()) {
+        this->remote.data.erase(this->remote.data.begin());
+    }
+}
 
-void MSFSObject::getLocalMimeType(QString path){
+
+void MSFSObject::getLocalMimeType(const QString &path){
 
         QMimeDatabase db;
         QMimeType type = db.mimeTypeForFile(path+this->path+this->fileName);
