@@ -2,17 +2,22 @@
 
 
 int libFuseCC::argc = 1;
-char * libFuseCC::argv[] = {"libFuseCC", NULL};
+char * libFuseCC::argv[] = {"libFuseCC", ""};
 QCoreApplication * libFuseCC::app = NULL;
 QThread * libFuseCC::thread = NULL;
+QHash<QString, CCSeparateThread *> *libFuseCC::threadsList = nullptr;
 
 
 
 libFuseCC::libFuseCC()
 {
 
-    if (thread == NULL)
-    {
+    threadsList = new QHash<QString,CCSeparateThread*>();
+
+
+    if (thread == NULL){
+
+
         thread = new QThread();
         connect(thread, SIGNAL(started()), this, SLOT(onStarted()), Qt::DirectConnection);
         thread->start();
@@ -245,10 +250,13 @@ void libFuseCC::runInSeparateThread(MSCloudProvider *providerInstance, const QSt
 
     QThread* thr = new QThread();
 
+    threadsList->insert(thread->commandParameters["filePath"].toString(),thread);
+
     thread->moveToThread(thr);
 
     QObject::connect(thr,SIGNAL(started()),thread,SLOT(run()));
-    QObject::connect(thread,SIGNAL(finished()),thr,SLOT(quit()));
+    //QObject::connect(thread,SIGNAL(finished()),thr,SLOT(quit()));
+//    QObject::connect(thread,SIGNAL(finished()),this,SLOT(onThreadFinished()));
 
     thr->start();
 
@@ -311,6 +319,40 @@ void libFuseCC::onStarted(){
     }
 
 }
+
+
+//-----------------------------------------------------------------------------------------------
+
+
+void libFuseCC::onThreadFinished(CCSeparateThread *sepThr){
+
+    QHash<QString,CCSeparateThread*>::iterator i = this->threadsList->find(sepThr->commandParameters["filePath"].toString());
+
+    if( i != this->threadsList->end() ){
+        this->threadsList->remove(i.key());
+    }
+
+    sepThr->thread()->terminate();
+
+    int y = 9;
+}
+
+//-----------------------------------------------------------------------------------------------
+
+
+
+void libFuseCC::terminateThreadByFilename(QString name){
+
+    QHash<QString,CCSeparateThread*>::iterator i = this->threadsList->find(name);
+
+    if( i != this->threadsList->end() ){
+        i.value()->thread()->quit();
+        this->threadsList->remove(i.key());
+    }
+
+}
+
+//-----------------------------------------------------------------------------------------------
 
 
 

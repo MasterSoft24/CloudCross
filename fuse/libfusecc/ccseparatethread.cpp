@@ -137,6 +137,7 @@ void CCSeparateThread::run(){
     }
 
     emit finished();
+    this->lpFuseCC->onThreadFinished(this);
     return ;
 
 }

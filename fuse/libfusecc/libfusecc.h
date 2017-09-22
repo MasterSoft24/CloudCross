@@ -42,16 +42,24 @@ public:
 
     void clearLocalPartOfSyncFileList(MSCloudProvider *providerInstance);
 
+    void onThreadFinished(CCSeparateThread* sepThr);
+
+    void terminateThreadByFilename(QString name);
+
 private:
 
     static int argc ;
     static char * argv[];
     static QCoreApplication * app ;
     static QThread * thread ;
+    static QHash<QString, CCSeparateThread *> *threadsList;
+
+
 
 private slots:
 
     void onStarted();
+
 };
 
 #include "ccseparatethread.h"

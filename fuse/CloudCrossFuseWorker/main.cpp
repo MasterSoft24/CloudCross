@@ -817,6 +817,8 @@ static int unlink_callback(const char *path){
 
     i.value().state = MSFSObject::ObjectState::DeleteLocal;
 
+    CC_FuseFS::Instance()->ccLib->terminateThreadByFilename(path);
+
     CC_FuseFS::Instance()->doSheduleUpdate();
 
     return 0;
