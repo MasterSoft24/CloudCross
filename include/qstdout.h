@@ -35,6 +35,7 @@
 #define QSTDOUT_H
 
 #include <QTextStream>
+#include <QBuffer>
 
 
 QTextStream& qStdOut();

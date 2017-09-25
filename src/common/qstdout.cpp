@@ -34,6 +34,7 @@
 
 #include "include/qstdout.h"
 #include <QFile>
+#include "include/qmultibuffer.h"
 
 QTextStream& qStdOut()
 {
@@ -42,4 +43,5 @@ QTextStream& qStdOut()
     static QTextStream ts( stdout );//stdout
     return ts ;
 }
+
 
