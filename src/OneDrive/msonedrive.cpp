@@ -293,6 +293,7 @@ afterReauth:
 
         file.close();
 
+        delete(req);
         return true;
 
     }
@@ -394,6 +395,7 @@ afterReauth:
         this->filelist_populateChanges(*object);
 
         file.close();
+        delete(req);
         return true;
 
     }
