@@ -71,7 +71,7 @@ public:
     // download file from cloud
     bool remote_file_get(MSFSObject* object);
     // upload new file to cloud
-    bool remote_file_insert(MSFSObject* object);
+    bool remote_file_insert(MSFSObject* object, const char *newParameter = "status");
     // update existing file on cloud
     bool remote_file_update(MSFSObject* object);
     // Generates a set of file IDs which can be provided in insert requests

@@ -75,7 +75,7 @@ public:
 #ifndef ZCCROSS_LIB
     QUrl* url;
     QUrlQuery* query;
-    QNetworkAccessManager* manager;
+    QNetworkAccessManager manager;
 
 
     QEventLoop* loop;

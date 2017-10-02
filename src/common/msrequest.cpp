@@ -48,7 +48,7 @@ MSRequest::MSRequest(QNetworkProxy *proxy)
     this->setQueryForDownload =true;
 
     this->url=new QUrl();
-    this->manager=new QNetworkAccessManager();
+    //this->manager=new QNetworkAccessManager(this);
     this->query=new QUrlQuery();
 
     //this->cookieJar=0;
@@ -63,7 +63,7 @@ MSRequest::MSRequest(QNetworkProxy *proxy)
     this->loop=new QEventLoop(this);
 
 
-    connect((QObject*)this->manager,SIGNAL(finished(QNetworkReply*)),(QObject*)this,SLOT(requestFinished(QNetworkReply*)));
+    connect((QObject*)&this->manager,SIGNAL(finished(QNetworkReply*)),(QObject*)this,SLOT(requestFinished(QNetworkReply*)));
 
     if(proxy != 0){
         this->setProxy(proxy);
@@ -83,7 +83,7 @@ MSRequest::~MSRequest(){
 
 #ifndef CCROSS_LIB
     delete(this->loop);
-    delete(this->manager);
+    //delete(this->manager);
     delete(this->query);
     delete(this->url);
     this->replyText.clear();
@@ -241,7 +241,7 @@ void MSRequest::methodCharger(QNetworkRequest req){
 
     if(this->requestMethod=="get"){
 
-        replySync=this->manager->get(req);
+        replySync=this->manager.get(req);
     }
 
 
@@ -258,7 +258,7 @@ void MSRequest::methodCharger(QNetworkRequest req){
 
         QByteArray ba;
         ba+=this->query->toString();
-        replySync=this->manager->post(req,ba);
+        replySync=this->manager.post(req,ba);
     }
 
 #ifdef PRINT_DEBUG_INFO
@@ -519,7 +519,7 @@ void MSRequest::setCURLOptions(const QByteArray &payload){
                         if( p != ""){
                             p += "&";
                         }
-                        p += i.key()+"="+ cUrlObject.escape(i.value());
+                        p += i.key()+"="+ /*cUrlObject.escape*/(i.value());
                     }
                     cUrlObject.requestOptions[CURLOPT_URL] = (toUrlEncoded(this->requestURL.toLocal8Bit()+"?"+p.toLocal8Bit()));
                     //__________
@@ -545,7 +545,7 @@ void MSRequest::setCURLOptions(const QByteArray &payload){
                         if( p != ""){
                             p += "&";
                         }
-                        p += i.key()+"="+ cUrlObject.escape(i.value());
+                        p += i.key()+"="+ /*cUrlObject.escape*/(i.value());
                     }
                     cUrlObject.requestOptions[CURLOPT_URL] = (toUrlEncoded(this->requestURL.toLocal8Bit()+"?"+p.toLocal8Bit()));
                     //__________
@@ -695,7 +695,7 @@ void MSRequest::methodCharger(QNetworkRequest req, const QString &path){
     QNetworkReply* replySync=0;
 
     if(this->requestMethod=="get"){
-        replySync=this->manager->get(req);
+        replySync=this->manager.get(req);
     }
 
 
@@ -704,7 +704,7 @@ void MSRequest::methodCharger(QNetworkRequest req, const QString &path){
 
         QByteArray ba;
         ba+=this->query->toString();
-        replySync=this->manager->post(req,ba);
+        replySync=this->manager.post(req,ba);
     }
 
     this->currentReply=replySync;
@@ -844,7 +844,7 @@ void MSRequest::post(const QByteArray &data){
     this->url->setQuery(*this->query);
     this->setUrl(*this->url);
 
-    replySync=this->manager->post(*this,data);
+    replySync=this->manager.post(*this,data);
 
     //QEventLoop loop;
     connect(replySync, SIGNAL(finished()),this->loop, SLOT(quit()));
@@ -860,6 +860,42 @@ void MSRequest::post(const QByteArray &data){
 
 
 void MSRequest::post(QIODevice *data){
+#ifdef CCROSS_LIB
+
+    if(this->requestHeaders.find("Content-Type") == this->requestHeaders.end()){
+
+        if(!this->notUseContentType){
+
+            //this->requestHeaders.insert("Content-Type", "");//application/x-www-form-urlencoded
+        }
+    }
+
+
+
+    this->requestMethod = "post";
+    this->setCURLOptions(data->readAll());
+
+    this->cUrlObject.requestOptions[CURLOPT_FOLLOWLOCATION] = 1;
+
+
+    QString r = this->cUrlObject.exec();
+
+    if (this->cUrlObject.lastError().isOk()) {
+
+        this->replyError = QNetworkReply::NetworkError::NoError;
+        this->replyText = QByteArray(this->cUrlObject.buffer(), this->cUrlObject.buffer().size());
+
+    }
+    else {
+        this->replyError = QNetworkReply::NetworkError::ContentGoneError;
+        qDebug() << (QString("MSRequest - POST Error: %1\nBuffer: %2").arg(this->cUrlObject.lastError().text()).arg(this->cUrlObject.errorBuffer()));
+    }
+
+    return;
+
+
+#endif
+
 
 #ifndef CCROSS_LIB
     QNetworkReply* replySync;
@@ -867,7 +903,7 @@ void MSRequest::post(QIODevice *data){
     this->url->setQuery(*this->query);
     this->setUrl(*this->url);
 
-    replySync=this->manager->post(*this,data);
+    replySync=this->manager.post(*this,data);
 
     //QEventLoop loop;
     connect(replySync, SIGNAL(finished()),this->loop, SLOT(quit()));
@@ -1014,7 +1050,7 @@ void MSRequest::syncDownloadWithGet( QString path){
 
 
 
-    QNetworkReply* replySync = this->manager->get(*this);
+    QNetworkReply* replySync = this->manager.get(*this);
     this->currentReply = replySync;
 
     connect(replySync,SIGNAL(readyRead()),this,SLOT(doReadyRead()));
@@ -1049,7 +1085,7 @@ void MSRequest::syncDownloadWithPost( QString path, QByteArray data){
 
 
 
-    QNetworkReply* replySync = this->manager->post(*this,data.data());
+    QNetworkReply* replySync = this->manager.post(*this,data.data());
     this->currentReply = replySync;
 
     connect(replySync,SIGNAL(readyRead()),this,SLOT(doReadyRead()));
@@ -1069,7 +1105,7 @@ void MSRequest::postMultipart(QHttpMultiPart *multipart){
     this->url->setQuery(*this->query);
     this->setUrl(*this->url);
 
-    replySync=this->manager->post(*this,multipart);
+    replySync=this->manager.post(*this,multipart);
     //multipart->setParent(replySync);
 
     //QEventLoop loop;
@@ -1134,7 +1170,7 @@ void MSRequest::put(const QByteArray &data){
     this->url->setQuery(*this->query);
     this->setUrl(*this->url);
 
-    replySync=this->manager->put(*this,data);
+    replySync=this->manager.put(*this,data);
 
     //QEventLoop loop;
     connect(replySync, SIGNAL(finished()),this->loop, SLOT(quit()));
@@ -1230,7 +1266,7 @@ void MSRequest::put(QIODevice *data){
     this->url->setQuery(*this->query);
     this->setUrl(*this->url);
 
-    replySync=this->manager->put(*this,data);
+    replySync=this->manager.put(*this,data);
 
     //QEventLoop loop;
     connect(replySync, SIGNAL(finished()),this->loop, SLOT(quit()));
@@ -1347,7 +1383,7 @@ void MSRequest::deleteResource(){
     this->url->setQuery(*this->query);
     this->setUrl(*this->url);
 
-    replySync=this->manager->deleteResource(*this);
+    replySync=this->manager.deleteResource(*this);
 
     //QEventLoop loop;
     connect(replySync, SIGNAL(finished()),this->loop, SLOT(quit()));
@@ -1426,6 +1462,7 @@ void MSRequest::requestFinished(QNetworkReply *reply){
     this->printDebugInfo_response(reply);
 #endif
 
+    reply->deleteLater();
 //    delete(reply);
 
 }
@@ -1535,8 +1572,9 @@ void MSRequest::MSsetCookieJar(QNetworkCookieJar* cookie)
 //    }
 
 
+
     this->cookieJar=cookie;
-    this->manager->setCookieJar(cookie);//this->cookieJar
+    this->manager.setCookieJar(cookie);//this->cookieJar
 
 }
 
@@ -1548,8 +1586,8 @@ void MSRequest::MSsetCookieJar(QNetworkCookieJar* cookie)
 QJsonObject MSRequest::cookieToJSON()
 {
     QJsonObject c;
-    //QList<QNetworkCookie> cl=this->manager->cookieJar()->cookiesForUrl(*this->url);
-    QList<QNetworkCookie> cl=this->manager->cookieJar()->cookiesForUrl( QUrl(this->replyURL));
+    //QList<QNetworkCookie> cl=this->manager.cookieJar()->cookiesForUrl(*this->url);
+    QList<QNetworkCookie> cl=this->manager.cookieJar()->cookiesForUrl( QUrl(this->replyURL));
 
 
     for(int i=0;i < cl.size();i++){
@@ -1572,7 +1610,7 @@ return true;
 
 void MSRequest::setProxy(QNetworkProxy *proxy){
 
-    this->manager->setProxy(*proxy);
+    this->manager.setProxy(*proxy);
 
 }
 

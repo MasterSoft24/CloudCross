@@ -58,6 +58,7 @@
 #include "msrequest.h"
 #include "qstdout.h"
 
+#include "mshttprequest.h"
 
 
 

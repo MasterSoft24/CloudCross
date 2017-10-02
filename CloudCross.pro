@@ -17,7 +17,9 @@ win32{
     DEFINES += PLATFORM_WINDOWS
 }
 
-
+# for MSHttpRequest
+include(../MSRequest-test/MSHttpRequest.pri)
+LIBS +=  -lcurl
 
 QT += core network
 QT -= gui
@@ -49,7 +51,10 @@ SOURCES += main.cpp \
     src/MailRu/msmailru.cpp \
     src/OneDrive/msonedrive.cpp \
     src/common/mssyncthread.cpp \
-    src/common/qmultibuffer.cpp
+    src/common/qmultibuffer.cpp \
+    ../MSRequest-test/mshttprequest.cpp \
+    ../MSRequest-test/QtCUrl.cpp \
+    ../MSRequest-test/msnetworkcookiejar.cpp
 
 
 
@@ -69,7 +74,10 @@ HEADERS += \
     src/MailRu/msmailru.h \
     src/OneDrive/msonedrive.h \
     include/mssyncthread.h \
-    include/qmultibuffer.h
+    include/qmultibuffer.h \
+    ../MSRequest-test/mshttprequest.h \
+    ../MSRequest-test/QtCUrl.h \
+    ../MSRequest-test/msnetworkcookiejar.h
 
 
 target.path = /usr/bin

@@ -326,15 +326,15 @@ void libFuseCC::onStarted(){
 
 void libFuseCC::onThreadFinished(CCSeparateThread *sepThr){
 
-    QHash<QString,CCSeparateThread*>::iterator i = this->threadsList->find(sepThr->commandParameters["filePath"].toString());
+//    QHash<QString,CCSeparateThread*>::iterator i = this->threadsList->find(sepThr->commandParameters["filePath"].toString());
 
-    if( i != this->threadsList->end() ){
-        this->threadsList->remove(i.key());
-    }
+//    if( i != this->threadsList->end() ){
+//        this->threadsList->remove(i.key());
+//    }
 
-    sepThr->thread()->terminate();
+//    sepThr->thread()->terminate();
 
-    int y = 9;
+//    int y = 9;
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -343,12 +343,12 @@ void libFuseCC::onThreadFinished(CCSeparateThread *sepThr){
 
 void libFuseCC::terminateThreadByFilename(QString name){
 
-    QHash<QString,CCSeparateThread*>::iterator i = this->threadsList->find(name);
+//    QHash<QString,CCSeparateThread*>::iterator i = this->threadsList->find(name);
 
-    if( i != this->threadsList->end() ){
-        i.value()->thread()->quit();
-        this->threadsList->remove(i.key());
-    }
+//    if( i != this->threadsList->end() ){
+//        i.value()->thread()->quit();
+//        this->threadsList->remove(i.key());
+//    }
 
 }
 

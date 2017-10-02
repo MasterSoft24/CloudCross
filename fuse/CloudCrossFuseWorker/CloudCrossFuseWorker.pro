@@ -17,6 +17,7 @@ win32{
     DEFINES += PLATFORM_WINDOWS
 }
 
+#DEFINES += CCROSS_LIB
 
 
 QT += core network
@@ -71,7 +72,7 @@ HEADERS += \
     cc_fusefs.h
 
 
-DEFINES += LIBFUSECC_LIBRARY
+#DEFINES += LIBFUSECC_LIBRARY
 
 unix:!macx: LIBS += -L$$PWD/../build/ -lfusecc
 

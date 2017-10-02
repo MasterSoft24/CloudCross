@@ -64,15 +64,6 @@ bool MSMailRu::auth(){
 
     MSRequest* req=new MSRequest(this->proxyServer);
 
-//    try{
-
-//        delete this->cookies;
-
-//    }
-//    catch(...){
-
-//    }
-
     this->cookies=new QNetworkCookieJar();
 
 #ifdef CCROSS_LIB
@@ -82,16 +73,16 @@ bool MSMailRu::auth(){
 
     req->MSsetCookieJar(this->cookies);
 
-    req->setRequestUrl("http://auth.mail.ru/cgi-bin/auth?lang=ru_RU&from=authpopup");
+    req->setRequestUrl(QStringLiteral("http://auth.mail.ru/cgi-bin/auth?lang=ru_RU&from=authpopup"));
 //    req->setRequestUrl("https://auth.mail.ru/cgi-bin/auth");
-    req->setMethod("post");
+    req->setMethod(QStringLiteral("post"));
 
-    req->addQueryItem("page",           "https://cloud.mail.ru/?from=promo");
-    req->addQueryItem("FailPage",       "");
-    req->addQueryItem("Domain",         "mail.ru");
-    req->addQueryItem("Login",          this->login);
-    req->addQueryItem("Password",       this->password);
-    req->addQueryItem("new_auth_form",  "1");
+    req->addQueryItem(QStringLiteral("page"),           QStringLiteral("https://cloud.mail.ru/?from=promo"));
+    req->addQueryItem(QStringLiteral("FailPage"),       QStringLiteral(""));
+    req->addQueryItem(QStringLiteral("Domain"),         QStringLiteral("mail.ru"));
+    req->addQueryItem(QStringLiteral("Login"),          this->login);
+    req->addQueryItem(QStringLiteral("Password"),       this->password);
+    req->addQueryItem(QStringLiteral("new_auth_form"),  "1");
 
 
     req->exec();
@@ -153,9 +144,9 @@ bool MSMailRu::auth(){
         }
 
 
-        //this->cookies=new QNetworkCookieJar(req->manager->cookieJar());
+        //this->cookies=new QNetworkCookieJar(req->manager.cookieJar());
 #ifndef CCROSS_LIB
-        this->cookies=(req->manager->cookieJar());
+        this->cookies=(req->manager.cookieJar());
 #else
 
         this->cookies=(req->getCookieJar());
@@ -200,7 +191,7 @@ bool MSMailRu::loadTokenFile(const QString &path)
 
     if(!key.open(QIODevice::ReadOnly))
     {
-        qInfo() << "Access key missing or corrupt. Start CloudCross with -a option for obtained private key."   ;
+        qInfo() << QStringLiteral("Access key missing or corrupt. Start CloudCross with -a option for obtained private key.")   ;
         return false;
     }
 
@@ -234,7 +225,7 @@ void MSMailRu::loadStateFile()
 
     if(!key.open(QIODevice::ReadOnly))
     {
-        qInfo() << "Previous state file not found. Start in stateless mode."  ;
+        qInfo() << QStringLiteral("Previous state file not found. Start in stateless mode.")  ;
         return;
     }
 
@@ -298,10 +289,10 @@ QString MSMailRu::remote_dispatcher(const QString &target){
 
     req->MSsetCookieJar(this->cookies);
 
-    req->setRequestUrl("https://cloud.mail.ru/api/v2/dispatcher");
-    req->setMethod("get");
+    req->setRequestUrl(QStringLiteral("https://cloud.mail.ru/api/v2/dispatcher"));
+    req->setMethod(QStringLiteral("get"));
 
-    req->addQueryItem("token",       this->token);
+    req->addQueryItem(QStringLiteral("token"),       this->token);
 
     req->exec();
 
@@ -315,7 +306,7 @@ QString MSMailRu::remote_dispatcher(const QString &target){
     QString content=req->readReplyText();
 
 #ifndef CCROSS_LIB
-        this->cookies=(req->manager->cookieJar());
+        this->cookies=(req->manager.cookieJar());
 #else
 
         this->cookies=(req->getCookieJar());
@@ -356,10 +347,10 @@ bool MSMailRu::remote_file_get(MSFSObject *object){
 
     req->MSsetCookieJar(this->cookies);
 
-    req->setRequestUrl("https://cloud.mail.ru/api/v2/dispatcher");
-    req->setMethod("get");
+    req->setRequestUrl(QStringLiteral("https://cloud.mail.ru/api/v2/dispatcher"));
+    req->setMethod(QStringLiteral("get"));
 
-    req->addQueryItem("token",       this->token);
+    req->addQueryItem(QStringLiteral("token"),       this->token);
 
     req->exec();
 
@@ -373,7 +364,7 @@ bool MSMailRu::remote_file_get(MSFSObject *object){
     QString content=req->readReplyText();
 
 #ifndef CCROSS_LIB
-        this->cookies=(req->manager->cookieJar());
+        this->cookies=(req->manager.cookieJar());
 #else
 
         this->cookies=(req->getCookieJar());
@@ -383,17 +374,17 @@ bool MSMailRu::remote_file_get(MSFSObject *object){
 
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject job = json.object();
-    QString serverURL=job["body"].toObject()["get"].toArray()[0].toObject()["url"].toString();
+    QString serverURL=job[QStringLiteral("body")].toObject()[QStringLiteral("get")].toArray()[0].toObject()[QStringLiteral("url")].toString();
 
 
         req=new MSRequest(this->proxyServer);
 
         req->MSsetCookieJar(this->cookies);
 
-        req->setRequestUrl(serverURL+object->remote.data["home"].toString().mid(1));
-        req->setMethod("get");
+        req->setRequestUrl(serverURL+object->remote.data[QStringLiteral("home")].toString().mid(1));
+        req->setMethod(QStringLiteral("get"));
 
-        req->addQueryItem("x-email",      this->login);
+        req->addQueryItem(QStringLiteral("x-email"),      this->login);
 
         req->exec();
 
@@ -444,11 +435,11 @@ bool MSMailRu::remote_file_get(MSFSObject *object){
 //=======================================================================================
 
 
-bool MSMailRu::remote_file_insert(MSFSObject *object){
+bool MSMailRu::remote_file_insert(MSFSObject *object, const char *newParameter){
 
     if(object->local.objectType==MSLocalFSObject::Type::folder){
 
-         qInfo()<< object->fileName << " is a folder. Skipped."  ;
+         qInfo()<< object->fileName << QStringLiteral(" is a folder. Skipped.")  ;
          return true;
      }
 
@@ -458,33 +449,33 @@ bool MSMailRu::remote_file_insert(MSFSObject *object){
 
 
      // get shard server address
-     QString url=this->remote_dispatcher("upload");
+     QString url=this->remote_dispatcher(QStringLiteral("upload"));
 
      MSRequest* req_prev;
      MSRequest* req=new MSRequest(this->proxyServer);
 
-     QString bound="ccross-data";
+     QString bound=QStringLiteral("ccross-data");
 
      req->MSsetCookieJar(this->cookies);
 
      // upload file body to intermediate server and recive confirm hash
 
      req->setRequestUrl(url); //url "https://cloclo3-upload.cloud.mail.ru/upload/"
-     req->setMethod("post");
+     req->setMethod(QStringLiteral("post"));
 
-     req->addHeader("Content-Type", "multipart/form-data; boundary=----"+QString(bound).toLocal8Bit());
+     req->addHeader(QStringLiteral("Content-Type"), QStringLiteral("multipart/form-data; boundary=----")+QString(bound).toLocal8Bit());
 
-     req->addQueryItem("cloud_domain",       "2");
-     req->addQueryItem("fileapi14785802593646",       "");
+     req->addQueryItem(QStringLiteral("cloud_domain"),       QStringLiteral("2"));
+     req->addQueryItem(QStringLiteral("fileapi14785802593646"),       QStringLiteral(""));
 
-     req->addQueryItem("x-email",      this->login);
+     req->addQueryItem(QStringLiteral("x-email"),      this->login);
 
 
      QByteArray mediaData;
 
-     mediaData.append(QString("------"+bound+"\r\n").toLocal8Bit());
-     mediaData.append(QString("Content-Disposition: form-data; name=\"file\"; filename=\""+object->fileName+"\"\r\n"));
-     mediaData.append(QString("Content-Type: application/octet-stream\r\n\r\n").toLocal8Bit());
+     mediaData.append(QString(QStringLiteral("------")+bound+"\r\n").toLocal8Bit());
+     mediaData.append(QString(QStringLiteral("Content-Disposition: form-data; name=\"file\"; filename=\"")+object->fileName+QStringLiteral("\"\r\n")));
+     mediaData.append(QString(QStringLiteral("Content-Type: application/octet-stream\r\n\r\n")).toLocal8Bit());
 
 
      QString filePath=this->workPath+object->path+object->fileName;
@@ -494,7 +485,7 @@ bool MSMailRu::remote_file_insert(MSFSObject *object){
      if (!file.open(QIODevice::ReadOnly)){
 
          //error file not found
-         qInfo()<<"Unable to open of "+filePath  ;
+         qInfo()<<QStringLiteral("Unable to open of ")+filePath  ;
          delete(req);
          return false;
      }
@@ -506,10 +497,10 @@ bool MSMailRu::remote_file_insert(MSFSObject *object){
 
      file.close();
 
-     QByteArray ba2(QString("\r\n------"+bound+"--\r\n").toLocal8Bit());
+     QByteArray ba2(QString(QStringLiteral("\r\n------") + bound + QStringLiteral("--\r\n")).toLocal8Bit());
      mbuff.append(&ba2);
 
-     req->addHeader("Content-Length",QString::number(mbuff.size()).toLocal8Bit());
+     req->addHeader(QStringLiteral("Content-Length"), QString::number(mbuff.size()).toLocal8Bit());
 
      mbuff.open(QIODevice::ReadOnly);
 
@@ -522,10 +513,10 @@ bool MSMailRu::remote_file_insert(MSFSObject *object){
      }
 
 
-     QStringList arr=QString(req->readReplyText()).split(';'); // at this point we recieve confirmation hash in arr[0] and size of file in arr[1]
+     QStringList arr = QString(req->readReplyText()).split(';'); // at this point we recieve confirmation hash in arr[0] and size of file in arr[1]
 
  #ifndef CCROSS_LIB
-         this->cookies=(req->manager->cookieJar());
+         this->cookies = (req->manager.cookieJar());
  #else
 
          this->cookies=(req->getCookieJar());
@@ -540,20 +531,20 @@ bool MSMailRu::remote_file_insert(MSFSObject *object){
 
 
 
-     req->setRequestUrl("https://cloud.mail.ru/api/v2/file/add");
-     req->setMethod("post");
+     req->setRequestUrl(QStringLiteral("https://cloud.mail.ru/api/v2/file/add"));
+     req->setMethod(QStringLiteral("post"));
 
-     req->addQueryItem("api",                "2");
-     req->addQueryItem("build",              this->build);
-     req->addQueryItem("conflict",           "strict"); // api does not contains ignore param CLOUDWEB-5028 (7114 too)
-     req->addQueryItem("email",              this->login);
-     req->addQueryItem("home",               object->path+object->fileName);
+     req->addQueryItem(QStringLiteral("api"),                QStringLiteral("2"));
+     req->addQueryItem(QStringLiteral("build"),              this->build);
+     req->addQueryItem(QStringLiteral("conflict"),           QStringLiteral("strict")); // api does not contains ignore param CLOUDWEB-5028 (7114 too)
+     req->addQueryItem(QStringLiteral("email"),              this->login);
+     req->addQueryItem(QStringLiteral("home"),               object->path+object->fileName);
 
-     req->addQueryItem("hash",               arr[0]);
-     req->addQueryItem("size",               arr[1].left(arr[1].length() - 2));
-     req->addQueryItem("token",              this->token);
-     req->addQueryItem("x-email",            this->login);
-     req->addQueryItem("x-page-id",          this->x_page_id);
+     req->addQueryItem(QStringLiteral("hash"),               arr[0]);
+     req->addQueryItem(QStringLiteral("size"),               arr[1].left(arr[1].length() - 2));
+     req->addQueryItem(QStringLiteral("token"),              this->token);
+     req->addQueryItem(QStringLiteral("x-email"),            this->login);
+     req->addQueryItem(QStringLiteral("x-page-id"),          this->x_page_id);
 
     // req->addHeader("Content-Type", QString("application/x-www-form-urlencoded"));
      req->exec();
@@ -564,15 +555,16 @@ bool MSMailRu::remote_file_insert(MSFSObject *object){
 
          QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
          QJsonObject job = json.object();
-         QString error=job["body"].toObject()["home"].toObject()["error"].toString();
+         QString error=job[QStringLiteral("body")].toObject()[QStringLiteral("home")].toObject()[QStringLiteral("error")].toString();
 
-         if(error == "exists"){// need remove and re-upload
+         if(error == QStringLiteral("exists")){// need remove and re-upload
 
              bool r=this->remote_file_trash(object);
              if(r == true){
 
                  this->remote_file_insert(object);
                  delete(req);
+                 delete(req_prev);
                  return true;
 
              }
@@ -592,19 +584,20 @@ bool MSMailRu::remote_file_insert(MSFSObject *object){
 
      QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
      QJsonObject job = json.object();
-     int status=job["status"].toInt();
+     int status=job[newParameter].toInt();
 
      delete(req_prev);
      delete(req);
 
+
      if(status == 200){
 
-         // set time for local file to tome of remote file to prevent re-downloading
+         // set time for local file to time of remote file to prevent re-downloading
          utimbuf tb;
          QString filePath=this->workPath+object->path+object->fileName;
 
 
-         double zz=job["time"].toDouble();
+         double zz=job[QStringLiteral("time")].toDouble();
          QDateTime zzd=QDateTime::fromTime_t(zz/1000);
          //fsObject.remote.modifiedDate=this->toMilliseconds(zzd,true);
 
@@ -650,17 +643,17 @@ bool MSMailRu::remote_file_makeFolder(MSFSObject *object){
     req->MSsetCookieJar(this->cookies);
 
 
-    req->setRequestUrl("https://cloud.mail.ru/api/v2/folder/add");
-    req->setMethod("post");
+    req->setRequestUrl(QStringLiteral("https://cloud.mail.ru/api/v2/folder/add"));
+    req->setMethod(QStringLiteral("post"));
 
-    req->addQueryItem("api",       "2");
-    req->addQueryItem("build",       this->build);
-    req->addQueryItem("conflict",       "strict");// api does not contains ignore param CLOUDWEB-5028 (7114 too)
-    req->addQueryItem("email",       this->login);
-    req->addQueryItem("home",        object->path+object->fileName); //object->path+object->fileName
-    req->addQueryItem("token",       this->token);
-    req->addQueryItem("x-email",     this->login);
-    req->addQueryItem("x-page-id",   this->x_page_id);
+    req->addQueryItem(QStringLiteral("api"),       QStringLiteral("2"));
+    req->addQueryItem(QStringLiteral("build"),       this->build);
+    req->addQueryItem(QStringLiteral("conflict"),       QStringLiteral("strict"));// api does not contains ignore param CLOUDWEB-5028 (7114 too)
+    req->addQueryItem(QStringLiteral("email"),       this->login);
+    req->addQueryItem(QStringLiteral("home"),        object->path+object->fileName); //object->path+object->fileName
+    req->addQueryItem(QStringLiteral("token"),       this->token);
+    req->addQueryItem(QStringLiteral("x-email"),     this->login);
+    req->addQueryItem(QStringLiteral("x-page-id"),   this->x_page_id);
 
     req->exec();
 
@@ -735,16 +728,16 @@ bool MSMailRu::remote_file_trash(MSFSObject *object){
     req->MSsetCookieJar(this->cookies);
 
 
-    req->setRequestUrl("https://cloud.mail.ru/api/v2/file/remove");
-    req->setMethod("post");
+    req->setRequestUrl(QStringLiteral("https://cloud.mail.ru/api/v2/file/remove"));
+    req->setMethod(QStringLiteral("post"));
 
-    req->addQueryItem("api",       "2");
-    req->addQueryItem("build",       this->build);
-    req->addQueryItem("email",       this->login);
-    req->addQueryItem("home",        object->path+object->fileName);
-    req->addQueryItem("token",       this->token);
-    req->addQueryItem("x-email",     this->login);
-    req->addQueryItem("x-page-id",   this->x_page_id);
+    req->addQueryItem(QStringLiteral("api"),       QStringLiteral("2"));
+    req->addQueryItem(QStringLiteral("build"),       this->build);
+    req->addQueryItem(QStringLiteral("email"),       this->login);
+    req->addQueryItem(QStringLiteral("home"),        object->path+object->fileName);
+    req->addQueryItem(QStringLiteral("token"),       this->token);
+    req->addQueryItem(QStringLiteral("x-email"),     this->login);
+    req->addQueryItem(QStringLiteral("x-page-id"),   this->x_page_id);
 
     req->exec();
 
@@ -1052,9 +1045,9 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
     // FORCING UPLOAD OR DOWNLOAD FILES AND FOLDERS
     if(this->getFlag("force")){
 
-        if(this->getOption("force")=="download"){
+        if(this->getOption(QStringLiteral("force"))=="download"){
 
-            qInfo()<<QString("Start downloading in force mode")  ;
+            qInfo()<<QStringLiteral("Start downloading in force mode")  ;
 
             lf=fsObjectList.begin();
 
@@ -1071,7 +1064,7 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(obj.remote.objectType == MSRemoteFSObject::Type::file){
 
-                        qInfo()<< QString(obj.path+obj.fileName +QString(" Forced downloading.") ) ;
+                        qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Forced downloading.") ) ;
 
                         this->remote_file_get(&obj);
                     }
@@ -1081,9 +1074,9 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
         }
         else{
-            if(this->getOption("force")=="upload"){
+            if(this->getOption(QStringLiteral("force"))==QStringLiteral("upload")){
 
-                qInfo()<<QString("Start uploading in force mode")  ;
+                qInfo()<<QStringLiteral("Start uploading in force mode")  ;
 
                 lf=fsObjectList.begin();
 
@@ -1101,7 +1094,7 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                             if(obj.local.objectType == MSLocalFSObject::Type::file){
 
-                                qInfo()<< QString(obj.path+obj.fileName +QString(" Forced uploading.") ) ;
+                                qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Forced uploading.") ) ;
 
                                 this->remote_file_update(&obj);
                             }
@@ -1110,7 +1103,7 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                             if(obj.local.objectType == MSLocalFSObject::Type::file){
 
-                                qInfo()<< QString(obj.path+obj.fileName +QString(" Forced uploading."))  ;
+                                qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Forced uploading."))  ;
 
                                 this->remote_file_insert(&obj);
                             }
@@ -1127,7 +1120,7 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
         }
 
 
-        if(this->getFlag("dryRun")){
+        if(this->getFlag(QStringLiteral("dryRun"))){
             return;
         }
 
@@ -1138,7 +1131,7 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
 
 
-            qInfo()<<QString("Syncronization end")  ;
+            qInfo()<<QStringLiteral("Syncronization end")  ;
 
             return;
     }
@@ -1147,7 +1140,7 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
     // SYNC FILES AND FOLDERS
 
-    qInfo()<<QString("Start syncronization")  ;
+    qInfo()<<QStringLiteral("Start syncronization")  ;
 
     lf=fsObjectList.begin();
 
@@ -1164,7 +1157,7 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
             case MSFSObject::ObjectState::ChangedLocal:
 
-                qInfo()<< QString(obj.path+obj.fileName +QString(" Changed local. Uploading."))  ;
+                qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Changed local. Uploading."))  ;
 
                 this->remote_file_update(&obj);
 
@@ -1174,7 +1167,7 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                 if((obj.local.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                    qInfo()<< QString(obj.path+obj.fileName +QString(" New local. Uploading.") ) ;
+                    qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") ) ;
 
                     this->remote_file_insert(&obj);
 
@@ -1183,14 +1176,14 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qInfo()<< QString(obj.path+obj.fileName +QString(" New local. Uploading.") ) ;
+                        qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") ) ;
 
                         this->remote_file_insert(&obj);
 
                     }
                     else{
 
-                        qInfo()<< QString(obj.path+obj.fileName +QString(" Delete remote. Delete local.") ) ;
+                        qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Delete local.") ) ;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1208,7 +1201,7 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
             case MSFSObject::ObjectState::ChangedRemote:
 
-                qInfo()<< QString(obj.path+obj.fileName +QString(" Changed remote. Downloading.") ) ;
+                qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Changed remote. Downloading.") ) ;
 
                 this->remote_file_get(&obj);
 
@@ -1221,13 +1214,13 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qInfo()<< QString(obj.path+obj.fileName +QString(" Delete local. Deleting remote.") ) ;
+                        qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote.") ) ;
 
                         this->remote_file_trash(&obj);
 
                     }
                     else{
-                        qInfo()<< QString(obj.path+obj.fileName +QString(" New remote. Downloading.") ) ;
+                        qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") ) ;
 
                         this->remote_file_get(&obj);
                     }
@@ -1238,13 +1231,13 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qInfo()<< QString(obj.path+obj.fileName +QString(" Delete local. Deleting remote.") ) ;
+                        qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote.") ) ;
 
                         this->remote_file_trash(&obj);
                     }
                     else{
 
-                        qInfo()<< QString(obj.path+obj.fileName +QString(" New remote. Downloading.") ) ;
+                        qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") ) ;
 
                         this->remote_file_get(&obj);
                     }
@@ -1257,14 +1250,14 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                 if((obj.remote.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                    qInfo()<< QString(obj.path+obj.fileName +QString(" New remote. Downloading.") ) ;
+                    qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") ) ;
 
                     this->remote_file_get(&obj);
 
                     break;
                 }
 
-                qInfo()<< QString(obj.path+obj.fileName +QString(" Delete local. Deleting remote.") ) ;
+                qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote.") ) ;
 
                 this->remote_file_trash(&obj);
 
@@ -1276,12 +1269,12 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qInfo()<< QString(obj.path+obj.fileName +QString(" New local. Uploading.") ) ;
+                        qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") ) ;
 
                         this->remote_file_insert(&obj);
                     }
                     else{
-                        qInfo()<< QString(obj.path+obj.fileName +QString(" Delete remote. Deleting local.") ) ;
+                        qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Deleting local.") ) ;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1296,14 +1289,14 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qInfo()<< QString(obj.path+obj.fileName +QString(" New local. Uploading.") ) ;
+                        qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") ) ;
 
                         this->remote_file_insert(&obj);
 
                     }
                     else{
 
-                        qInfo()<< QString(obj.path+obj.fileName +QString(" Delete remote. Deleting local.") ) ;
+                        qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Deleting local.") ) ;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1325,7 +1318,7 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
     }
 
-    if(this->getFlag("dryRun")){
+    if(this->getFlag(QStringLiteral("dryRun"))){
         return;
     }
 
@@ -1336,7 +1329,7 @@ void MSMailRu::doSync(QHash<QString, MSFSObject> fsObjectList){
 
 
 
-        qInfo()<<QString("Syncronization end") ;
+        qInfo()<<QStringLiteral("Syncronization end") ;
 
 }
 
@@ -1532,7 +1525,7 @@ bool MSMailRu::readRemote(const QString &path, QNetworkCookieJar* cookie)
 
         if(this->providerAuthStatus == false){
 
-            qInfo()<<"Authentication failed. Possibly you need re-auth or login and passwrd is incorrect"  ;
+            qInfo()<<QStringLiteral("Authentication failed. Possibly you need re-auth or login and passwrd is incorrect")  ;
 
             //this->cookies->deleteLater();//delete(this->cookies);
             return providerAuthStatus;
@@ -1550,19 +1543,19 @@ bool MSMailRu::readRemote(const QString &path, QNetworkCookieJar* cookie)
         req->MSsetCookieJar(cookie);
     }
 
-    req->setRequestUrl("https://cloud.mail.ru/api/v2/folder");
-    req->setMethod("get");
+    req->setRequestUrl(QStringLiteral("https://cloud.mail.ru/api/v2/folder"));
+    req->setMethod(QStringLiteral("get"));
 
-    req->addQueryItem("token",       this->token);
-    req->addQueryItem("home",       path);
-    req->addQueryItem("build",       this->build);
-    req->addQueryItem("x-page-id",      this->x_page_id);
-    req->addQueryItem("api",      "2");
-    req->addQueryItem("offset",      "0");
-    req->addQueryItem("limit",      "2000000");
-    req->addQueryItem("email",      this->login);
-    req->addQueryItem("x-email",      this->login);
-    req->addQueryItem("_",      "1433249148810");
+    req->addQueryItem(QStringLiteral("token"),       this->token);
+    req->addQueryItem(QStringLiteral("home"),       path);
+    req->addQueryItem(QStringLiteral("build"),       this->build);
+    req->addQueryItem(QStringLiteral("x-page-id"),      this->x_page_id);
+    req->addQueryItem(QStringLiteral("api"),      QStringLiteral("2"));
+    req->addQueryItem(QStringLiteral("offset"),      QStringLiteral("0"));
+    req->addQueryItem(QStringLiteral("limit"),      QStringLiteral("2000000"));
+    req->addQueryItem(QStringLiteral("email"),      this->login);
+    req->addQueryItem(QStringLiteral("x-email"),      this->login);
+    req->addQueryItem(QStringLiteral("_"),      QStringLiteral("1433249148810"));
 
 
     req->exec();
@@ -1609,7 +1602,7 @@ bool MSMailRu::readRemote(const QString &path, QNetworkCookieJar* cookie)
                 fsObject.fileName=o["name"].toString();
                 fsObject.remote.objectType=MSRemoteFSObject::Type::folder;
 
-                this->readRemote(fsObject.path+fsObject.fileName,0);//req->manager->cookieJar()
+                this->readRemote(fsObject.path+fsObject.fileName,0);//req->manager.cookieJar()
 
             }
             else{
@@ -1652,7 +1645,7 @@ bool MSMailRu::readRemote(const QString &path, QNetworkCookieJar* cookie)
                 }
             }
 
-            this->syncFileList.insert(o["home"].toString(), fsObject);
+            this->syncFileList.insert(o[QStringLiteral("home")].toString(), fsObject);
 
 
         }
@@ -2219,21 +2212,21 @@ bool MSMailRu::directUpload(const QString &url, const QString &remotePath){
     // upload file body to intermediate server and recive confirm hash
 
     req->setRequestUrl(urld); //url "https://cloclo3-upload.cloud.mail.ru/upload/"
-    req->setMethod("post");
+    req->setMethod(QStringLiteral("post"));
 
-    req->addHeader("Content-Type", "multipart/form-data; boundary=----"+QString(bound).toLocal8Bit());
+    req->addHeader(QStringLiteral("Content-Type"), QStringLiteral("multipart/form-data; boundary=----")+QString(bound).toLocal8Bit());
 
-    req->addQueryItem("cloud_domain",       "2");
-    req->addQueryItem("fileapi14785802593646",       "");
+    req->addQueryItem(QStringLiteral("cloud_domain"),       QStringLiteral("2"));
+    req->addQueryItem(QStringLiteral("fileapi14785802593646"),       QStringLiteral(""));
 
-    req->addQueryItem("x-email",      this->login);
+    req->addQueryItem(QStringLiteral("x-email"),      this->login);
 
 
     QByteArray mediaData;
 
-    mediaData.append(QString("------"+bound+"\r\n").toLocal8Bit());
-    mediaData.append(QString("Content-Disposition: form-data; name=\"file\"; filename=\""+object.fileName+"\"\r\n"));
-    mediaData.append(QString("Content-Type: application/octet-stream\r\n\r\n").toLocal8Bit());
+    mediaData.append(QString(QStringLiteral("------")+bound+QStringLiteral("\r\n")).toLocal8Bit());
+    mediaData.append(QString(QStringLiteral("Content-Disposition: form-data; name=\"file\"; filename=\"")+object.fileName+QStringLiteral("\"\r\n")));
+    mediaData.append(QString(QStringLiteral("Content-Type: application/octet-stream\r\n\r\n")).toLocal8Bit());
 
 
     // read file content and put him into request body
@@ -2254,9 +2247,9 @@ bool MSMailRu::directUpload(const QString &url, const QString &remotePath){
 
     file.close();
 
-    mediaData.append(QString("\r\n------"+bound+"--\r\n").toLocal8Bit());
+    mediaData.append(QString(QStringLiteral("\r\n------")+bound+QStringLiteral("--\r\n")).toLocal8Bit());
 
-    req->addHeader("Content-Length",QString::number(mediaData.length()).toLocal8Bit());
+    req->addHeader(QStringLiteral("Content-Length"),QString::number(mediaData.length()).toLocal8Bit());
 
     req->post(mediaData);
 
@@ -2272,7 +2265,7 @@ bool MSMailRu::directUpload(const QString &url, const QString &remotePath){
     QStringList arr=QString(req->readReplyText()).split(';'); // at this point we recieve confirmation hash in arr[0] and size of file in arr[1]
 
 #ifndef CCROSS_LIB
-        this->cookies=(req->manager->cookieJar());
+        this->cookies=(req->manager.cookieJar());
 #else
 
         this->cookies=(req->getCookieJar());
@@ -2287,19 +2280,19 @@ bool MSMailRu::directUpload(const QString &url, const QString &remotePath){
     delete(req_prev);
 
 
-    req->setRequestUrl("https://cloud.mail.ru/api/v2/file/add");
-    req->setMethod("post");
+    req->setRequestUrl(QStringLiteral("https://cloud.mail.ru/api/v2/file/add"));
+    req->setMethod(QStringLiteral("post"));
 
-    req->addQueryItem("api",       "2");
-    req->addQueryItem("build",       this->build);
-    req->addQueryItem("conflict",       "rename"); // api does not contains ignore param CLOUDWEB-5028 (7114 too)
-    req->addQueryItem("email",       this->login);
-    req->addQueryItem("home",       object.path+object.fileName);
-    req->addQueryItem("hash",       arr[0]);
-    req->addQueryItem("size",       arr[1].left(arr[1].length() - 2));
-    req->addQueryItem("token",       this->token);
-    req->addQueryItem("x-email",       this->login);
-    req->addQueryItem("x-page-id",       this->x_page_id);
+    req->addQueryItem(QStringLiteral("api"),       QStringLiteral("2"));
+    req->addQueryItem(QStringLiteral("build"),       this->build);
+    req->addQueryItem(QStringLiteral("conflict"),       QStringLiteral("rename")); // api does not contains ignore param CLOUDWEB-5028 (7114 too)
+    req->addQueryItem(QStringLiteral("email"),       this->login);
+    req->addQueryItem(QStringLiteral("home"),       object.path+object.fileName);
+    req->addQueryItem(QStringLiteral("hash"),       arr[0]);
+    req->addQueryItem(QStringLiteral("size"),       arr[1].left(arr[1].length() - 2));
+    req->addQueryItem(QStringLiteral("token"),       this->token);
+    req->addQueryItem(QStringLiteral("x-email"),       this->login);
+    req->addQueryItem(QStringLiteral("x-page-id"),       this->x_page_id);
 
     req->exec();
 
@@ -2352,10 +2345,10 @@ QString MSMailRu::getInfo(){
 
     req->MSsetCookieJar(this->cookies);
 
-    req->setRequestUrl("https://cloud.mail.ru/api/v2/user/space");
-    req->setMethod("get");
+    req->setRequestUrl(QStringLiteral("https://cloud.mail.ru/api/v2/user/space"));
+    req->setMethod(QStringLiteral("get"));
 
-    req->addQueryItem("token",       this->token);
+    req->addQueryItem(QStringLiteral("token"),       this->token);
 
     req->exec();
 

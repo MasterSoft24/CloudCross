@@ -11,6 +11,8 @@ void MSSyncThread::run(){
         this->provider->threadsRunning->acquire(1);
         this->provider->doSync(this->threadSyncList);
         this->provider->threadsRunning->release(1);
+
+        this->threadSyncList.clear();
     }
     emit finished();
     this->thread()->quit();

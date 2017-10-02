@@ -24,7 +24,6 @@ win32{
 }
 
 
-DEFINES += CCROSS_LIB
 
 
 QT       += network
@@ -98,6 +97,8 @@ unix {
 
 LIBS +=  -lcurl
 
+
+DEFINES += CCROSS_LIB
 
 # DEFINITIONS
 
