@@ -47,7 +47,7 @@ Also, you can control the versioning of files synchronized on Google Drive.
 a CloudCross ebuild may be found in
 [programmador](https://bitbucket.org/programmador/gentoo-overlay/overview) overlay.
 
-For simple including of overlays in Your system
+For simple including of overlays into Your system
 [Layman](https://wiki.gentoo.org/wiki/Layman) may be used:
 
 	layman -a -s programmador
