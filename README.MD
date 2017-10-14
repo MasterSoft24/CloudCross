@@ -23,13 +23,13 @@ Also, you can control the versioning of files synchronized on Google Drive.
 
 	
 	
-For install on deb-based distributions (Debian,Ubuntu,Linux Mint):
+### For install on deb-based distributions (Debian,Ubuntu,Linux Mint):
 
 	sudo apt-get install build-essential qt5-default qtbase5-dev qt5-qmake
 
 
 
-For install on rpm-based distributions (Redhat,CentOS, Fedora, Alt Linux):
+### For install on rpm-based distributions (Redhat,CentOS, Fedora, Alt Linux):
 
 	yum groupinstall 'Development Tools'
 
@@ -37,13 +37,28 @@ For install on rpm-based distributions (Redhat,CentOS, Fedora, Alt Linux):
 
 
 
-For install on  Arch Linux:
+### For install on  Arch Linux:
 
 	pacman -S base-devel qt5-base
 
 
 
-Next,basic install sequence is:
+### For install on Gentoo Linux and hopefully its derivatives (Funtoo, Calculate etc.)
+a CloudCross ebuild may be found in
+[programmador](https://bitbucket.org/programmador/gentoo-overlay/overview) overlay.
+
+For simple including of overlays into Your system
+[Layman](https://wiki.gentoo.org/wiki/Layman) may be used:
+
+	layman -a -s programmador
+
+Now CloudCross should be installable:
+
+	emerge --ask net-misc/cloudcross
+
+
+
+### To build CloudCross from source follow the next sequence:
 
 1. Download archive. 
 2. Unpack it. 
