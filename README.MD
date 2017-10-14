@@ -58,7 +58,7 @@ Now CloudCross should be installable:
 
 
 
-### Next,basic install sequence is:
+### To build CloudCross from source follow the next sequence:
 
 1. Download archive. 
 2. Unpack it. 
