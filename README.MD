@@ -43,6 +43,21 @@ For install on  Arch Linux:
 
 
 
+For install on Gentoo Linux and hopefully its derivatives (Funtoo, Calculate etc.)
+a CloudCross ebuild may be found in
+[programmador](https://bitbucket.org/programmador/gentoo-overlay/overview) overlay.
+
+For simple including of overlays in Your system
+[Layman](https://wiki.gentoo.org/wiki/Layman) may be used:
+
+	layman -a -s programmador
+
+Now CloudCross should be installable:
+
+	emerge --ask net-misc/cloudcross
+
+
+
 Next,basic install sequence is:
 
 1. Download archive. 
