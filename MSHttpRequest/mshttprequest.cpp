@@ -13,7 +13,7 @@ size_t header_callback(char *buffer, size_t size,size_t nitems, void *userdata){
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-MSHttpRequest::MSHttpRequest(QObject *parent) : QObject(parent)
+MSHttpRequest::MSHttpRequest(MSNetworkProxy* proxy = nullptr)
 {
 
     this->dataStreamType = dataStreamTypes::DS_None;
@@ -24,6 +24,10 @@ MSHttpRequest::MSHttpRequest(QObject *parent) : QObject(parent)
     this->cUrlObject->inpFile = nullptr;
     this->cookieJarObject = nullptr;
     this->cUrlObject->replyHeaders.clear();
+
+    if(proxy !=nullptr){
+        this->setProxy(proxy);
+    }
 
 }
 
@@ -41,6 +45,13 @@ MSHttpRequest::~MSHttpRequest(){
     }
 
     delete(this->cUrlObject);
+}
+
+//==============================================================================================
+
+void MSHttpRequest::setProxy(MSNetworkProxy *proxy){
+
+
 }
 
 //==============================================================================================
@@ -130,6 +141,12 @@ void MSHttpRequest::setInputDataStream(QMultiBuffer *data){
     }
 
     return;
+}
+
+//==============================================================================================
+
+QString MSHttpRequest::replyURL(){
+    return this->cUrlObject->replyURL;
 }
 //==============================================================================================
 

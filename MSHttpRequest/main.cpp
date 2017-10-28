@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
 
     QString host = "https://httpbin.org";
-    MSHttpRequest* req;/* = new MSHttpRequest();*/
+    MSHttpRequest* req;/* = new MSHttpRequest(0);*/
 
 
     for(int i=0;i < 10 ;i++){
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     qInfo() << "======================================================"<<endl;
     qInfo() << " Simple GET with 2 params"<<endl;
 
-    req = new MSHttpRequest();
+    req = new MSHttpRequest(0);
     req->setMethod("get");
     req->setRequestUrl(host+"/get");
 
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
     qInfo() << "======================================================"<<endl;
     qInfo() << " Simple GET must return 1024 random bytes as response"<<endl;
 
-    req = new MSHttpRequest();
+    req = new MSHttpRequest(0);
     req->setMethod("get");
     req->setRequestUrl(host+"/bytes/1024");
 
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
     qInfo() << "======================================================"<<endl;
     qInfo() << " Simple GET must write file with random bytes (100K max)"<<endl;
 
-    req = new MSHttpRequest();
+    req = new MSHttpRequest(0);
     req->setMethod("get");
     req->setRequestUrl(host+"/bytes/999999999");
 
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 
     qInfo() << " Simple POST with 2 params"<<endl;
 
-    req = new MSHttpRequest();
+    req = new MSHttpRequest(0);
     req->setMethod("post");
     req->setRequestUrl(host+"/post");
 
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
     qInfo() << "======================================================"<<endl;
     qInfo() << " Simple POST miltipart in QByteArray (for small data)"<<endl;
 
-    req = new MSHttpRequest();
+    req = new MSHttpRequest(0);
     req->setMethod("post");
     req->setRequestUrl(host+"/post");
 
@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
     qInfo() << "======================================================"<<endl;
     qInfo() << " Simple POST with simple payload "<<endl;
 
-    req = new MSHttpRequest();
+    req = new MSHttpRequest(0);
     req->setMethod("post");
     req->setRequestUrl(host+"/post");
 
@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
     qInfo() << "======================================================"<<endl;
     qInfo() << " Simple POST with payload from file  (upload for big data)"<<endl;
 
-    req = new MSHttpRequest();
+    req = new MSHttpRequest(0);
     req->setMethod("post");
     req->setRequestUrl(host+"/post");
 
@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
     qInfo() << "======================================================"<<endl;
     qInfo() << " Simple POST miltipart in QMultiBuffer  (for big data)"<<endl;
 
-    req = new MSHttpRequest();
+    req = new MSHttpRequest(0);
     req->setMethod("post");
     req->setRequestUrl(host+"/post");
 
@@ -310,7 +310,7 @@ int main(int argc, char *argv[])
 
     qInfo() << " Simple PUT with 2 params and small payload"<<endl;
 
-    req = new MSHttpRequest();
+    req = new MSHttpRequest(0);
     req->setMethod("put");
     req->setRequestUrl(host+"/put");
 
@@ -345,7 +345,7 @@ int main(int argc, char *argv[])
 
     qInfo() << " Simple PUT with 2 params and payload from file"<<endl;
 
-    req = new MSHttpRequest();
+    req = new MSHttpRequest(0);
     req->setMethod("put");
     req->setRequestUrl(host+"/put");
 
@@ -379,7 +379,7 @@ int main(int argc, char *argv[])
 
     qInfo() << " Simple DELETE with 2 params "<<endl;
 
-    req = new MSHttpRequest();
+    req = new MSHttpRequest(0);
     req->setMethod("delete");
     req->setRequestUrl(host+"/delete");
 
@@ -414,7 +414,7 @@ int main(int argc, char *argv[])
 
     qInfo() << " Remote set cookie test "<<endl;
 
-    req = new MSHttpRequest();
+    req = new MSHttpRequest(0);
     req->setMethod("get");
     req->setRequestUrl(host+"/cookies/set?cookie_n1=cookie_value1&cookie_n2=cookie_value2");
 
@@ -443,7 +443,7 @@ int main(int argc, char *argv[])
 
     qInfo() << " Remote set cookie test2 (with previously setted cookies) "<<endl;
 
-    req = new MSHttpRequest();
+    req = new MSHttpRequest(0);
     req->setMethod("get");
     req->setRequestUrl(host+"/cookies/set?add_cookie_n1=add_cookie_value1&add_cookie_n2=add_cookie_value2");
 

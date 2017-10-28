@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 
     QByteArray b64(idt.c_str());
 
-    MSHttpRequest* req = new MSHttpRequest();
+    MSHttpRequest* req = new MSHttpRequest(0);
 
     QDataStream ds(QByteArray::fromBase64(b64));
 

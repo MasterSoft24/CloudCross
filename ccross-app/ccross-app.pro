@@ -59,6 +59,7 @@ SOURCES += main.cpp \
 
 
 
+
 HEADERS += \
     include/msrequest.h \
     include/msoptparser.h \
@@ -79,6 +80,7 @@ HEADERS += \
     ../MSHttpRequest/mshttprequest.h \
     ../MSHttpRequest/QtCUrl.h \
     ../MSHttpRequest/msnetworkcookiejar.h \
+    ../MSHttpRequest/msnetworkproxy.h \
 
 
 

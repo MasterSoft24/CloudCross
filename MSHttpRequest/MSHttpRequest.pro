@@ -32,7 +32,8 @@ HEADERS += \
     mshttprequest.h \
     QtCUrl.h \
     qmultibuffer.h \
-    msnetworkcookiejar.h
+    msnetworkcookiejar.h \
+    msnetworkproxy.h
 
 DISTFILES += \
     MSHttpRequest.pri

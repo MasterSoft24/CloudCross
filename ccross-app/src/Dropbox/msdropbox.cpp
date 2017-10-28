@@ -62,7 +62,7 @@ bool MSDropbox::auth(){
     connect(this,SIGNAL(oAuthError(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
 
 
-    MSRequest* req=new MSRequest(this->proxyServer);
+    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     //www.dropbox.com/1/oauth2/authorize?client_id=jqw8z760uh31l92&response_type=code&state=hGDSAGDKJASHDKJHASLKFH
 
@@ -88,7 +88,7 @@ bool MSDropbox::auth(){
     qInfo()<<"-------------------------------------" ;
     qInfo()<< tr("Please go to this URL and confirm application credentials\n") ;
 
-    qInfo() << req->replyURL;
+    qInfo() << req->replyURL();
     qInfo()<<"" ;
 
 
@@ -111,7 +111,7 @@ bool MSDropbox::onAuthFinished(const QString &html, MSCloudProvider *provider){
 
     Q_UNUSED(provider)
 
-    MSRequest* req=new MSRequest(this->proxyServer);
+    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://api.dropboxapi.com/1/oauth2/token");
     req->setMethod("post");
@@ -280,7 +280,7 @@ bool MSDropbox::createHashFromRemote(){
 
     }
 
-    MSRequest* req=new MSRequest(this->proxyServer);
+    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://api.dropboxapi.com/2/files/list_folder");
     req->setMethod("post");
@@ -315,7 +315,7 @@ bool MSDropbox::createHashFromRemote(){
 bool MSDropbox::readRemote(){ //QString parentId,QString currentPath
 
 
-    MSRequest* req=new MSRequest(this->proxyServer);
+    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://api.dropboxapi.com/2/files/list_folder");
     req->setMethod("post");
@@ -429,7 +429,7 @@ bool MSDropbox::readRemote(){ //QString parentId,QString currentPath
 
         if(hasMore){
 
-            MSRequest* req=new MSRequest(this->proxyServer);
+            MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
             req->setRequestUrl("https://api.dropboxapi.com/2/files/list_folder/continue");
             req->setMethod("post");
@@ -1545,14 +1545,14 @@ bool MSDropbox::remote_file_get(MSFSObject* object){
 
     QString id=object->remote.data["id"].toString();
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://content.dropboxapi.com/2/files/download");
     req->setMethod("post");
 
     req->addHeader("Authorization","Bearer "+this->access_token);
     req->addHeader("Dropbox-API-Arg","{\"path\":\""+id+"\"}");
-    req->addHeader("Content-Type",QByteArray()); // this line needed for requests with libcurl version of MSRequest
+    req->addHeader("Content-Type",QByteArray()); // this line needed for requests with libcurl version of MSHttpRequest
 
     QString filePath=this->workPath+object->path+object->fileName;
 
@@ -1561,7 +1561,7 @@ bool MSDropbox::remote_file_get(MSFSObject* object){
     req->post(ba);
 #endif
 #ifndef CCROSS_LIB
-    req->syncDownloadWithPost(filePath,ba);
+    //req->syncDownloadWithPost(filePath,ba); // NEWNEW
 #endif
 
 
@@ -1614,7 +1614,7 @@ bool MSDropbox::remote_file_insert(MSFSObject *object){
 
     // start session ===========
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://content.dropboxapi.com/2/files/upload_session/start");
    // req->setMethod("post");
@@ -1659,7 +1659,7 @@ bool MSDropbox::remote_file_insert(MSFSObject *object){
 
     delete(req);
 
-    req=new MSRequest(this->proxyServer);
+    req=new MSHttpRequest(this->proxyServer);
 
     if( file.size() <= DROPBOX_CHUNK_SIZE){// onepass and finalize uploading
 
@@ -1785,12 +1785,12 @@ bool MSDropbox::remote_file_insert(MSFSObject *object){
 
             if((unsigned long long)cursorPosition > (unsigned long long)fSize - DROPBOX_CHUNK_SIZE){
 
-                req=new MSRequest(this->proxyServer);
+                req=new MSHttpRequest(this->proxyServer);
                 //cursorPosition -= blsz;
                 break;
             }
 
-            req=new MSRequest(this->proxyServer);
+            req=new MSHttpRequest(this->proxyServer);
         }while(true);
 
         // finalize upload
@@ -1887,7 +1887,7 @@ bool MSDropbox::remote_file_update(MSFSObject *object){
 
     // start session ===========
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://content.dropboxapi.com/2/files/upload_session/start");
    // req->setMethod("post");
@@ -1931,7 +1931,7 @@ bool MSDropbox::remote_file_update(MSFSObject *object){
 
     delete(req);
 
-    req=new MSRequest(this->proxyServer);
+    req=new MSHttpRequest(this->proxyServer);
 
     if(file.size() <= DROPBOX_CHUNK_SIZE){// onepass and finalize uploading
 
@@ -2056,12 +2056,12 @@ bool MSDropbox::remote_file_update(MSFSObject *object){
 
             if((unsigned long long)cursorPosition > (unsigned long long)fSize - DROPBOX_CHUNK_SIZE){
 
-                req=new MSRequest(this->proxyServer);
+                req=new MSHttpRequest(this->proxyServer);
                 //cursorPosition -= blsz;
                 break;
             }
 
-            req=new MSRequest(this->proxyServer);
+            req=new MSHttpRequest(this->proxyServer);
 
         }while (true);
 
@@ -2149,7 +2149,7 @@ bool MSDropbox::remote_file_makeFolder(MSFSObject *object){
         return true;
     }
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://api.dropboxapi.com/2/files/create_folder");
 
@@ -2231,7 +2231,7 @@ bool MSDropbox::remote_file_trash(MSFSObject *object){
     }
 
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://api.dropboxapi.com/2/files/delete");
 
@@ -2422,7 +2422,7 @@ bool MSDropbox::directUpload(const QString &url, const QString &remotePath){
 
     // download file into temp file ---------------------------------------------------------------
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     QString tempFileName=this->generateRandom(10);
     QString filePath=this->workPath+"/"+tempFileName;
@@ -2485,7 +2485,7 @@ bool MSDropbox::directUpload(const QString &url, const QString &remotePath){
 
     // start session ===========
 
-    req = new MSRequest(this->proxyServer);
+    req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://content.dropboxapi.com/2/files/upload_session/start");
    // req->setMethod("post");
@@ -2526,7 +2526,7 @@ bool MSDropbox::directUpload(const QString &url, const QString &remotePath){
 
     delete(req);
 
-    req=new MSRequest(this->proxyServer);
+    req=new MSHttpRequest(this->proxyServer);
 
     if(passCount==0){// onepass and finalize uploading
 
@@ -2614,7 +2614,7 @@ bool MSDropbox::directUpload(const QString &url, const QString &remotePath){
             delete(cursor1);
             cursorPosition += DROPBOX_CHUNK_SIZE;
 
-            req=new MSRequest(this->proxyServer);
+            req=new MSHttpRequest(this->proxyServer);
         }
 
         // finalize upload
@@ -2685,14 +2685,14 @@ bool MSDropbox::directUpload(const QString &url, const QString &remotePath){
 QString MSDropbox::getInfo(){
 
 
-    MSRequest *req0 = new MSRequest(this->proxyServer);
+    MSHttpRequest *req0 = new MSHttpRequest(this->proxyServer);
 
     req0->setRequestUrl("https://api.dropboxapi.com/2/users/get_current_account");
     req0->setMethod("post");
 
     req0->addHeader("Authorization",                     "Bearer "+this->access_token);
 
-    req0->notUseContentType=true;
+//    req0->notUseContentType=true;// NEWNEW
 
     req0->exec();
 
@@ -2723,14 +2723,14 @@ QString MSDropbox::getInfo(){
 
 
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://api.dropboxapi.com/2/users/get_space_usage");
     req->setMethod("post");
 
     req->addHeader("Authorization",                     "Bearer "+this->access_token);
 
-    req->notUseContentType=true;
+//    req->notUseContentType=true;// NEWNEW
 
     req->exec();
 

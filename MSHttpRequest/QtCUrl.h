@@ -59,6 +59,7 @@ public:
     QFile* outFile;
     QIODevice* inpFile;
     QString inpFileName;
+    QString replyURL;
 
     QString escape(const QString &str);
     //    QByteArray escape(QByteArray str);

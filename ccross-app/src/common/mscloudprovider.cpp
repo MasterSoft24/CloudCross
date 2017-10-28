@@ -56,6 +56,7 @@ MSCloudProvider::MSCloudProvider(QObject *parent)
     this->proxyServer=0;
 }
 
+//=======================================================================================
 
 bool MSCloudProvider::setProxyServer(const QString &type, const QString &proxy)
 {
@@ -68,20 +69,23 @@ bool MSCloudProvider::setProxyServer(const QString &type, const QString &proxy)
     QString addr=pa[0];
     qint32 port= pa[1].toInt();
 
-    this->proxyServer = new QNetworkProxy();
+//    this->proxyServer = new QNetworkProxy();
+    this->proxyServer = new MSNetworkProxy();
 
     this->proxyServer->setHostName(addr);
     this->proxyServer->setPort(port);
 
     if(type == "http"){
-        this->proxyServer->setType(QNetworkProxy::HttpProxy);
+        this->proxyServer->setType(MSNetworkProxy::HttpProxy);
     }
     if(type == "socks5"){
-        this->proxyServer->setType(QNetworkProxy::Socks5Proxy);
+        this->proxyServer->setType(MSNetworkProxy::Socks5Proxy);
     }
 
     return true;
 }
+
+//=======================================================================================
 
 bool MSCloudProvider::filterServiceFileNames(const QString &path){// return false if input path is service filename
 

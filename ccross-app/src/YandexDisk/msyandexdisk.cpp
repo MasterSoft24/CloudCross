@@ -90,7 +90,7 @@ bool MSYandexDisk::onAuthFinished(const QString &html, MSCloudProvider *provider
 
 Q_UNUSED(provider)
 
-    MSRequest* req=new MSRequest(this->proxyServer);
+    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://oauth.yandex.ru/token");
     req->setMethod("post");
@@ -245,7 +245,7 @@ bool MSYandexDisk::createHashFromRemote(){
 
   //<<<<<<<<  this->readRemote();
 
-    MSRequest* req=new MSRequest(this->proxyServer);
+    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://api.dropboxapi.com/2/files/list_folder");
     req->setMethod("post");
@@ -283,7 +283,7 @@ bool MSYandexDisk::createHashFromRemote(){
 bool MSYandexDisk::readRemote(const QString &currentPath){ //QString parentId,QString currentPath
 
 
-    MSRequest* req=new MSRequest(this->proxyServer);
+    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://cloud-api.yandex.net:443/v1/disk/resources");
     req->setMethod("get");
@@ -398,7 +398,7 @@ bool MSYandexDisk::readRemote(const QString &currentPath){ //QString parentId,QS
         }
 
 
-            MSRequest* req=new MSRequest(this->proxyServer);
+            MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
             req->setRequestUrl("https://cloud-api.yandex.net:443/v1/disk/resources");
             req->setMethod("get");
@@ -1498,7 +1498,7 @@ bool MSYandexDisk::remote_file_get(MSFSObject* object){
         return true;
     }
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://cloud-api.yandex.net/v1/disk/resources/download");
     req->setMethod("get");
@@ -1573,7 +1573,7 @@ bool MSYandexDisk::remote_file_insert(MSFSObject *object){
 
     // get url for uploading ===========
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://cloud-api.yandex.net/v1/disk/resources/upload");
     req->setMethod("get");
@@ -1616,7 +1616,7 @@ bool MSYandexDisk::remote_file_insert(MSFSObject *object){
     QFile file(filePath);
     qint64 fSize=file.size();
 
-    req = new MSRequest(this->proxyServer);
+    req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl(href);
 
@@ -1664,7 +1664,7 @@ bool MSYandexDisk::remote_file_update(MSFSObject *object){
 
     // get url for uploading ===========
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://cloud-api.yandex.net/v1/disk/resources/upload");
     req->setMethod("get");
@@ -1702,7 +1702,7 @@ bool MSYandexDisk::remote_file_update(MSFSObject *object){
     QFile file(filePath);
     qint64 fSize=file.size();
 
-    req = new MSRequest(this->proxyServer);
+    req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl(href);
 
@@ -1740,7 +1740,7 @@ bool MSYandexDisk::remote_file_makeFolder(MSFSObject *object){
         return true;
     }
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://cloud-api.yandex.net/v1/disk/resources");
 
@@ -1792,7 +1792,7 @@ bool MSYandexDisk::remote_file_makeFolder(MSFSObject *object){
 
     delete(req);
 
-    req = new MSRequest(this->proxyServer);
+    req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl(href);
     req->addHeader("Authorization",                     "OAuth "+this->access_token);
@@ -1841,7 +1841,7 @@ bool MSYandexDisk::remote_file_trash(MSFSObject *object){
     }
 
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://cloud-api.yandex.net/v1/disk/resources");
 
@@ -2013,16 +2013,16 @@ void MSYandexDisk::local_removeFolder(const QString &path){
 bool MSYandexDisk::local_writeFileContent(const QString &filePath, const QString &hrefToDownload){
 
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl(hrefToDownload);
 
     req->setMethod("get");
 
 #ifndef CCROSS_LIB
-    req->setQueryForDownload = false; // don't use a query parameters settings in syncDownloadWithGet function
+    //req->setQueryForDownload = false; // don't use a query parameters settings in syncDownloadWithGet function // NEWNEW
 
-    req->syncDownloadWithGet(filePath);
+    //req->syncDownloadWithGet(filePath);//NEWNEW
 #endif
 #ifdef CCROSS_LIB
     req->download(hrefToDownload);
@@ -2060,7 +2060,7 @@ bool MSYandexDisk::directUpload(const QString &url, const QString &remotePath){
 
     // download file into temp file ---------------------------------------------------------------
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     QString filePath=this->workPath+"/"+this->generateRandom(10);
 
@@ -2117,7 +2117,7 @@ bool MSYandexDisk::directUpload(const QString &url, const QString &remotePath){
 
     // get url for uploading ===========
 
-    req = new MSRequest(this->proxyServer);
+    req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://cloud-api.yandex.net/v1/disk/resources/upload");
     req->setMethod("get");
@@ -2156,7 +2156,7 @@ bool MSYandexDisk::directUpload(const QString &url, const QString &remotePath){
     QFile file(filePath);
     qint64 fSize=file.size();
 
-    req = new MSRequest(this->proxyServer);
+    req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl(href);
 
@@ -2194,7 +2194,7 @@ bool MSYandexDisk::directUpload(const QString &url, const QString &remotePath){
 
 QString MSYandexDisk::getInfo(){
 
-    MSRequest *req0 = new MSRequest(this->proxyServer);
+    MSHttpRequest *req0 = new MSHttpRequest(this->proxyServer);
 
     req0->setRequestUrl("https://login.yandex.ru/info");
     req0->setMethod("get");
@@ -2232,7 +2232,7 @@ QString MSYandexDisk::getInfo(){
 
 
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://cloud-api.yandex.net/v1/disk/");
     req->setMethod("get");

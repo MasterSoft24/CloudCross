@@ -10,6 +10,7 @@
 #include "QtCUrl.h"
 #include "msnetworkcookiejar.h"
 #include "qmultibuffer.h"
+#include "msnetworkproxy.h"
 
 class MSHttpRequest : public QObject
 {
@@ -24,11 +25,12 @@ public:
     };
 
 
-    explicit MSHttpRequest(QObject *parent = 0);
+     MSHttpRequest(MSNetworkProxy* proxy);
     ~MSHttpRequest();
 
     QString requestMethod; // get, post, put, post-multipart etc
     QString requestURL;
+
 
     QHash<QString,QString> queryItems;
     QHash<QString,QString> requestHeaders;
@@ -49,6 +51,8 @@ public:
 
     // methods
 
+    void setProxy(MSNetworkProxy* proxy);
+
     bool setMethod(const QString &method);
     void setRequestUrl(const QString &url);
     void addQueryItem(const QString &itemName, const QString &itemValue );
@@ -63,6 +67,7 @@ public:
     void setInputDataStream(QFile* data);
     void setInputDataStream(QMultiBuffer* data);
 
+    QString replyURL();
 
     void MSsetCookieJar(MSNetworkCookieJar *cookie);
     MSNetworkCookieJar *getCookieJar();

@@ -62,7 +62,7 @@ MSMailRu::MSMailRu()
 bool MSMailRu::auth(){
 
 
-    MSHttpRequest* req=new MSHttpRequest(/*this->proxyServer*/);
+    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     //this->cookies=new MSNetworkCookieJar();
 
@@ -289,7 +289,7 @@ QString MSMailRu::remote_dispatcher(const QString &target){
     this->auth();
 
 
-    MSHttpRequest* req=new MSHttpRequest(/*this->proxyServer*/);
+    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     req->MSsetCookieJar(this->cookies);
 
@@ -349,7 +349,7 @@ bool MSMailRu::remote_file_get(MSFSObject *object){
     this->auth();
 
     MSHttpRequest* req_prev;
-    MSHttpRequest* req=new MSHttpRequest(/*this->proxyServer*/);
+    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     req->MSsetCookieJar(this->cookies);
 
@@ -385,7 +385,7 @@ bool MSMailRu::remote_file_get(MSFSObject *object){
     QString serverURL=job[QStringLiteral("body")].toObject()[QStringLiteral("get")].toArray()[0].toObject()[QStringLiteral("url")].toString();
 
 
-        req=new MSHttpRequest(/*this->proxyServer*/);
+        req=new MSHttpRequest(this->proxyServer);
 
         req->MSsetCookieJar(this->cookies);
 
@@ -464,7 +464,7 @@ bool MSMailRu::remote_file_insert(MSFSObject *object, const char *newParameter){
      //url ="https://httpbin.org/anything";
 
      MSHttpRequest* req_prev;
-     MSHttpRequest* req=new MSHttpRequest(/*this->proxyServer*/);
+     MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
      QString bound=QStringLiteral("ccross-data");
 
@@ -549,7 +549,7 @@ bool MSMailRu::remote_file_insert(MSFSObject *object, const char *newParameter){
 
      req_prev=req;
 
-     req=new MSHttpRequest(/*this->proxyServer*/);
+     req=new MSHttpRequest(this->proxyServer);
 
      req->MSsetCookieJar(this->cookies);
 
@@ -663,7 +663,7 @@ bool MSMailRu::remote_file_makeFolder(MSFSObject *object){
 
     this->auth();
 
-    MSHttpRequest* req=new MSHttpRequest(/*this->proxyServer*/);
+    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     req->MSsetCookieJar(this->cookies);
 
@@ -752,7 +752,7 @@ bool MSMailRu::remote_file_trash(MSFSObject *object){
 
     this->auth();
 
-    MSHttpRequest* req=new MSHttpRequest(/*this->proxyServer*/);
+    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     req->MSsetCookieJar(this->cookies);
 
@@ -1566,7 +1566,7 @@ bool MSMailRu::readRemote(const QString &path, MSNetworkCookieJar* cookie)
 
     //MSHttpRequest* req_prev;
 
-    MSHttpRequest* req=new MSHttpRequest(/*this->proxyServer*/);
+    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     if(cookie == NULL){
         req->MSsetCookieJar(this->cookies);
@@ -2185,7 +2185,7 @@ bool MSMailRu::directUpload(const QString &url, const QString &remotePath){
 
     // download file into temp file ---------------------------------------------------------------
 
-    MSHttpRequest *reqd = new MSHttpRequest(/*this->proxyServer*/);
+    MSHttpRequest *reqd = new MSHttpRequest(this->proxyServer);
 
     QString filePath=this->workPath+"/"+this->generateRandom(10);
 
@@ -2243,7 +2243,7 @@ bool MSMailRu::directUpload(const QString &url, const QString &remotePath){
     QString urld=this->remote_dispatcher("upload");
 
     MSHttpRequest* req_prev;
-    MSHttpRequest* req=new MSHttpRequest(/*this->proxyServer*/);
+    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     QString bound="ccross-data";
 
@@ -2313,7 +2313,7 @@ bool MSMailRu::directUpload(const QString &url, const QString &remotePath){
 
     req_prev=req;
 
-    req=new MSHttpRequest(/*this->proxyServer*/);
+    req=new MSHttpRequest(this->proxyServer);
 
     req->MSsetCookieJar(this->cookies);
 
@@ -2382,7 +2382,7 @@ QString MSMailRu::getInfo(){
     this->auth();
 
 
-    MSHttpRequest* req=new MSHttpRequest(/*this->proxyServer*/);
+    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     req->MSsetCookieJar(this->cookies);
 

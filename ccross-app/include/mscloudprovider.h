@@ -61,7 +61,6 @@
 #include "mshttprequest.h"
 
 
-
 class MSCloudProvider : public QObject
 {
 
@@ -75,7 +74,7 @@ private:
 
 public:
 
-    QNetworkProxy* proxyServer;
+    MSNetworkProxy* proxyServer;
 
     QString currentPath;// directory where program was run
     QString workPath;// path set with -p option

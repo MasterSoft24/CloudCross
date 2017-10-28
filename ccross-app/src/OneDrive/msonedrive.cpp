@@ -57,7 +57,7 @@ bool MSOneDrive::remote_file_get(MSFSObject *object){
 
     QString filePath = this->workPath + object->path + object->fileName;
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
 afterReauth:
 
@@ -69,7 +69,7 @@ afterReauth:
 #ifdef CCROSS_LIB
     req->download(object->remote.data["@content.downloadUrl"].toString(), this->workPath + object->path + object->fileName);
 #else
-    req->syncDownloadWithGet(this->workPath + object->path + object->fileName);
+    //req->syncDownloadWithGet(this->workPath + object->path + object->fileName);//NEWNEW
 #endif
 
     QString c = req->readReplyText();
@@ -92,7 +92,7 @@ afterReauth:
         if(req->replyErrorText.contains("Host requires authentication")){
             delete(req);
             this->refreshToken();
-            req = new MSRequest(this->proxyServer);
+            req = new MSHttpRequest(this->proxyServer);
 
             qInfo() << "OneDrive token expired. Refreshing token done. Retry last operation. " ;
 
@@ -106,7 +106,7 @@ afterReauth:
 
 //    //if(id=="")return false; //remove me
 
-//    MSRequest *req = new MSRequest(this->proxyServer);
+//    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
 //    req->setRequestUrl("https://api.onedrive.com/v1.0/drive/items/"+QString(id)+"/content");
 //    req->setMethod("get");
@@ -166,7 +166,7 @@ bool MSOneDrive::remote_file_insert(MSFSObject *object){
 
     // Create an upload session ===========
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
 afterReauth:
 
@@ -186,7 +186,7 @@ afterReauth:
         if(req->replyErrorText.contains("Host requires authentication")){
             delete(req);
             this->refreshToken();
-            req = new MSRequest(this->proxyServer);
+            req = new MSHttpRequest(this->proxyServer);
 
             qInfo() << QString("OneDrive token expired. Refreshing token done. Retry last operation. ") ;
 
@@ -237,7 +237,7 @@ afterReauth:
 
     if(passCount==0){// onepass and finalize uploading
 
-        req = new MSRequest(this->proxyServer);
+        req = new MSHttpRequest(this->proxyServer);
 
 
         req->setRequestUrl(uploadUrl);
@@ -266,7 +266,7 @@ afterReauth:
             if(req->replyErrorText.contains("Host requires authentication")){
                 delete(req);
                 this->refreshToken();
-                req = new MSRequest(this->proxyServer);
+                req = new MSHttpRequest(this->proxyServer);
                 qInfo() << QString("OneDrive token expired. Refreshing token done. Retry last operation. ") ;
 
                 goto afterReauth;
@@ -306,7 +306,7 @@ afterReauth:
 
         do{
 
-            req = new MSRequest(this->proxyServer);
+            req = new MSHttpRequest(this->proxyServer);
             req->setRequestUrl(uploadUrl);
 
             //set upload block size
@@ -351,7 +351,7 @@ afterReauth:
                 if(req->replyErrorText.contains("Host requires authentication")){
                     delete(req);
                     this->refreshToken();
-                    req = new MSRequest(this->proxyServer);
+                    req = new MSHttpRequest(this->proxyServer);
                     qInfo() << QString("OneDrive token expired. Refreshing token done. Retry last operation. ") ;
                     goto afterReauth;
                 }
@@ -430,7 +430,7 @@ bool MSOneDrive::remote_file_makeFolder(MSFSObject *object){
         return true;
     }
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     if(object->path == "/"){
 
@@ -500,7 +500,7 @@ bool MSOneDrive::remote_file_trash(MSFSObject *object){
         return true;
     }
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     if(object->path == "/"){
 
@@ -780,7 +780,7 @@ bool MSOneDrive::refreshToken(){
 //    this->access_token=this->token;
 //    return true;
 
-    MSRequest* req=new MSRequest(this->proxyServer);
+    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://login.live.com/oauth20_token.srf");
     req->setMethod("post");
@@ -1409,7 +1409,7 @@ bool MSOneDrive::readRemote(const QString &rootPath){
 
 
 
-    MSRequest* req=new MSRequest(this->proxyServer);
+    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     if(rootPath != ""){
         req->setRequestUrl("https://api.onedrive.com/v1.0/drive/root:"+rootPath+":/children");
@@ -1499,7 +1499,7 @@ bool MSOneDrive::readRemote(const QString &rootPath){
 
         if(hasMore){
 
-            MSRequest* mrq=new MSRequest();
+            MSHttpRequest* mrq=new MSHttpRequest(this->proxyServer);
 
             QString nl=job["@odata.nextLink"].toString();
 
@@ -1983,7 +1983,7 @@ bool MSOneDrive::directUpload(const QString &url, const QString &remotePath){
 Q_UNUSED(remotePath);
 Q_UNUSED(url);
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://api.onedrive.com/v1.0/drive/items/D7C91EBFD21F9BA0!510/children");
     req->setMethod("post");
@@ -2023,7 +2023,7 @@ Q_UNUSED(url);
 
 QString MSOneDrive::getInfo(){
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://api.onedrive.com/v1.0/drive");
     req->setMethod("get");
@@ -2063,7 +2063,7 @@ bool MSOneDrive::onAuthFinished(const QString &html, MSCloudProvider *provider){
 
     Q_UNUSED(provider);
 
-        MSRequest* req=new MSRequest(this->proxyServer);
+        MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
         req->setRequestUrl("https://login.live.com/oauth20_token.srf");
         req->setMethod("post");

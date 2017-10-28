@@ -36,7 +36,7 @@
 
 
 #include "msgoogledrive.h"
-#include "include/msrequest.h"
+
 #include <QDebug>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -65,7 +65,7 @@ bool MSGoogleDrive::auth(){
     connect(this,SIGNAL(oAuthError(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
 
 
-    MSRequest* req=new MSRequest(this->proxyServer);
+    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://accounts.google.com/o/oauth2/v2/auth");
     req->setMethod("get");
@@ -98,7 +98,7 @@ bool MSGoogleDrive::auth(){
     qInfo()<<"-------------------------------------" ;
     qInfo()<< tr("Please go to this URL and confirm application credentials\n") ;
 
-    qInfo() << req->replyURL;
+    qInfo() << req->replyURL();
     qInfo()<<"" ;
 ;
 
@@ -120,7 +120,7 @@ bool MSGoogleDrive::onAuthFinished(const QString &html, MSCloudProvider *provide
 
 Q_UNUSED(provider)
 
-    MSRequest* req=new MSRequest(this->proxyServer);
+    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     //req->setRequestUrl("https://accounts.google.com/o/oauth2/token"); // old path
     req->setRequestUrl("https://www.googleapis.com/oauth2/v4/token");
@@ -270,7 +270,7 @@ void MSGoogleDrive::saveStateFile(){
 
 bool MSGoogleDrive::refreshToken(){
 
-    MSRequest* req=new MSRequest(this->proxyServer);
+    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://www.googleapis.com/oauth2/v4/token");
     req->setMethod("post");
@@ -323,7 +323,7 @@ bool MSGoogleDrive::refreshToken(){
 
 bool MSGoogleDrive::createHashFromRemote(){
 
-    MSRequest* req=new MSRequest(this->proxyServer);
+    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://www.googleapis.com/drive/v2/files");
     req->setMethod("get");
@@ -359,7 +359,7 @@ bool MSGoogleDrive::createHashFromRemote(){
 
         delete(req);
 
-        req=new MSRequest(this->proxyServer);
+        req=new MSHttpRequest(this->proxyServer);
 
 
         req->setRequestUrl("https://www.googleapis.com/drive/v2/files");
@@ -432,7 +432,7 @@ bool MSGoogleDrive::createHashFromRemote(){
 QString MSGoogleDrive::getRoot(){
 
 
-    MSRequest* req = new MSRequest(this->proxyServer);
+    MSHttpRequest* req = new MSHttpRequest(this->proxyServer);
     req->setRequestUrl("https://www.googleapis.com/drive/v2/files/root/children");
     req->setMethod("get");
 
@@ -1776,7 +1776,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 //    QList<QString> lst;
 
 //    while(count > 0){
-//        MSRequest *req = new MSRequest(this->proxyServer);
+//        MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
 //        req->setRequestUrl("https://www.googleapis.com/drive/v2/files/generateIds");
 //        req->setMethod("get");
@@ -1846,7 +1846,7 @@ bool MSGoogleDrive::remote_file_get(MSFSObject* object){
 
     QString id = object->remote.extraData.find("id").value().toString();// object->remote.data["id"].toString();
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
 afterReauth:
 
@@ -1936,8 +1936,12 @@ afterReauth:
     QString filePath=this->workPath+object->path+object->fileName;
 
 #ifndef CCROSS_LIB
-    req->url->setQuery(*req->query);
-    req->syncDownloadWithGet(filePath);
+//    req->url->setQuery(*req->query);
+//    req->syncDownloadWithGet(filePath);
+
+    req->setOutputFile(filePath);
+    req->exec();
+
 #endif
 #ifdef CCROSS_LIB
     req->exec();
@@ -1948,7 +1952,7 @@ afterReauth:
     if(req->replyErrorText.contains("Host requires authentication")){
         delete(req);
         this->refreshToken();
-        req = new MSRequest(this->proxyServer);
+        req = new MSHttpRequest(this->proxyServer);
 
         qInfo() << "GoogleDrive token expired. Refreshing token done. Retry last operation. " ;
 
@@ -1993,7 +1997,7 @@ bool MSGoogleDrive::remote_file_insert(MSFSObject *object){
         parentID= po.remote.extraData.find("id").value().toString();//  po.remote.data["id"].toString();
     }
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
 afterReauth:
 
@@ -2113,14 +2117,16 @@ afterReauth:
 
     req->addHeader("Content-Length",QString::number(metaData.length()).toLocal8Bit());
 
-    req->post(metaData);
+    //req->post(metaData);
+    req->setInputDataStream(metaData);
+    req->exec();
 
     if(!req->replyOK()){
 
         if(req->replyErrorText.contains("Host requires authentication")){
             delete(req);
             this->refreshToken();
-            req = new MSRequest(this->proxyServer);
+            req = new MSHttpRequest(this->proxyServer);
 
             qInfo() << "GoogleDrive token expired. Refreshing token done. Retry last operation. " ;
 
@@ -2155,7 +2161,7 @@ afterReauth:
 
         do{
 
-            req = new MSRequest(this->proxyServer);
+            req = new MSHttpRequest(this->proxyServer);
             req->setRequestUrl(uploadURI);
 
             //set upload block size
@@ -2181,7 +2187,7 @@ afterReauth:
 
             //----------------------
 #ifndef CCROSS_LIB
-            req->query = new QUrlQuery(req->url->query());// extract query string and setup his separately
+            //req->query = new QUrlQuery(req->url->query());// extract query string and setup his separately
 #endif
             req->addHeader("Authorization",                     QString("Bearer "+this->access_token));
             req->addHeader("Content-Length",                    QString::number(blsz));
@@ -2190,7 +2196,9 @@ afterReauth:
             //file.seek(cursorPosition);
             mb.seek(cursorPosition);
 
-            req->put(&mb);
+            req->setInputDataStream(&mb);
+            req->exec();
+//            req->put(&mb);
 //            req->put(file.read(GOOGLEDRIVE_CHUNK_SIZE));
 
             if(!req->replyOK()){
@@ -2199,7 +2207,7 @@ afterReauth:
                     // delete(req->query);
                     delete(req);
                     this->refreshToken();
-                    req = new MSRequest(this->proxyServer);
+                    req = new MSHttpRequest(this->proxyServer);
 
                     qInfo() << "GoogleDrive token expired. Refreshing token done. Retry last operation. " ;
 
@@ -2229,19 +2237,21 @@ afterReauth:
     }
     else{// single-shot upload
 
-        req = new MSRequest(this->proxyServer);
+        req = new MSHttpRequest(this->proxyServer);
 
 afterReauth2:
 
         req->setRequestUrl(uploadURI);
 #ifndef CCROSS_LIB
-        req->query = new QUrlQuery(req->url->query());// extract query string and setup his separately
+        //req->query = new QUrlQuery(req->url->query());// extract query string and setup his separately
 #endif
         req->addHeader("Authorization",                     QString("Bearer "+this->access_token));
         req->addHeader("Content-Type",                      object->local.mimeType);
         req->addHeader("Content-Length",                      QString::number(file.size()));
 
-        req->put(&mb);
+        req->setInputDataStream(&mb);
+        req->exec();
+//        req->put(&mb);
 //        req->put(file.readAll());
 
         file.close();
@@ -2252,7 +2262,7 @@ afterReauth2:
                 // delete(req->query);
                 delete(req);
                 this->refreshToken();
-                req = new MSRequest(this->proxyServer);
+                req = new MSHttpRequest(this->proxyServer);
 
                 qInfo() << "GoogleDrive token expired. Refreshing token done. Retry last operation. " ;
 
@@ -2311,10 +2321,10 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
     }
 
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://www.googleapis.com/upload/drive/v2/files/"+id);
-    req->setMethod("post");
+    req->setMethod("put");
 
     req->addHeader("Authorization",                     QString("Bearer "+this->access_token));
     req->addHeader("Content-Type",                      QString("application/json; charset=UTF-8"));
@@ -2385,7 +2395,9 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
 
     req->addHeader("Content-Length",QString::number(metaData.length()).toLocal8Bit());
 
-    req->put(metaData);
+    req->setInputDataStream(metaData);
+    req->exec();
+//    req->put(metaData);
 
 
     if(!req->replyOK()){
@@ -2413,7 +2425,7 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
 
         do{
 
-            req = new MSRequest(this->proxyServer);
+            req = new MSHttpRequest(this->proxyServer);
             req->setRequestUrl(uploadURI);
 
             //set upload block size
@@ -2439,7 +2451,7 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
 
             //----------------------
 #ifndef CCROSS_LIB
-            req->query = new QUrlQuery(req->url->query());// extract query string and setup his separately
+            //req->query = new QUrlQuery(req->url->query());// extract query string and setup his separately
 #endif
 
             QString tst = "bytes "+QString::number(cursorPosition).toLocal8Bit()+"-"+QString::number(cursorPosition+blsz-1).toLocal8Bit()+"/"+QString::number(fSize).toLocal8Bit();
@@ -2473,11 +2485,11 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
     }
     else{// single-shot upload
 
-        req = new MSRequest(this->proxyServer);
+        req = new MSHttpRequest(this->proxyServer);
 
         req->setRequestUrl(uploadURI);
 #ifndef CCROSS_LIB
-        req->query = new QUrlQuery(req->url->query());// extract query string and setup his separately
+        //req->query = new QUrlQuery(req->url->query());// extract query string and setup his separately
 #endif
         req->addHeader("Authorization",                     QString("Bearer "+this->access_token));
         req->addHeader("Content-Type",                      object->local.mimeType);
@@ -2519,7 +2531,7 @@ bool MSGoogleDrive::remote_file_makeFolder(MSFSObject *object){
         return true;
     }
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://www.googleapis.com/drive/v2/files");
     req->setMethod("post");
@@ -2590,7 +2602,7 @@ bool MSGoogleDrive::remote_file_makeFolder(MSFSObject *object, const QString &pa
         return true;
     }
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://www.googleapis.com/drive/v2/files");
     req->setMethod("post");
@@ -2673,7 +2685,7 @@ bool MSGoogleDrive::remote_file_trash(MSFSObject *object){
 
     QString id = object->remote.extraData.find("id").value().toString();//   object->remote.data["id"].toString();
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://www.googleapis.com/drive/v2/files/"+id+"/trash");
     req->setMethod("post");
@@ -2908,7 +2920,7 @@ bool MSGoogleDrive::directUpload(const QString &url, const QString &remotePath){
 
     // download file into temp file ---------------------------------------------------------------
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     QString tempFileName=this->generateRandom(10);
     QString filePath=this->workPath+"/"+tempFileName;
@@ -3028,7 +3040,7 @@ bool MSGoogleDrive::directUpload(const QString &url, const QString &remotePath){
         parentID = po.remote.extraData.find("id").value().toString();//   po.remote.data["id"].toString();
     }
 
-    req = new MSRequest(this->proxyServer);
+    req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://www.googleapis.com/upload/drive/v2/files");
     req->setMethod("post");
@@ -3136,7 +3148,7 @@ QString MSGoogleDrive::getInfo(){
 //        "usageInDriveTrash": long
 //      }
 
-    MSRequest *req = new MSRequest(this->proxyServer);
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl("https://www.googleapis.com/drive/v3/about");
     req->setMethod("get");

@@ -310,6 +310,19 @@ QString QtCUrl::exec( Options &opt) {
     //const char* reply = buffer().data();
     // QByteArray(_buffer.data(), _buffer.size());
 
+    char* rurl=nullptr;
+    curl_easy_getinfo(_curl, CURLINFO_REDIRECT_URL, &rurl);
+
+    if(rurl != nullptr){
+        this->replyURL = QString(rurl);
+
+        free(rurl);
+    }
+
+
+
+
+
     if (_textCodec) {
         //        curl_easy_cleanup(_curl);
         //return _textCodec->toUnicode(reply);
