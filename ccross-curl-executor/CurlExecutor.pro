@@ -2,31 +2,31 @@ QT += core network
 QT -= gui
 
 
-include(../MSHttpRequest.pri)
+include(../MSHttpRequest/MSHttpRequest.pri)
 LIBS +=  -lcurl
 
 
 CONFIG += c++11
 
-TARGET = CurlExecutor
+TARGET = ccross-curl
 CONFIG += console
 CONFIG -= app_bundle
 
 TEMPLATE = app
 
 SOURCES += main.cpp \
-    ../mshttprequest.cpp \
-    ../QtCUrl.cpp \
-    ../msnetworkcookiejar.cpp \
-    ../qmultibuffer.cpp
+    ../MSHttpRequest/mshttprequest.cpp \
+    ../MSHttpRequest/QtCUrl.cpp \
+    ../MSHttpRequest/msnetworkcookiejar.cpp \
+    ../MSHttpRequest/qmultibuffer.cpp
 
 
 
 HEADERS += \
-    ../mshttprequest.h \
-    ../QtCUrl.h \
-    ../msnetworkcookiejar.h \
-    ../qmultibuffer.h
+    ../MSHttpRequest/mshttprequest.h \
+    ../MSHttpRequest/QtCUrl.h \
+    ../MSHttpRequest/msnetworkcookiejar.h \
+    ../MSHttpRequest/qmultibuffer.h
 
 
 # The following define makes your compiler emit warnings if you use

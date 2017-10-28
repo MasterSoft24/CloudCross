@@ -2,5 +2,7 @@ TEMPLATE = subdirs
 
 
 SUBDIRS = MSHttpRequest/MSHttpRequest.pro \
-        ccross/ccross.pro \
+        ccross-app/ccross-app.pro \
+        ccross-curl-executor/CurlExecutor.pro
+
 
