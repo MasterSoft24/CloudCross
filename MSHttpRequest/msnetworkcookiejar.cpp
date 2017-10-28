@@ -47,7 +47,7 @@
 MSNetworkCookieJar::MSNetworkCookieJar(QObject *parent) : QObject(parent)
 {
 
-    this->cookieFile = new QTemporaryFile("cclib");
+    this->cookieFile = new QTemporaryFile(QDir::tempPath()+"/cclib");
     this->cookieFile->setAutoRemove(true);
     this->cookieFile->open();
 

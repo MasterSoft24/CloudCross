@@ -1025,7 +1025,7 @@ void MSHttpRequest::exec(){
 //        connect(exe, SIGNAL(readyReadStandardOutput()), this, SLOT(readExecutorOutput()));
         connect(exe, SIGNAL(finished(int)), this, SLOT(readExecutorOutput()));
 
-        exe->start("./CurlExecutor",p);
+        exe->start("ccross-curl",p);
 
         Q_PID exe_pid = exe->pid();
         if(exe_pid <= 0){

@@ -9,6 +9,7 @@
 #include <QObject>
 #include <QTemporaryFile>
 #include <QDebug>
+#include <QDir>
 
 class MSNetworkCookieJar : public QObject
 {
