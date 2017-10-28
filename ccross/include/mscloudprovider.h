@@ -150,7 +150,7 @@ public:
 //    virtual void                        filelist_populateChanges(QHash<QString,MSFSObject> changedFSObjectList)=0;
 
 
-    bool local_writeFileContent(const QString &filePath, MSRequest *req);
+    bool local_writeFileContent(const QString &filePath, MSHttpRequest *req);
 
 
     void local_createDirectory(const QString &path);

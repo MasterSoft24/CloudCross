@@ -25,6 +25,8 @@
 #define QTCURL_H
 
 #include <curl/curl.h>
+#include "pthread.h"
+
 #include <QHash>
 #include <QVariant>
 #include <QLinkedList>
@@ -32,19 +34,21 @@
 #include <QIODevice>
 #include <QList>
 #include <QPair>
+#include <QFile>
 class QTextCodec;
 
 
 //Q_DECLARE_METATYPE(QByteArray*)
 
-class QtCUrl {
+class QtCUrl /*: public QObject*/
+{
+//    Q_OBJECT
 public:
     typedef QHash<CURLoption, QVariant> Options;
     typedef QHashIterator<CURLoption, QVariant> OptionsIterator;
-    typedef int (*WriterPtr)(char*, size_t, size_t, std::string*);
 
+    typedef int (*WriterPtr)(char*, size_t, size_t, void*);
     // Changes for a CloudCross MSRequest class
-
     typedef size_t (*ReaderPtr)(void*, size_t , size_t , void*);
     typedef size_t (*HeaderPtr)(char*, size_t ,size_t, void*);
 
@@ -52,54 +56,58 @@ public:
     Options requestOptions;
 
     QList<QPair<QByteArray,QByteArray>> replyHeaders;
+    QFile* outFile;
+    QIODevice* inpFile;
+    QString inpFileName;
 
-    QString escape(QString str);
+    QString escape(const QString &str);
     //    QByteArray escape(QByteArray str);
 
      HeaderPtr headerFunction;
 
-    class Code {
-    public:
-        Code(CURLcode code = CURLE_OK): _code(code) {}
-        QString text() { return curl_easy_strerror(_code); }
-        inline CURLcode code() { return _code; }
-        inline bool isOk() { return _code == CURLE_OK; }
+        class Code {
+        public:
+            Code(CURLcode code = CURLE_OK): _code(code) {}
+            QString text() { return curl_easy_strerror(_code); }
+            inline CURLcode code() { return _code; }
+            inline bool isOk() { return _code == CURLE_OK; }
+            CURLcode _code;
+        private:
 
-
-
-
-
-    private:
-        CURLcode _code;
-    };
+        };
 
     QtCUrl();
     virtual ~QtCUrl();
 
-    QString exec(Options& opt);
+    QString exec(Options &opt);
     QString exec();
 
     QByteArray buffer() const {
         return QByteArray(_buffer.data(), _buffer.size());
     }
     inline Code lastError() { return _lastCode; }
-    QString errorBuffer() { return _errorBuffer; }
+    QString errorBuffer() { return (char*)(&_errorBuffer[0]); }
     void setTextCodec(const char* codecName);
     void setTextCodec(QTextCodec* codec);
 
+    std::string _buffer;
+    char*  _errorBuffer;
+    Code _lastCode;
 
+    CURL* _curl;
 
 protected:
     void setOptions(Options& opt);
 
 private:
-    CURL* _curl;
-    char* _errorBuffer;
-    std::string _buffer;
+
+
+   struct curl_slist *slist;
+
 
     QByteArray replyBuffer;
 
-    Code _lastCode;
+
     QTextCodec* _textCodec;
     QLinkedList<curl_slist*> _slist;
 

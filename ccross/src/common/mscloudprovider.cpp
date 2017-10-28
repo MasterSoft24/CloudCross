@@ -327,7 +327,7 @@ QString MSCloudProvider::getOption(const QString &optionName){
 
 
 
-bool MSCloudProvider::local_writeFileContent(const QString &filePath, MSRequest* req){
+bool MSCloudProvider::local_writeFileContent(const QString &filePath, MSHttpRequest* req){
 
     if(req->replyError!= QNetworkReply::NetworkError::NoError){
         qStdOut()<< "Request error. ";

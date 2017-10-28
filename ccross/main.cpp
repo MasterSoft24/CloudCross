@@ -527,6 +527,8 @@ void authMailru(MSProvidersPool* providers,QString login,QString password){
     else{
        qInfo() << "Authentication failed"<<endl;
     }
+
+    delete(mrp->cookies);
 }
 
 
@@ -581,16 +583,19 @@ void syncMailru(MSProvidersPool* providers){
 
     providers->addProvider(mrp);
     if(! providers->loadTokenFile("MailRu")){
+        delete(mrp->cookies);
         exit(0);
     }
 
     if(!providers->refreshToken("MailRu")){
         qInfo()<<"Unauthorized access. Aborted."<<endl;
+        delete(mrp->cookies);
         exit(0);
     }
 
     mrp->createSyncFileList();
 
+    delete(mrp->cookies);
 }
 
 
@@ -602,11 +607,13 @@ void infoMailru(MSProvidersPool* providers){
 
     providers->addProvider(dbp,true);
     if(!providers->loadTokenFile("MailRu")){
+        delete(dbp->cookies);
         return ;
     }
 
     if(! providers->refreshToken("MailRu")){
 
+        delete(dbp->cookies);
         qInfo()<< "Unauthorized client"<<endl;
        return;
     }
@@ -617,6 +624,7 @@ void infoMailru(MSProvidersPool* providers){
     if(info == "false"){
 
         qInfo()<< "Error getting cloud information " <<endl;
+        delete(dbp->cookies);
         return;
     }
 
@@ -632,6 +640,7 @@ void infoMailru(MSProvidersPool* providers){
     qInfo()<< "" << endl << "total: "<< (uint64_t)total/1000<<" GB" <<endl << "usage: "<< (uint64_t)usage/1000<<" GB"  << endl << "free: "<< (uint64_t)free/1000<<" GB"  <<endl;
 
 
+    delete(dbp->cookies);
 }
 
 
@@ -958,15 +967,15 @@ int main(int argc, char *argv[])
 //    }
 
 
-    MSRequest* req=new MSRequest();
-    req->setRequestUrl("http://cloudcross.mastersoft24.ru/stat");
-    req->setMethod("get");
-    req->addQueryItem("os",            OS);
-    req->addQueryItem("distr",         DISTR);
-    req->addQueryItem("platform",      PLATFORM);
-    req->addQueryItem("aaid",          AAID);
+//    MSRequest* req=new MSRequest();
+//    req->setRequestUrl("http://cloudcross.mastersoft24.ru/stat");
+//    req->setMethod("get");
+//    req->addQueryItem("os",            OS);
+//    req->addQueryItem("distr",         DISTR);
+//    req->addQueryItem("platform",      PLATFORM);
+//    req->addQueryItem("aaid",          AAID);
 
-    req->exec();
+//    req->exec();
 
 
 //    QTextCodec *russian =QTextCodec::codecForName("unicode");

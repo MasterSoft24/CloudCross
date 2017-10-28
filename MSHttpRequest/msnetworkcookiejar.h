@@ -8,6 +8,7 @@
 
 #include <QObject>
 #include <QTemporaryFile>
+#include <QDebug>
 
 class MSNetworkCookieJar : public QObject
 {
@@ -15,17 +16,27 @@ class MSNetworkCookieJar : public QObject
 
 private:
 
-    QTemporaryFile* cookieFile;
+
 
 public:
 
     QString name;
+    QTemporaryFile* cookieFile;
 
     explicit MSNetworkCookieJar(QObject *parent = 0);
+
     QString getFileName();
     ~MSNetworkCookieJar();
 
     bool isCookieRemoved();
+
+    MSNetworkCookieJar& operator =(const MSNetworkCookieJar &c){
+
+        this->cookieFile = c.cookieFile;
+        this->name = c.name;
+
+        return *this;
+    }
 
 signals:
 

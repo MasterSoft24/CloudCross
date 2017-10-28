@@ -56,6 +56,8 @@ MSNetworkCookieJar::MSNetworkCookieJar(QObject *parent) : QObject(parent)
 
 }
 
+
+
 QString MSNetworkCookieJar::getFileName(){
     return this->cookieFile->fileName();
 }
@@ -66,6 +68,7 @@ MSNetworkCookieJar::~MSNetworkCookieJar(){
     this->cookieFile->remove();
     delete(this->cookieFile);
     this->cookieFile = nullptr;
+
 }
 
 bool MSNetworkCookieJar::isCookieRemoved(){
@@ -76,3 +79,5 @@ bool MSNetworkCookieJar::isCookieRemoved(){
         return false;
     }
 }
+
+//MSNetworkCookieJar MSNetworkCookieJar::operator =(MSNetworkCookieJar c)

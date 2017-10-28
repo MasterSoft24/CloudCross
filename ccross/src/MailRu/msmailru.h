@@ -50,7 +50,7 @@
 #include <sys/time.h>
 
 #ifdef CCROSS_LIB
-#define QNetworkCookieJar MSNetworkCookieJar
+#define MSNetworkCookieJar MSNetworkCookieJar
 //#define manager->cookieJar "getCookieJar"
 #endif
 #include <QNetworkCookieJar>
@@ -123,7 +123,7 @@ public:
 
 
     bool createHashFromRemote();
-    bool readRemote(const QString &path, QNetworkCookieJar *cookie);//QString parentId,QString currentPath
+    bool readRemote(const QString &path, MSNetworkCookieJar *cookie);//QString parentId,QString currentPath
     bool _readRemote(const QString &rootPath);
     bool readLocal(const QString &path);
     bool readLocalSingle(const QString &path);
@@ -153,7 +153,7 @@ public:
     QString x_email;
     QString api;
 
-    QNetworkCookieJar* cookies;
+    MSNetworkCookieJar *cookies;
 
 
 public slots:
