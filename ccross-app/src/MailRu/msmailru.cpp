@@ -37,6 +37,7 @@
 
 #include "msmailru.h"
 
+#include <utime.h> // for macOS
 
 #include <QJsonDocument>
 #include <QJsonObject>

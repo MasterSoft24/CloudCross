@@ -32,6 +32,7 @@
 */
 #include "msonedrive.h"
 
+#include <utime.h> // for macOS
 
 //#define qInfo qInfo
 //#define endl ""

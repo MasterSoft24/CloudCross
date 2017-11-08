@@ -36,6 +36,8 @@
 
 #include "msdropbox.h"
 
+#include <utime.h> // for macOS
+
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
