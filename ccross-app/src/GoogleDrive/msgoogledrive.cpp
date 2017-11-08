@@ -376,7 +376,14 @@ bool MSGoogleDrive::createHashFromRemote(){
         req->setMethod(QStringLiteral("get"));
 
         req->addQueryItem(QStringLiteral("access_token"),           this->access_token);
-        req->addQueryItem(QStringLiteral("maxResults"),           QStringLiteral("1000"));
+
+        if(this->getFlag("lowMemory")){
+            req->addQueryItem(QStringLiteral("maxResults"),           QStringLiteral("100"));
+        }
+        else{
+            req->addQueryItem(QStringLiteral("maxResults"),           QStringLiteral("1000"));
+        }
+
         req->addQueryItem(QStringLiteral("q"), QStringLiteral("trashed=false"));
 
         QString nextPageToken=job[QStringLiteral("nextPageToken")].toString();

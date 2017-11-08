@@ -2,6 +2,7 @@
 
 ### v1.4.1
 - New option --filter-type was added.
+- New option --low-memory added. 
 - .include and .exclude files can contains now a regular expressions in Perl style or a wildcards. (thanks to [@futuarmo](https://github.com/futuarmo))
 - Closed few issues #27, #26, #24, #14, #15, #22, #21
 - Added a multi-threaded uploading/downloading. This feature can de avoid by --single-thread option.

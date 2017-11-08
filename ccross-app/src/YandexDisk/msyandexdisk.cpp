@@ -300,7 +300,15 @@ bool MSYandexDisk::readRemote(const QString &currentPath){ //QString parentId,QS
     req->addHeader(QStringLiteral("Authorization"),                     QStringLiteral("OAuth ")+this->access_token);
     req->addHeader(QStringLiteral("Content-Type"),                      QStringLiteral("application/json; charset=UTF-8"));
 
-    req->addQueryItem(QStringLiteral("limit"),          QStringLiteral("1000000"));
+
+    if(this->getFlag("lowMemory")){
+        req->addQueryItem(QStringLiteral("limit"),      QStringLiteral("500"));
+    }
+    else{
+        req->addQueryItem(QStringLiteral("limit"),      QStringLiteral("1000000"));
+    }
+
+
     req->addQueryItem(QStringLiteral("offset"),          QStringLiteral("0"));
     req->addQueryItem(QStringLiteral("path"),          currentPath);
 
@@ -415,7 +423,14 @@ bool MSYandexDisk::readRemote(const QString &currentPath){ //QString parentId,QS
             req->addHeader(QStringLiteral("Authorization"),                     QStringLiteral("OAuth ")+this->access_token);
             req->addHeader(QStringLiteral("Content-Type"),                      QStringLiteral("application/json; charset=UTF-8"));
 
-            req->addQueryItem(QStringLiteral("limit"),          QStringLiteral("1000000"));
+
+            if(this->getFlag("lowMemory")){
+                req->addQueryItem(QStringLiteral("limit"),      QStringLiteral("500"));
+            }
+            else{
+                req->addQueryItem(QStringLiteral("limit"),      QStringLiteral("1000000"));
+            }
+
             req->addQueryItem(QStringLiteral("offset"),          QString::number(entries.size()));
             req->addQueryItem(QStringLiteral("path"),          currentPath);
 

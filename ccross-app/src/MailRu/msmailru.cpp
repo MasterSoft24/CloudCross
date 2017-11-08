@@ -1585,7 +1585,15 @@ bool MSMailRu::readRemote(const QString &path, MSNetworkCookieJar* cookie)
     req->addQueryItem(QStringLiteral("x-page-id"),      this->x_page_id);
     req->addQueryItem(QStringLiteral("api"),      QStringLiteral("2"));
     req->addQueryItem(QStringLiteral("offset"),      QStringLiteral("0"));
-    req->addQueryItem(QStringLiteral("limit"),      QStringLiteral("2000000"));
+
+
+    if(this->getFlag("lowMemory")){
+        req->addQueryItem(QStringLiteral("limit"),      QStringLiteral("500"));
+    }
+    else{
+        req->addQueryItem(QStringLiteral("limit"),      QStringLiteral("2000000"));
+    }
+
     req->addQueryItem(QStringLiteral("email"),      this->login);
     req->addQueryItem(QStringLiteral("x-email"),      this->login);
     req->addQueryItem(QStringLiteral("_"),      QStringLiteral("1433249148810"));

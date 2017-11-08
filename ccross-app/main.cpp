@@ -134,6 +134,9 @@ void printHelp(){
     qInfo()<< QObject::tr("   --filter-type              Filter type for .include and .exclude files. Can be set to \"regexp\" or \"wildcard\". "
                             "                              Ignored if it set in files") <<endl;
     qInfo()<< QObject::tr("   --single-thread            Run as single threaded") <<endl;
+
+    qInfo()<< QObject::tr("   --low-memory               Reduce memory utilization during reading a remote file list. Using of this"
+                          "                              option may do increase of synchronization time ") <<endl;
 }
 
 
@@ -1020,6 +1023,9 @@ int main(int argc, char *argv[])
 
     parser->insertOption(21,"--single-thread");
 
+    parser->insertOption(22,"--low-memory");
+
+
     //...............
 
     parser->parse(opts);
@@ -1500,6 +1506,11 @@ int main(int argc, char *argv[])
         case 21: // --single-thread
 
             providers->setFlag("singleThread",true);
+            break;
+
+        case 22: // --low-memory
+
+            providers->setFlag("lowMemory",true);
             break;
 
         default: // syn execute without any params by default

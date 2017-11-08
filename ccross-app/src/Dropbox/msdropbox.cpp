@@ -343,6 +343,10 @@ bool MSDropbox::readRemote(){ //QString parentId,QString currentPath
     d.insert(QStringLiteral("include_media_info"),false);
     d.insert(QStringLiteral("include_deleted"),false);
 
+    if(this->getFlag("lowMemory")){
+        d.insert(QStringLiteral("limit"),500);
+    }
+
 
     QByteArray metaData;
 
