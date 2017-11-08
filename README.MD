@@ -1,4 +1,4 @@
-#The CloudCross Project
+# The CloudCross Project
 
 ## Current version: 1.4.1-rc2
 Release date: **2017-11-09**
