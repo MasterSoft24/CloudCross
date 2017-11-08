@@ -99,6 +99,13 @@ bool MSDropbox::auth(){
     connect(this, SIGNAL(providerAuthComplete()), &loop, SLOT(quit()));
     loop.exec();
 
+    if(!this->providerAuthStatus){
+        qInfo() << "Code was not received. Some browsers handle redirect incorrectly. If it this case please copy a value of \"code\" parameter to the terminal and press enter "<< endl;
+        QTextStream s(stdin);
+        QString code =s.readLine();
+        this->onAuthFinished(code,this);
+
+    }
 
     return true;
 
@@ -111,6 +118,9 @@ bool MSDropbox::onAuthFinished(const QString &html, MSCloudProvider *provider){
 
     Q_UNUSED(provider)
 
+    QString code = html.trimmed();
+
+
     MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl(QStringLiteral("https://api.dropboxapi.com/1/oauth2/token"));
@@ -118,7 +128,7 @@ bool MSDropbox::onAuthFinished(const QString &html, MSCloudProvider *provider){
 
     req->addQueryItem(QStringLiteral("client_id"),          QStringLiteral("jqw8z760uh31l92"));
     req->addQueryItem(QStringLiteral("client_secret"),      QStringLiteral("eeuwcu3kzqrbl9j"));
-    req->addQueryItem(QStringLiteral("code"),               html.trimmed());
+    req->addQueryItem(QStringLiteral("code"),               code);
     req->addQueryItem(QStringLiteral("grant_type"),         QStringLiteral("authorization_code"));
     req->addQueryItem(QStringLiteral("redirect_uri"),           QStringLiteral("http://127.0.0.1:1973"));
 

@@ -78,6 +78,13 @@ bool MSYandexDisk::auth(){
     connect(this, SIGNAL(providerAuthComplete()), &loop, SLOT(quit()));
     loop.exec();
 
+    if(!this->providerAuthStatus){
+        qInfo() << "Code was not received. Some browsers handle redirect incorrectly. If it this case please copy a value of \"code\" parameter to the terminal and press enter "<< endl;
+        QTextStream s(stdin);
+        QString code =s.readLine();
+        this->onAuthFinished(code,this);
+
+    }
 
     return true;
 
@@ -1862,7 +1869,7 @@ bool MSYandexDisk::remote_file_trash(MSFSObject *object){
 
     req->addHeader(QStringLiteral("Authorization"),                     QStringLiteral("OAuth ")+this->access_token);
     //req->addHeader("Content-Type",                      QString("application/json; charset=UTF-8"));
-    req->addQueryItem(QStringLiteral("path"),                           object->path+object->fileName);
+    req->addQueryItem(QStringLiteral("path"),                           QUrl::toPercentEncoding(object->path+object->fileName));
 
     req->exec();
 //    req->deleteResource();

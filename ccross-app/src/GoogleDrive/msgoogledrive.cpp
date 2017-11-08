@@ -108,6 +108,13 @@ bool MSGoogleDrive::auth(){
     connect(this, SIGNAL(providerAuthComplete()), &loop, SLOT(quit()));
     loop.exec();
 
+    if(!this->providerAuthStatus){
+        qInfo() << "Code was not received. Some browsers handle redirect incorrectly. If it this case please copy a value of \"code\" parameter to the terminal and press enter "<< endl;
+        QTextStream s(stdin);
+        QString code =s.readLine();
+        this->onAuthFinished(code,this);
+
+    }
 
     return true;
 

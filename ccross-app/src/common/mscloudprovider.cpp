@@ -415,9 +415,10 @@ QString MSCloudProvider::generateRandom(int count){
 void MSCloudProvider::onIncomingConnection(){
 
 
-    this->oauthListenerSocket=this->oauthListener->nextPendingConnection();
+    this->oauthListenerSocket = this->oauthListener->nextPendingConnection();
     //QHostAddress pa=this->oauthListenerSocket->co;
     connect(this->oauthListenerSocket,SIGNAL(readyRead()),this, SLOT(onDataRecieved()));
+
 }
 
 
@@ -428,11 +429,12 @@ void MSCloudProvider::onDataRecieved(){
         os.setAutoDetectUnicode(true);
 
        // qDebug() << this->oauthListenerSocket->readAll()+"\n\r";
-        QString c=this->oauthListenerSocket->readLine();
-
+        QString c=this->oauthListenerSocket->readAll();//readLine();
 
         int cb=c.indexOf("code=");
         int ce=0;
+
+
         QString code;
 
         if(cb != -1){
@@ -452,11 +454,12 @@ void MSCloudProvider::onDataRecieved(){
         }
         else{
 
-	    this->oauthListenerSocket->close();
+            this->oauthListenerSocket->close();
 
-	    this->stopListener();
+            this->stopListener();
 
             emit oAuthError("",this);
+
         }
 
 
@@ -476,6 +479,7 @@ bool MSCloudProvider::stopListener(){
 
     //this->oauthListener->pauseAccepting();
     this->oauthListener->close();
+    delete(this->oauthListener);
     return true;
 }
 

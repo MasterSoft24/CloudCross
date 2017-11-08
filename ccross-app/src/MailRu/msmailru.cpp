@@ -1579,7 +1579,7 @@ bool MSMailRu::readRemote(const QString &path, MSNetworkCookieJar* cookie)
     req->setMethod(QStringLiteral("get"));
 
     req->addQueryItem(QStringLiteral("token"),       this->token);
-    req->addQueryItem(QStringLiteral("home"),       path);
+    req->addQueryItem(QStringLiteral("home"),       QUrl::toPercentEncoding(path));
     req->addQueryItem(QStringLiteral("build"),       this->build);
     req->addQueryItem(QStringLiteral("x-page-id"),      this->x_page_id);
     req->addQueryItem(QStringLiteral("api"),      QStringLiteral("2"));
