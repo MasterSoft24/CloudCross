@@ -37,6 +37,7 @@
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QJsonArray>
+#include <QTextCodec>
 
 #include <sys/types.h>
 #include <utime.h>

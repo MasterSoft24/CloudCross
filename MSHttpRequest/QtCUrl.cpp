@@ -31,7 +31,7 @@
 #include <QStringList>
 
 
-#define QTCURL_DEBUG
+//#define QTCURL_DEBUG
 
 CURLcode curlGlobalInit() {
     return curl_global_init(CURL_GLOBAL_ALL);
@@ -47,6 +47,7 @@ int writer(char* data, size_t size, size_t nmemb, void* userdata) {
     if(curlPtr->outFile != nullptr){
 
         out = curlPtr->outFile->write(data, size * nmemb);
+        out = size * nmemb;
     }
     else{
 
@@ -62,7 +63,7 @@ int writer(char* data, size_t size, size_t nmemb, void* userdata) {
 
 size_t header(char* buffer, size_t size,size_t nitems, void* userdata){
 
-    return nitems * size;
+    //return nitems * size;
 
     if(userdata == nullptr){
         return nitems * size;
@@ -93,22 +94,65 @@ size_t header(char* buffer, size_t size,size_t nitems, void* userdata){
 size_t reader(char* buffer, size_t size,size_t nitems, void* userdata){
 
     QtCUrl* curlPtr = (QtCUrl*)userdata;
+
     qint64 out = 0;
+    qint64 realCount = 0;
+
+    qint64 fsz = curlPtr->inpFile->size();
+    qint64 pos = curlPtr->inpFile->pos();
+
+//    qInfo()<<"POS is "<<pos;
+
+    if(curlPtr->payloadChunkSize == 0){ // if the file will be processed as a single piece
+
+        if( pos + (size * nitems) > fsz){
+            realCount = fsz - pos;
+        }
+        else{
+            realCount = size * nitems;
+        }
+
+    }
+    else{ // if the file splitted by chunks
+
+        qint64 relPos = pos-curlPtr->payloadFilePosition; //position relative of chunk beginning
+
+        if( relPos + (size * nitems) > curlPtr->payloadChunkSize){
+            realCount = curlPtr->payloadChunkSize - relPos;
+        }
+        else{
+            realCount = size * nitems;
+        }
+
+
+    }
+
+    if(realCount <= 0 ){
+        return 0;
+    }
+
 
     if(curlPtr->inpFile != nullptr){
 
-        out = curlPtr->inpFile->read(buffer,size * nitems);
+//        if(curlPtr->payloadChunkSize != 0){
 
+//            if(ppp >= curlPtr->payloadChunkSize){
+//                return 0;
+//            }
+//        }
+
+        out = curlPtr->inpFile->read(buffer,realCount);
+//        out = size * nitems;
     }
-    else{
+//    else{
 
-        return 0/*size * nitems*/;
-    }
+//        return 0/*size * nitems*/;
+//    }
 
 
-    if(out == -1){
-        return 0;
-    }
+//    if(out == -1){
+//        return 0;
+//    }
     return out;
 
 }
@@ -142,11 +186,14 @@ QtCUrl::QtCUrl(): _textCodec(0) {
     //static CURLcode __global = curlGlobalInit();
     //Q_UNUSED(__global)
 
+    this->payloadChunkSize =0;
+    this->payloadFilePosition =0;
 
     _curl = curl_easy_init();
 //    _errorBuffer = new char[CURL_ERROR_SIZE];
     _errorBuffer = (char*)malloc(CURL_ERROR_SIZE);
 
+    _replyURL = nullptr;
     //slist = nullptr;
 }
 
@@ -185,90 +232,17 @@ QtCUrl::~QtCUrl() {
 
 
         value.clear();
-
-//        switch (value.type()) {
-//        case QVariant::Bool:
-//        case QVariant::Int: {
-////            int val = value.toInt();
-////            curl_easy_setopt(_curl, i.key(), val);
-////            break;
-//        }
-//        case QVariant::ByteArray: {
-////            QByteArray ba = value.toByteArray();
-////            curl_easy_setopt(_curl, i.key(), ba.constData());
-////            break;
-//        }
-//        case QVariant::Url: {
-////            QByteArray ba = value.toUrl().toEncoded();
-////            curl_easy_setopt(_curl, i.key(), ba.constData());
-////            break;
-//        }
-//        case QVariant::String: {
-////            std::string str = value.toString().toStdString();
-////            curl_easy_setopt(_curl, i.key(), str.c_str());
-////            break;
-//        }
-//        case QVariant::ULongLong: {
-////            qulonglong val = value.toULongLong();
-////            curl_easy_setopt(_curl, i.key(), (void*) val);
-////            break;
-//        }
-//        case QVariant::StringList: {
-////            struct curl_slist *slist = NULL;
-////            foreach (const QString &tmp, value.toStringList()) {
-////                slist = curl_slist_append(slist, tmp.toUtf8().data());
-////            }
-////            _slist.append(slist);
-////            curl_easy_setopt(_curl, i.key(), slist);
-//            value.clear();
-//            break;
-//        }
-//        default:
-//            const QString typeName = value.typeName();
-
-//            if (typeName == "QtCUrl::WriterPtr") {
-////                curl_easy_setopt(_curl, i.key(), value.value<WriterPtr>());
-//            }
-//            else if (typeName == "QtCUrl::HeaderPtr") {
-////                curl_easy_setopt(_curl, i.key(), value.value<HeaderPtr>());
-//            }
-//            else if (typeName == "QtCUrl::ReaderPtr") {
-////                curl_easy_setopt(_curl, i.key(), value.value<ReaderPtr>());
-//            }
-//            else if (typeName == "QtCurl*") {
-////                curl_easy_setopt(_curl, i.key(), value.value<QtCUrl*>());
-//            }
-//            else if (typeName == "std::string*") {
-////                curl_easy_setopt(_curl, i.key(), value.value<std::string*>());
-//            }
-//            else if (typeName == "char*") {
-//                curl_free( value.value<char*>());
-////                curl_easy_setopt(_curl, i.key(), value.value<char*>());
-//            }
-//            else if (typeName == "void*") {
-////                curl_easy_setopt(_curl, i.key(), value.value<char*>());
-//            }
-//            else if (typeName == "QIODevice*") {
-////                curl_easy_setopt(_curl, i.key(), value.value<QIODevice*>());
-//            }
-//            else if (typeName == "qlonglong") {
-////                curl_easy_setopt(_curl, i.key(), value.value<qlonglong>());
-//            }
-//            else {
-//                qDebug() << "[QtCUrl] Unsupported option type: " << typeName;
-//            }
-
-//        }
-
-
     }
 
     _buffer.clear();
-    requestOptions.clear();
+    //requestOptions.clear();
     replyHeaders.clear();
+    if(_replyURL != nullptr){
+        curl_free(_replyURL);
+    }
    //
 
-    curl_easy_reset(_curl);
+    //curl_easy_reset(_curl);
     curl_easy_cleanup(_curl);
 //    delete[] _errorBuffer;
     free(_errorBuffer);
@@ -293,10 +267,15 @@ QString QtCUrl::exec( Options &opt) {
     //
     if(this->outFile != nullptr){
         this->outFile->open(QIODevice::WriteOnly);
+
     }
 
     if(this->inpFile != nullptr){
         this->inpFile->open(QIODevice::ReadOnly);
+
+        if(this->payloadChunkSize != 0){
+            this->inpFile->seek(this->payloadFilePosition);
+        }
     }
 
 
@@ -310,13 +289,14 @@ QString QtCUrl::exec( Options &opt) {
     //const char* reply = buffer().data();
     // QByteArray(_buffer.data(), _buffer.size());
 
-    char* rurl=nullptr;
-    curl_easy_getinfo(_curl, CURLINFO_REDIRECT_URL, &rurl);
 
-    if(rurl != nullptr){
-        this->replyURL = QString(rurl);
+    curl_easy_getinfo(_curl, CURLINFO_EFFECTIVE_URL, &_replyURL);
 
-        free(rurl);
+    if(_replyURL != nullptr){
+        this->replyURL = QString(_replyURL);
+    }
+    else{
+        this->replyURL = "NO_EFFECIVE_URL";
     }
 
 
@@ -352,8 +332,13 @@ QString QtCUrl::exec(){
 
 void QtCUrl::setOptions(Options& opt) {
     Options defaults;
-    defaults[CURLOPT_FAILONERROR] = true;
+//    defaults[CURLOPT_FAILONERROR] = true;
     defaults[CURLOPT_ERRORBUFFER].setValue(_errorBuffer);
+
+    defaults[CURLOPT_SSL_VERIFYHOST].setValue(false);
+    defaults[CURLOPT_SSL_VERIFYPEER].setValue(false);
+
+    defaults[CURLOPT_MAXREDIRS].setValue(-1);
 
     defaults[CURLOPT_WRITEFUNCTION].setValue(&writer);
 

@@ -53,7 +53,15 @@ int main(int argc, char *argv[])
     qInfo() << "======================================================"<<endl;
     qInfo() << " Simple GET with 2 params"<<endl;
 
-    req = new MSHttpRequest(0);
+    MSNetworkProxy* proxy = new MSNetworkProxy();
+
+    proxy->setHostName( "70.44.216.252");
+    proxy->setPort(40656);
+    proxy->setType( MSNetworkProxy::ProxyType::Socks5Proxy);
+
+
+
+    req = new MSHttpRequest(proxy);
     req->setMethod("get");
     req->setRequestUrl(host+"/get");
 
@@ -64,7 +72,7 @@ int main(int argc, char *argv[])
     req->addQueryItem("q_par2","2");
 
 #ifdef USE_EXECUTOR
-    req->exec();
+    req->get();
 #else
     req->get();
 #endif

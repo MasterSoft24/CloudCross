@@ -67,7 +67,7 @@ public:
     bool remote_file_generateIDs(int count);
     // create folder on remote
     bool remote_file_makeFolder(MSFSObject* object);
-    bool remote_file_makeFolder(MSFSObject* object,const QString &parentID);
+    bool remote_file_makeFolder(MSFSObject* object,const QString &parentID/*, const char *newParameter = "id"*/);
     // trash file or folder on remote
     bool remote_file_trash(MSFSObject* object);
     // create directory on remote, recursively if nesessary

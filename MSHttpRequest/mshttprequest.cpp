@@ -25,6 +25,10 @@ MSHttpRequest::MSHttpRequest(MSNetworkProxy* proxy = nullptr)
     this->cookieJarObject = nullptr;
     this->cUrlObject->replyHeaders.clear();
 
+    this->proxy = nullptr;
+
+    this->cUrlObject->payloadChunkSize =0;
+
     if(proxy !=nullptr){
         this->setProxy(proxy);
     }
@@ -44,6 +48,7 @@ MSHttpRequest::~MSHttpRequest(){
         //delete(this->cookieJarObject);
     }
 
+
     delete(this->cUrlObject);
 }
 
@@ -51,14 +56,26 @@ MSHttpRequest::~MSHttpRequest(){
 
 void MSHttpRequest::setProxy(MSNetworkProxy *proxy){
 
+    cUrlObject->requestOptions[CURLOPT_PROXY] = (proxy->getProxyString());
+    this->proxy = proxy;
+}
 
+//==============================================================================================
+
+void MSHttpRequest::disableProxy(){
+
+     if(cUrlObject->requestOptions.find(CURLOPT_PROXY) != cUrlObject->requestOptions.end()){
+         cUrlObject->requestOptions.remove(CURLOPT_PROXY);
+
+         this->proxy = nullptr;
+     }
 }
 
 //==============================================================================================
 
 bool MSHttpRequest::setMethod(const QString &method){
 
-    if((method.toLower() == QStringLiteral("post"))||(method.toLower() == QStringLiteral("get"))||(method.toLower() == QStringLiteral("put"))){
+    if((method.toLower() == QStringLiteral("post"))||(method.toLower() == QStringLiteral("get"))||(method.toLower() == QStringLiteral("put"))||(method.toLower() == QStringLiteral("delete"))){
         this->requestMethod=method.toUpper();
         return true;
     }
@@ -66,6 +83,14 @@ bool MSHttpRequest::setMethod(const QString &method){
         return false;
     }
 }
+
+//==============================================================================================
+
+void MSHttpRequest::setPayloadChunkData(qint64 size, quint64 pos){
+    this->cUrlObject->payloadChunkSize = size;
+    this->cUrlObject->payloadFilePosition = pos;
+}
+
 //==============================================================================================
 
 void MSHttpRequest::setRequestUrl(const QString &url){
@@ -92,9 +117,19 @@ void MSHttpRequest::addHeader(const QByteArray &headerName, const QByteArray &he
 }
 //==============================================================================================
 
-QString MSHttpRequest::getReplyHeader(const QByteArray &headerName)
-{
+QString MSHttpRequest::getReplyHeader(const QByteArray &headerName){
 
+    QList<QPair<QByteArray,QByteArray>> hl = this->cUrlObject->replyHeaders;
+
+    for(int i=0;i<hl.size();i++){
+
+        if(hl[i].first == headerName){
+
+            return hl[i].second;
+        }
+    }
+
+    return QString();
 }
 //==============================================================================================
 
@@ -133,7 +168,7 @@ void MSHttpRequest::setInputDataStream(QMultiBuffer *data){
             this->dataStreamMultiBuffer.append(QPair<dataStreamTypes,QByteArray>(dataStreamTypes::DS_ByteArray,b));
         }
         else{
-            QFile* f = qvariant_cast<QFile*> (data->items[1].slot);
+            QFile* f = qvariant_cast<QFile*> (data->items[i].slot);
             this->dataStreamMultiBuffer.append(QPair<dataStreamTypes,QByteArray>(dataStreamTypes::DS_File,f->fileName().toStdString().c_str()));
         }
 
@@ -275,6 +310,7 @@ void MSHttpRequest::post(const QByteArray &data){
                 QByteArray collect = /*pr.toLocal8Bit() +*/ data;
 
 
+
                 cUrlObject->requestOptions[CURLOPT_POSTFIELDS] = collect;
                 cUrlObject->requestOptions[CURLOPT_POSTFIELDSIZE] = collect.size();
 
@@ -413,7 +449,14 @@ void MSHttpRequest::post(QIODevice *data){
 
                 cUrlObject->requestOptions[CURLOPT_POST] = 1;
                 cUrlObject->requestOptions[CURLOPT_READDATA] = (qlonglong)(this->cUrlObject);
-                cUrlObject->requestOptions[CURLOPT_INFILESIZE] = data->size();
+
+                if(this->cUrlObject->payloadChunkSize != 0){
+                    cUrlObject->requestOptions[CURLOPT_INFILESIZE_LARGE] = this->cUrlObject->payloadChunkSize;
+                }
+                else{
+                    cUrlObject->requestOptions[CURLOPT_INFILESIZE_LARGE] = data->size();
+                }
+
                 cUrlObject->inpFile = data;
 
 //                cUrlObject->requestOptions[CURLOPT_POSTFIELDS] = collect;
@@ -436,14 +479,30 @@ void MSHttpRequest::post(QIODevice *data){
                     }
                     p += i.key()+"="+ /*cUrlObject->escape*/(i.value());
                 }
-                cUrlObject->requestOptions[CURLOPT_URL] = (this->requestURL.toLocal8Bit()+"?"+p.toLocal8Bit());
+
+
+                if(p == QStringLiteral("")){
+                    cUrlObject->requestOptions[CURLOPT_URL] = this->requestURL.toLocal8Bit();
+                }
+                else{
+                    cUrlObject->requestOptions[CURLOPT_URL] = (this->requestURL.toLocal8Bit()+"?"+p.toLocal8Bit());
+                }
+
                 //__________
 
 //                QByteArray collect = /*pr.toLocal8Bit() +*/ data;
 
                 cUrlObject->requestOptions[CURLOPT_POST] = 1;
+                cUrlObject->requestOptions[CURLOPT_UPLOAD] = 1;
                 cUrlObject->requestOptions[CURLOPT_READDATA] = (qlonglong)(this->cUrlObject);
-                cUrlObject->requestOptions[CURLOPT_INFILESIZE] = data->size();
+
+                if(this->cUrlObject->payloadChunkSize != 0){
+                    cUrlObject->requestOptions[CURLOPT_INFILESIZE_LARGE].setValue(this->cUrlObject->payloadChunkSize);// = this->payloadChunkSize;
+                }
+                else{
+                    cUrlObject->requestOptions[CURLOPT_INFILESIZE_LARGE].setValue(data->size());// = data->size();
+                }
+//                cUrlObject->requestOptions[CURLOPT_INFILESIZE] = data->size();
                 cUrlObject->inpFile = data;
 
 //                cUrlObject->requestOptions[CURLOPT_POSTFIELDS] = collect;
@@ -454,6 +513,8 @@ void MSHttpRequest::post(QIODevice *data){
 
         }
     }
+
+
 
     // set request headers
     if(this->requestHeaders.size() > 0){
@@ -523,7 +584,7 @@ void MSHttpRequest::put(const QByteArray &data){
             if( p != ""){
                 p += "&";
             }
-            p += i.key()+"="+ cUrlObject->escape(i.value());
+            p += i.key()+"="+ /*cUrlObject->escape*/(i.value());
         }
 
 //        if(this->requestMethod.toUpper() == "POST"){
@@ -771,14 +832,28 @@ void MSHttpRequest::put(QIODevice *data){
                     }
                     p += i.key()+"="+ /*cUrlObject->escape*/(i.value());
                 }
-                cUrlObject->requestOptions[CURLOPT_URL] = (this->requestURL.toLocal8Bit()+"?"+p.toLocal8Bit());
+
+                if(p == QStringLiteral("")){
+                    cUrlObject->requestOptions[CURLOPT_URL] = this->requestURL.toLocal8Bit();
+                }
+                else{
+                    cUrlObject->requestOptions[CURLOPT_URL] = (this->requestURL.toLocal8Bit()+"?"+p.toLocal8Bit());
+                }
+
+
                 //__________
 
 //                QByteArray collect = /*pr.toLocal8Bit() +*/ data;
 
                 cUrlObject->requestOptions[CURLOPT_PUT] = 1;
                 cUrlObject->requestOptions[CURLOPT_READDATA] = (qlonglong)(this->cUrlObject);
-                cUrlObject->requestOptions[CURLOPT_INFILESIZE] = data->size();
+                if(this->cUrlObject->payloadChunkSize != 0){
+                    cUrlObject->requestOptions[CURLOPT_INFILESIZE_LARGE] = this->cUrlObject->payloadChunkSize;
+                }
+                else{
+                    cUrlObject->requestOptions[CURLOPT_INFILESIZE_LARGE] = data->size();
+                }
+
                 cUrlObject->inpFile = data;
 
 //                cUrlObject->requestOptions[CURLOPT_POSTFIELDS] = collect;
@@ -857,11 +932,17 @@ void MSHttpRequest::deleteResource(){
         }
         p += i.key()+"="+ /*cUrlObject->escape*/(i.value());
     }
-    cUrlObject->requestOptions[CURLOPT_URL] = (this->requestURL.toLocal8Bit()+"?"+p.toLocal8Bit());
+
+    if(p!= ""){
+        cUrlObject->requestOptions[CURLOPT_URL] = (this->requestURL.toLocal8Bit()+"?"+p.toLocal8Bit());
+    }
+    else{
+        cUrlObject->requestOptions[CURLOPT_URL] = this->requestURL.toLocal8Bit();
+    }
 
 
-    cUrlObject->requestOptions[CURLOPT_POSTFIELDS] = "";
-    cUrlObject->requestOptions[CURLOPT_POSTFIELDSIZE] = 0;
+//    cUrlObject->requestOptions[CURLOPT_POSTFIELDS] = "";
+//    cUrlObject->requestOptions[CURLOPT_POSTFIELDSIZE] = 0;
 
     // set request headers
     if(this->requestHeaders.size() > 0){
@@ -930,7 +1011,7 @@ void MSHttpRequest::get(){
             if( p != ""){
                 p += "&";
             }
-            p += i.key()+"="+ cUrlObject->escape(i.value());
+            p += i.key()+"="+ /*cUrlObject->escape*/(i.value());
         }
 
         cUrlObject->requestOptions[CURLOPT_URL] = this->requestURL.toLocal8Bit() + "?" + p.toLocal8Bit();//toUrlEncoded(this->requestURL.toLocal8Bit())+"?" + toUrlEncoded(p.toLocal8Bit());
@@ -958,7 +1039,7 @@ void MSHttpRequest::get(){
         cUrlObject->requestOptions[CURLOPT_HTTPHEADER] = h;
     }
 
-    this->cUrlObject->requestOptions[CURLOPT_FOLLOWLOCATION] = 1;
+    this->cUrlObject->requestOptions[CURLOPT_FOLLOWLOCATION] = true;
 
 
     QString r = this->cUrlObject->exec();
@@ -996,12 +1077,31 @@ void MSHttpRequest::exec(){
     ds << this->queryItems;
     ds << this->requestHeaders;
 
-    if(this->cookieJarObject == nullptr){
-        ds << "NO_COOKIE";
+    ds << this->cUrlObject->payloadChunkSize;
+    ds << this->cUrlObject->payloadFilePosition;
+
+    if( this->proxy != nullptr){
+        QString pst = this->proxy->getProxyString();
+        ds << this->proxy->getProxyString().toLocal8Bit();
     }
     else{
+        ds << QByteArray("NO_PROXY");
+    }
+
+    if(this->cookieJarObject == nullptr){
+        ds << QByteArray("NO_COOKIE");
+    }
+    else{
+
         this->cookieJarObject->cookieFile->seek(0);
-        ds << this->cookieJarObject->cookieFile->readAll();
+        QByteArray cba = this->cookieJarObject->cookieFile->readAll();
+        if(cba.size() == 0){
+            ds << QByteArray("EMPTY_COOKIE");
+        }
+        else{
+            ds << cba;
+        }
+
     }
 
     if(this->cUrlObject->outFile == nullptr){
@@ -1047,7 +1147,7 @@ void MSHttpRequest::exec(){
         Q_PID exe_pid = exe->pid();
         if(exe_pid <= 0){
 
-            // do something for not executor found cause
+            // to do something for not executor found cause
         }
 
 //qInfo() << d.toBase64();
@@ -1140,9 +1240,13 @@ void MSHttpRequest::readExecutorOutput(){ // read data from CurlExecutor and pla
     this->cUrlObject->_errorBuffer = (char*) malloc(ebsz);
     memcpy(this->cUrlObject->_errorBuffer, e.data(),ebsz);
 
+    QByteArray ru;
+    ds >> ru;
+    this->cUrlObject->replyURL=QString(ru);
+
     QByteArray cookie;
     ds >> cookie;
-    if((QString(cookie) != "NO_COOKIE")&&(QString(cookie) != "")){
+    if((QString(cookie) != "NO_COOKIE")&&(QString(cookie) != "")&&(this->cookieJarObject != nullptr)){
 
         // set cookie object
         int y =9999;

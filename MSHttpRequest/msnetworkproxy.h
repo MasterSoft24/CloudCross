@@ -26,6 +26,7 @@ public:
     QString proxyAddr;
     QString proxyPort;
 
+
     MSNetworkProxy(){
 
     }
@@ -36,7 +37,43 @@ public:
 
     QString getProxyString(){
 
-        return this->proxyType + "://" + this->proxyAddr + ":" + this->proxyPort;
+        if(this->proxyAddr != ""){
+            return this->proxyType + "://" + this->proxyAddr + ":" + this->proxyPort;
+        }
+        else{
+            return QString("ggggggg");
+        }
+
+    }
+
+    void setProxyFromString(QString addr){ // could be a schema://00.00.00.00:00 or a 00.00.00.00:00
+
+        QString schema = "";
+        QString host;
+        QString port;
+
+        // test for schema
+        if(addr.contains("http") || addr.contains("socks5")){
+            schema = addr.left(addr.indexOf(":"));
+            addr = addr.mid(addr.indexOf(":")+3);
+        }
+        else{
+            schema = "http";
+        }
+
+        // extract address
+
+        host = addr.left(addr.lastIndexOf(":"));
+
+        //extract port
+
+        port = addr.mid(addr.lastIndexOf(":")+1);
+
+        // set proxy data
+
+        this->proxyAddr = host;
+        this->proxyPort = port;
+        this->proxyType = schema;
     }
 
     void setHostName(QString host){

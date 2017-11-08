@@ -26,7 +26,8 @@ HEADERS += \
     ../MSHttpRequest/mshttprequest.h \
     ../MSHttpRequest/QtCUrl.h \
     ../MSHttpRequest/msnetworkcookiejar.h \
-    ../MSHttpRequest/qmultibuffer.h
+    ../MSHttpRequest/qmultibuffer.h \
+    ../MSHttpRequest/msnetworkproxy.h
 
 
 # The following define makes your compiler emit warnings if you use

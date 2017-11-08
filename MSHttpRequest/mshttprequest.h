@@ -31,6 +31,8 @@ public:
     QString requestMethod; // get, post, put, post-multipart etc
     QString requestURL;
 
+    MSNetworkProxy* proxy;
+
 
     QHash<QString,QString> queryItems;
     QHash<QString,QString> requestHeaders;
@@ -52,8 +54,10 @@ public:
     // methods
 
     void setProxy(MSNetworkProxy* proxy);
+    void disableProxy();
 
     bool setMethod(const QString &method);
+    void setPayloadChunkData(qint64 size,quint64 pos);
     void setRequestUrl(const QString &url);
     void addQueryItem(const QString &itemName, const QString &itemValue );
 

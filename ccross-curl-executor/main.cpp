@@ -2,15 +2,21 @@
 #include <QDebug>
 #include <QTextStream>
 #include "mshttprequest.h"
+//#include "msnetworkproxy.h"
 #include <QDataStream>
 #include "qmultibuffer.h"
 
 #include <iostream>
 #include <string>
 
+//#include <QFile>
+
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
+
+//    QFile log("executor.log");
+//    log.open(QIODevice::WriteOnly);
 
     MSNetworkCookieJar* jar;
 
@@ -18,6 +24,9 @@ int main(int argc, char *argv[])
     std::cin >> idt;
 
     QByteArray b64(idt.c_str());
+//    QByteArray b64("AAAACABQAE8AUwBUAAAAXABoAHQAdABwAHMAOgAvAC8AYQBwAGkALgBkAHIAbwBwAGIAbwB4AGEAcABpAC4AYwBvAG0ALwAyAC8AZgBpAGwAZQBzAC8AbABpAHMAdABfAGYAbwBsAGQAZQByAAAAAAAAAAMAAAAcAEMAbwBuAHQAZQBuAHQALQBMAGUAbgBnAHQAaAAAAAYAMQAwADUAAAAaAEEAdQB0AGgAbwByAGkAegBhAHQAaQBvAG4AAACOAEIAZQBhAHIAZQByACAAMwBNADkARQBMAEMANQBwAFAAdABBAEEAQQBBAEEAQQBBAEEAQQBGAEgAYwBPAFcAcwBwAG0AYgBNAGUAaQBXAFIAYwA1AFkAdwB6AEcAMAAwAG8ARgAzAFgAOABHAHQAVgByAEwASgBqAEMAZwA4AG8AdQBjAGEAaQBnAGEAZAAAABgAQwBvAG4AdABlAG4AdAAtAFQAeQBwAGUAAAA+AGEAcABwAGwAaQBjAGEAdABpAG8AbgAvAGoAcwBvAG4AOwAgAGMAaABhAHIAcwBlAHQAPQBVAFQARgAtADgAAAAAAAAAAAAAAAAAAAAAAAAAGGh0dHA6Ly8xNTguNjkuMTk3LjIzNjo4MAAAAAlOT19DT09LSUUAAAALTk9fT1VURklMRQACAAAAaXsKICAgICJpbmNsdWRlX2RlbGV0ZWQiOiBmYWxzZSwKICAgICJpbmNsdWRlX21lZGlhX2luZm8iOiBmYWxzZSwKICAgICJwYXRoIjogIiIsCiAgICAicmVjdXJzaXZlIjogdHJ1ZQp9Cg==");
+
+    MSNetworkProxy* prx = new MSNetworkProxy();
 
     MSHttpRequest* req = new MSHttpRequest(0);
 
@@ -28,9 +37,25 @@ int main(int argc, char *argv[])
     ds >> req->queryItems;
     ds >> req->requestHeaders;
 
+    ds >> req->cUrlObject->payloadChunkSize;
+    ds >> req->cUrlObject->payloadFilePosition;
+
+    QByteArray proxy;
+    ds >> proxy;
+
+    if(QString(proxy) != "NO_PROXY"){
+
+        prx->setProxyFromString(proxy);
+        req->setProxy(prx);
+    }
+    else{
+        req->disableProxy();
+    }
+
+
     QByteArray cookie;
     ds >> cookie;
-    if((QString(cookie) != "NO_COOKIE")&&(QString(cookie) != "")){
+    if((QString(cookie) != "NO_COOKIE")&&(QString(cookie) != "EMPTY_COOKIE")){
 
         // set cookie object
 
@@ -45,8 +70,11 @@ int main(int argc, char *argv[])
 
     }
     else{
-        jar = new MSNetworkCookieJar(req);
-        req->MSsetCookieJar(jar);
+        if(QString(cookie) == "EMPTY_COOKIE"){
+            jar = new MSNetworkCookieJar(req);
+            req->MSsetCookieJar(jar);
+        }
+
     }
 
     QByteArray outfile;
@@ -158,6 +186,7 @@ int main(int argc, char *argv[])
      * buffer()
      * lastError()
      * errorBuffer()
+     * replyURL
      * cookieFile
      */
 
@@ -169,15 +198,16 @@ int main(int argc, char *argv[])
     QByteArray b (req->cUrlObject->_buffer.c_str());
 
     QString bs(b);
-    //int start =  bs.indexOf("\"csrf\"");
-
 
     rds << req->cUrlObject->replyHeaders;
     rds << QByteArray(req->cUrlObject->_buffer.c_str());
     rds << (uint)(req->cUrlObject->lastError().code());
     rds << QByteArray(req->cUrlObject->errorBuffer().toStdString().c_str());
 
-    if(req->cookieJarObject == nullptr){
+    QByteArray ru(req->cUrlObject->replyURL.toLocal8Bit());
+    rds << ru;
+
+    if((req->cookieJarObject == nullptr)||(req->cookieJarObject->cookieFile->size() == 0)){
         rds << QByteArray("NO_COOKIE");
     }
     else{
@@ -187,15 +217,17 @@ int main(int argc, char *argv[])
     }
 
 
-    delete(req->cookieJarObject);
-
-    delete(req);
-
+    if(req->cookieJarObject != nullptr){
+        delete(req->cookieJarObject);
+    }
 
 
     std::cout << d.toBase64().toStdString().c_str()  ;
 
     std::cout << std::flush;
+
+     //delete(req);
+    //req->deleteLater();
 
 return 0;
 //    return a.exec();

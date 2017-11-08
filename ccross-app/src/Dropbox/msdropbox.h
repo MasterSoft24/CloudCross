@@ -64,9 +64,9 @@ public:
      // download file from cloud
      bool remote_file_get(MSFSObject* object);
      // upload new file to cloud
-     bool remote_file_insert(MSFSObject* object);
+     bool remote_file_insert(MSFSObject* object/*, const char *newParameter = "https://content.dropboxapi.com/2/files/upload_session/append"*/);
      // update existing file on cloud
-     bool remote_file_update(MSFSObject* object);
+     bool remote_file_update(MSFSObject* object/*, const char *newParameter = "Dropbox-API-Arg"*/);
      // Generates a set of file IDs which can be provided in insert requests
      bool remote_file_generateIDs(int count);
      // create folder on remote
@@ -114,7 +114,7 @@ public:
 
 
      bool createHashFromRemote();
-     bool readRemote();//QString parentId,QString currentPath
+     bool readRemote(/*const char *newParameter = "include_deleted"*/);//QString parentId,QString currentPath
      bool _readRemote(const QString &rootPath);
      bool readLocal(const QString &path);
      bool readLocalSingle(const QString &path);

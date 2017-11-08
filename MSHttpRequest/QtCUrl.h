@@ -60,6 +60,11 @@ public:
     QIODevice* inpFile;
     QString inpFileName;
     QString replyURL;
+    char* _replyURL;
+
+    qint64 payloadChunkSize;
+    qint64 payloadFilePosition;
+
 
     QString escape(const QString &str);
     //    QByteArray escape(QByteArray str);
