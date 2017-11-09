@@ -1483,8 +1483,21 @@ bool MSOneDrive::readRemote(const QString &rootPath){
 
                 this->readRemote(fsObject.path+fsObject.fileName);
             }
+            
+            if(this->getFlag("useInclude")){//  --use-include
 
+                if( this->filterIncludeFileNames(fsObject.path+fsObject.fileName)){
 
+                    continue;
+                }
+            }
+            else{// use exclude by default
+
+                if(! this->filterExcludeFileNames(fsObject.path+fsObject.fileName)){
+
+                    continue;
+                }
+            }
 
             this->syncFileList.insert(fsObject.path+fsObject.fileName, fsObject);
 
