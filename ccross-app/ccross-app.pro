@@ -36,7 +36,7 @@ TEMPLATE = app
 QMAKE_CXXFLAGS_WARN_OFF -= -Wno-unused-parameter
 
 SOURCES += main.cpp \
-    src/common/msrequest.cpp \
+#    src/common/msrequest.cpp \
     src/common/msoptparser.cpp \
     src/common/mscloudprovider.cpp \
     src/GoogleDrive/msgoogledrive.cpp \
@@ -61,7 +61,7 @@ SOURCES += main.cpp \
 
 
 HEADERS += \
-    include/msrequest.h \
+#    include/msrequest.h \
     include/msoptparser.h \
     include/mscloudprovider.h \
     src/GoogleDrive/msgoogledrive.h \

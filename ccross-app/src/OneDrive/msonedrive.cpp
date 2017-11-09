@@ -34,7 +34,7 @@
 
 #include <utime.h> // for macOS
 
-//#define qInfo qInfo
+//#define qStdOut qStdOut
 //#define endl ""
 
 
@@ -103,7 +103,7 @@ afterReauth:
             this->refreshToken();
             req = new MSHttpRequest(this->proxyServer);
 
-            qInfo() << QStringLiteral("OneDrive token expired. Refreshing token done. Retry last operation. ") ;
+            qStdOut() << QStringLiteral("OneDrive token expired. Refreshing token done. Retry last operation. ") ;
 
             goto afterReauth;
         }
@@ -116,7 +116,7 @@ bool MSOneDrive::remote_file_insert(MSFSObject *object){
 
     if(object->local.objectType==MSLocalFSObject::Type::folder){
 
-        qInfo()<< QString(object->fileName + QStringLiteral(" is a folder. Skipped."))  ;
+        qStdOut()<< QString(object->fileName + QStringLiteral(" is a folder. Skipped."))  ;
         return true;
     }
 
@@ -150,7 +150,7 @@ afterReauth:
             this->refreshToken();
             req = new MSHttpRequest(this->proxyServer);
 
-            qInfo() << QStringLiteral("OneDrive token expired. Refreshing token done. Retry last operation. ") ;
+            qStdOut() << QStringLiteral("OneDrive token expired. Refreshing token done. Retry last operation. ") ;
 
             goto afterReauth;
         }
@@ -173,7 +173,7 @@ afterReauth:
     if(uploadUrl == QStringLiteral("")){
 
         delete(req);
-        qInfo()<< QString(QStringLiteral("Error when upload ")+filePath+QStringLiteral(" on remote"))  ;
+        qStdOut()<< QString(QStringLiteral("Error when upload ")+filePath+QStringLiteral(" on remote"))  ;
         return false;
     }
 
@@ -190,7 +190,7 @@ afterReauth:
     if (!file.open(QIODevice::ReadOnly)){
 
         //error file not found
-        qInfo()<<QString(QStringLiteral("Unable to open of ")+filePath)  ;
+        qStdOut()<<QString(QStringLiteral("Unable to open of ")+filePath)  ;
         delete(req);
         return false;
     }
@@ -212,7 +212,7 @@ afterReauth:
             req->addHeader(QStringLiteral("Content-Range"),                     QStringLiteral("bytes 0-")+QString::number(fSize-1).toLocal8Bit()+QStringLiteral("/")+QString::number(fSize).toLocal8Bit());
         }
         else{
-            qInfo()<< QString(QStringLiteral("    OneDrive does not support zero-length files. Uploading skiped."));
+            qStdOut()<< QString(QStringLiteral("    OneDrive does not support zero-length files. Uploading skiped."));
             delete(req);
             return false;
         }
@@ -236,7 +236,7 @@ afterReauth:
                 delete(req);
                 this->refreshToken();
                 req = new MSHttpRequest(this->proxyServer);
-                qInfo() << QString(QStringLiteral("OneDrive token expired. Refreshing token done. Retry last operation. ")) ;
+                qStdOut() << QString(QStringLiteral("OneDrive token expired. Refreshing token done. Retry last operation. ")) ;
 
                 goto afterReauth;
             }
@@ -329,7 +329,7 @@ afterReauth:
                     delete(req);
                     this->refreshToken();
                     req = new MSHttpRequest(this->proxyServer);
-                    qInfo() << QString(QStringLiteral("OneDrive token expired. Refreshing token done. Retry last operation. ")) ;
+                    qStdOut() << QString(QStringLiteral("OneDrive token expired. Refreshing token done. Retry last operation. ")) ;
                     goto afterReauth;
                 }
 
@@ -665,11 +665,11 @@ bool MSOneDrive::auth(){
 
     this->startListener(1973);
 
-    qInfo()<<"-------------------------------------" ;
-    qInfo()<< tr("Please go to this URL and confirm application credentials\n") ;
+    qStdOut()<<"-------------------------------------" ;
+    qStdOut()<< tr("Please go to this URL and confirm application credentials\n") ;
 
 
-    qInfo() << QStringLiteral("https://login.live.com/oauth20_authorize.srf?client_id=07bcebfb-0764-450a-b9ef-e839c592a418&scope=onedrive.readwrite offline_access&response_type=code&redirect_uri=http://localhost:1973")  ;
+    qStdOut() << QStringLiteral("https://login.live.com/oauth20_authorize.srf?client_id=07bcebfb-0764-450a-b9ef-e839c592a418&scope=onedrive.readwrite offline_access&response_type=code&redirect_uri=http://localhost:1973")  ;
 
 
 
@@ -679,7 +679,7 @@ bool MSOneDrive::auth(){
 
 
     if(!this->providerAuthStatus){
-        qInfo() << "Code was not received. Some browsers handle redirect incorrectly. If it this case please copy a value of \"code\" parameter to the terminal and press enter "<< endl;
+        qStdOut() << "Code was not received. Some browsers handle redirect incorrectly. If it this case please copy a value of \"code\" parameter to the terminal and press enter "<< endl;
         QTextStream s(stdin);
         QString code =s.readLine();
         this->onAuthFinished(code,this);
@@ -705,7 +705,7 @@ bool MSOneDrive::loadTokenFile(const QString &path){
 
     if(!key.open(QIODevice::ReadOnly))
     {
-        qInfo() << QStringLiteral("Access key missing or corrupt. Start CloudCross with -a option for obtained private key.")   ;
+        qStdOut() << QStringLiteral("Access key missing or corrupt. Start CloudCross with -a option for obtained private key.")   ;
         return false;
     }
 
@@ -732,7 +732,7 @@ void MSOneDrive::loadStateFile(){
 
     if(!key.open(QIODevice::ReadOnly))
     {
-        qInfo() << QStringLiteral("Previous state file not found. Start in stateless mode.")  ;
+        qStdOut() << QStringLiteral("Previous state file not found. Start in stateless mode.")  ;
         return;
     }
 
@@ -889,7 +889,7 @@ void MSOneDrive::checkFolderStructures(){
 
         // create new folder structure on remote
 
-        qInfo()<<"Checking folder structure on remote"  ;
+        qStdOut()<<"Checking folder structure on remote"  ;
 
         QHash<QString,MSFSObject> localFolders=this->filelist_getFSObjectsByTypeLocal(MSLocalFSObject::Type::folder);
         localFolders=this->filelist_getFSObjectsByState(localFolders,MSFSObject::ObjectState::NewLocal);
@@ -907,7 +907,7 @@ void MSOneDrive::checkFolderStructures(){
 
         // create new folder structure on local
 
-        qInfo()<<"Checking folder structure on local"  ;
+        qStdOut()<<"Checking folder structure on local"  ;
 
         QHash<QString,MSFSObject> remoteFolders=this->filelist_getFSObjectsByTypeRemote(MSRemoteFSObject::Type::folder);
         remoteFolders=this->filelist_getFSObjectsByState(remoteFolders,MSFSObject::ObjectState::NewRemote);
@@ -950,7 +950,7 @@ void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
         if(this->getOption("force")=="download"){
 
-            qInfo()<<QStringLiteral("Start downloading in force mode")  ;
+            qStdOut()<<QStringLiteral("Start downloading in force mode")  ;
 
             lf=fsObjectList.begin();
 
@@ -967,7 +967,7 @@ void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(obj.remote.objectType == MSRemoteFSObject::Type::file){
 
-                        qInfo()<< QString(obj.path + obj.fileName + QStringLiteral(" Forced downloading."))  ;
+                        qStdOut()<< QString(obj.path + obj.fileName + QStringLiteral(" Forced downloading."))  ;
 
                         this->remote_file_get(&obj);
                     }
@@ -979,7 +979,7 @@ void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
         else{
             if(this->getOption(QStringLiteral("force"))==QStringLiteral("upload")){
 
-                qInfo()<<QStringLiteral("Start uploading in force mode")  ;
+                qStdOut()<<QStringLiteral("Start uploading in force mode")  ;
 
                 lf=fsObjectList.begin();
 
@@ -997,7 +997,7 @@ void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                             if(obj.local.objectType == MSLocalFSObject::Type::file){
 
-                                qInfo()<< QString(obj.path + obj.fileName + QStringLiteral(" Forced uploading."))  ;
+                                qStdOut()<< QString(obj.path + obj.fileName + QStringLiteral(" Forced uploading."))  ;
 
                                 this->remote_file_update(&obj);
                             }
@@ -1006,7 +1006,7 @@ void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                             if(obj.local.objectType == MSLocalFSObject::Type::file){
 
-                                qInfo()<< QString(obj.path + obj.fileName + QStringLiteral(" Forced uploading."))  ;
+                                qStdOut()<< QString(obj.path + obj.fileName + QStringLiteral(" Forced uploading."))  ;
 
                                 this->remote_file_insert(&obj);
                             }
@@ -1034,7 +1034,7 @@ void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
 
 
-            qInfo()<<QStringLiteral("Syncronization end")  ;
+            qStdOut()<<QStringLiteral("Syncronization end")  ;
 
             return;
     }
@@ -1043,7 +1043,7 @@ void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
     // SYNC FILES AND FOLDERS
 
-    qInfo()<<QStringLiteral("Start syncronization")  ;
+    qStdOut()<<QStringLiteral("Start syncronization")  ;
 
     lf=fsObjectList.begin();
 
@@ -1060,7 +1060,7 @@ void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
             case MSFSObject::ObjectState::ChangedLocal:
 
-                qInfo()<< QString(obj.path + obj.fileName + QStringLiteral(" Changed local. Uploading."))  ;
+                qStdOut()<< QString(obj.path + obj.fileName + QStringLiteral(" Changed local. Uploading."))  ;
 
                 this->remote_file_update(&obj);
 
@@ -1070,7 +1070,7 @@ void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                 if((obj.local.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                    qInfo()<< QString(obj.path + obj.fileName + QStringLiteral(" New local. Uploading."))  ;
+                    qStdOut()<< QString(obj.path + obj.fileName + QStringLiteral(" New local. Uploading."))  ;
 
                     this->remote_file_insert(&obj);
 
@@ -1079,14 +1079,14 @@ void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading."))  ;
+                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading."))  ;
 
                         this->remote_file_insert(&obj);
 
                     }
                     else{
 
-                        qInfo()<< QString(obj.path +obj.fileName +QStringLiteral(" Delete remote. Delete local."))  ;
+                        qStdOut()<< QString(obj.path +obj.fileName +QStringLiteral(" Delete remote. Delete local."))  ;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1104,7 +1104,7 @@ void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
             case MSFSObject::ObjectState::ChangedRemote:
 
-                qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Changed remote. Downloading."))  ;
+                qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Changed remote. Downloading."))  ;
 
                 this->remote_file_get(&obj);
 
@@ -1117,13 +1117,13 @@ void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote.") ) ;
+                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote.") ) ;
 
                         this->remote_file_trash(&obj);
 
                     }
                     else{
-                        qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") ) ;
+                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") ) ;
 
                         this->remote_file_get(&obj);
                     }
@@ -1134,13 +1134,13 @@ void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote."))  ;
+                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote."))  ;
 
                         this->remote_file_trash(&obj);
                     }
                     else{
 
-                        qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading."))  ;
+                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading."))  ;
 
                         this->remote_file_get(&obj);
                     }
@@ -1153,14 +1153,14 @@ void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                 if((obj.remote.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                    qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") ) ;
+                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") ) ;
 
                     this->remote_file_get(&obj);
 
                     break;
                 }
 
-                qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote."))  ;
+                qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote."))  ;
 
                 this->remote_file_trash(&obj);
 
@@ -1172,12 +1172,12 @@ void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") ) ;
+                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") ) ;
 
                         this->remote_file_insert(&obj);
                     }
                     else{
-                        qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Deleting local.") ) ;
+                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Deleting local.") ) ;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1192,14 +1192,14 @@ void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") ) ;
+                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") ) ;
 
                         this->remote_file_insert(&obj);
 
                     }
                     else{
 
-                        qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Deleting local.") ) ;
+                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Deleting local.") ) ;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1232,7 +1232,7 @@ void MSOneDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
 
 
-        qInfo()<<QStringLiteral("Syncronization end")  ;
+        qStdOut()<<QStringLiteral("Syncronization end")  ;
 
 }
 
@@ -1837,7 +1837,7 @@ bool MSOneDrive::createSyncFileList(){
             else
                 regex2.setPatternSyntax(QRegExp::Wildcard);
             if(!regex2.isValid()){
-                qInfo()<<QStringLiteral("Include filelist contains errors. Program will be terminated.");
+                qStdOut()<<QStringLiteral("Include filelist contains errors. Program will be terminated.");
                 return false;
             }
         }
@@ -1873,25 +1873,25 @@ bool MSOneDrive::createSyncFileList(){
             else
                 regex2.setPatternSyntax(QRegExp::Wildcard);
             if(!regex2.isValid()){
-                qInfo()<<QStringLiteral("Exclude filelist contains errors. Program will be terminated.");
+                qStdOut()<<QStringLiteral("Exclude filelist contains errors. Program will be terminated.");
                 return false;
             }
         }
     }
 
-    qInfo()<< QStringLiteral("Reading remote files") ;
+    qStdOut()<< QStringLiteral("Reading remote files") ;
 
 
     if(!this->readRemote(QStringLiteral(""))){// top level files and folders
-        qInfo()<<QStringLiteral("Error occured on reading remote files")  ;
+        qStdOut()<<QStringLiteral("Error occured on reading remote files")  ;
         return false;
 
     }
 
-    qInfo()<<QStringLiteral("Reading local files and folders")  ;
+    qStdOut()<<QStringLiteral("Reading local files and folders")  ;
 
     if(!this->readLocal(this->workPath)){
-        qInfo()<<QStringLiteral("Error occured on local files and folders")  ;
+        qStdOut()<<QStringLiteral("Error occured on local files and folders")  ;
         return false;
 
     }
@@ -1984,7 +1984,7 @@ bool MSOneDrive::directUpload(const QString &url, const QString &remotePath){
 Q_UNUSED(remotePath);
 Q_UNUSED(url);
 
-    qInfo() << "NOT INPLEMENTED YET"<<endl;
+    qStdOut() << "NOT INPLEMENTED YET"<<endl;
     return false;
 
     MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
@@ -2098,7 +2098,7 @@ bool MSOneDrive::onAuthFinished(const QString &html, MSCloudProvider *provider){
         if(v!=""){
 
             this->token=v;
-            qInfo() << QStringLiteral("Token was succesfully accepted and saved. To start working with the program run ccross without any options for start full synchronize.") ;
+            qStdOut() << QStringLiteral("Token was succesfully accepted and saved. To start working with the program run ccross without any options for start full synchronize.") ;
             this->providerAuthStatus=true;
             emit providerAuthComplete();
             return true;
