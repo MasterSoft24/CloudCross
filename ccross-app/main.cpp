@@ -134,6 +134,8 @@ void printHelp(){
 
     qStdOut()<< QObject::tr("   --low-memory               Reduce memory utilization during reading a remote file list. Using of this"
                           "                              option may do increase of synchronization time ") <<endl;
+
+    qStdOut()<< QObject::tr("   --empty-trash              Delete all files from cloud trash bin.");
 }
 
 
@@ -261,6 +263,27 @@ void infoGrive(MSProvidersPool* providers){
 }
 
 
+void emptyTrashGrive(MSProvidersPool* providers){
+
+    MSGoogleDrive* gdp=new MSGoogleDrive();
+
+    gdp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
+    providers->addProvider(gdp);
+    if(! providers->loadTokenFile("GoogleDrive")){
+        exit(0);
+    }
+
+    if(!providers->refreshToken("GoogleDrive")){
+        qStdOut()<<"Unauthorized access. Aborted."<<endl;
+        exit(0);
+    }
+
+    gdp->remote_file_empty_trash();
+
+}
+
+
 void authDropbox(MSProvidersPool* providers){
 
     MSDropbox* dbp=new MSDropbox();
@@ -383,6 +406,24 @@ void infoDropbox(MSProvidersPool* providers){
 
 }
 
+void emptyTrashDropbox(MSProvidersPool* providers){
+
+    MSDropbox* dbp=new MSDropbox();
+
+    dbp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
+    providers->addProvider(dbp);
+    if(! providers->loadTokenFile("Dropbox")){
+        exit(0);
+    }
+
+    if(!providers->refreshToken("Dropbox")){
+        qStdOut()<<"Unauthorized access. Aborted."<<endl;
+        exit(0);
+    }
+
+    dbp->remote_file_empty_trash();
+}
 
 
 void authYandex(MSProvidersPool* providers){
@@ -506,6 +547,27 @@ void infoYandex(MSProvidersPool* providers){
 
 
 }
+
+
+void emptyTrashYandex(MSProvidersPool* providers){
+
+    MSYandexDisk* ydp=new MSYandexDisk();
+
+    ydp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
+    providers->addProvider(ydp);
+    if(! providers->loadTokenFile("YandexDisk")){
+        exit(0);
+    }
+
+    if(!providers->refreshToken("YandexDisk")){
+        qStdOut()<<"Unauthorized access. Aborted."<<endl;
+        exit(0);
+    }
+
+    ydp->remote_file_empty_trash();
+}
+
 
 void authMailru(MSProvidersPool* providers,QString login,QString password){
 
@@ -644,6 +706,28 @@ void infoMailru(MSProvidersPool* providers){
 }
 
 
+void emptyTrashMailru(MSProvidersPool* providers){
+
+    MSMailRu* mrp=new MSMailRu();
+
+    mrp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
+    providers->addProvider(mrp);
+    if(! providers->loadTokenFile("MailRu")){
+        delete(mrp->cookies);
+        exit(0);
+    }
+
+    if(!providers->refreshToken("MailRu")){
+        qStdOut()<<"Unauthorized access. Aborted."<<endl;
+        delete(mrp->cookies);
+        exit(0);
+    }
+
+    mrp->remote_file_empty_trash();
+
+    delete(mrp->cookies);
+}
 
 
 void authOneDrive(MSProvidersPool* providers){
@@ -771,7 +855,24 @@ void infoOneDrive(MSProvidersPool* providers){
 }
 
 
+void emptyTrashOneDrive(MSProvidersPool *providers){
 
+    MSOneDrive* odp=new MSOneDrive();
+
+    odp->setProxyServer(providers->proxyTypeString,providers->proxyAddrString);
+
+    providers->addProvider(odp);
+    if(! providers->loadTokenFile("OneDrive")){
+        exit(0);
+    }
+
+    if(!providers->refreshToken("OneDrive")){
+        qStdOut()<<"Unauthorized access. Aborted."<<endl;
+        exit(0);
+    }
+
+    odp->remote_file_empty_trash();
+}
 
 
 // ============= FUSE =======================
@@ -1020,6 +1121,8 @@ int main(int argc, char *argv[])
     parser->insertOption(21,"--single-thread");
 
     parser->insertOption(22,"--low-memory");
+
+    parser->insertOption(23,"--empty-trash");
 
 
     //...............
@@ -1507,6 +1610,33 @@ int main(int argc, char *argv[])
         case 22: // --low-memory
 
             providers->setFlag("lowMemory",true);
+            break;
+
+        case 23: // --empty-trash
+
+            switch(currentProvider){
+                case ProviderType::Google:
+                    emptyTrashGrive(providers);
+                    break;
+                case ProviderType::Dropbox:
+                    emptyTrashDropbox(providers);
+                    break;
+                case ProviderType::Yandex:
+                    emptyTrashYandex(providers);
+                    break;
+                case ProviderType::Mailru:
+                    emptyTrashMailru(providers);
+                    break;
+                case ProviderType::OneDrive:
+                    emptyTrashOneDrive(providers);
+                    break;
+
+                default:
+                    break;
+
+            }
+
+            return 0;
             break;
 
         default: // syn execute without any params by default

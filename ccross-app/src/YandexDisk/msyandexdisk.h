@@ -135,6 +135,10 @@ public slots:
     bool onAuthFinished(const QString &html, MSCloudProvider *provider);
 
 
+
+    // MSCloudProvider interface
+public:
+    bool remote_file_empty_trash();
 };
 
 #endif // MSYANDEXDISK_H

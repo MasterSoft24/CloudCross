@@ -1,6 +1,7 @@
 ## Change log:
 
 ### v1.4.1
+- New option --empty-trash added.  This option works only with Yandex and Google providers (for this version. In the future possible appears other providers with supporting this feature.).
 - New option --filter-type was added.
 - New option --low-memory added. 
 - .include and .exclude files can contains now a regular expressions in Perl style or a wildcards. (thanks to [@futuarmo](https://github.com/futuarmo))

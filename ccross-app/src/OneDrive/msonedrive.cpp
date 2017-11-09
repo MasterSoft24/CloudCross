@@ -2110,3 +2110,11 @@ bool MSOneDrive::onAuthFinished(const QString &html, MSCloudProvider *provider){
         }
 
 }
+
+
+bool MSOneDrive::remote_file_empty_trash(){
+
+
+    qStdOut() << "This option does not supported by this provider" << endl;
+    return false;
+}

@@ -2848,3 +2848,11 @@ QString MSDropbox::getInfo(){
 
 }
 
+
+
+bool MSDropbox::remote_file_empty_trash(){
+
+    qStdOut() << "This option does not supported by this provider" << endl;
+    return false;
+
+}

@@ -2449,3 +2449,10 @@ Q_UNUSED(provider);
     return true;
 
 }
+
+
+bool MSMailRu::remote_file_empty_trash(){
+
+    qStdOut() << "This option does not supported by this provider" << endl;
+    return false;
+}

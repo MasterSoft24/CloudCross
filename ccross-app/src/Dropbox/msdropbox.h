@@ -141,6 +141,10 @@ public slots:
 
 
 
+
+    // MSCloudProvider interface
+public:
+    bool remote_file_empty_trash();
 };
 
 #endif // MSDROPBOX_H

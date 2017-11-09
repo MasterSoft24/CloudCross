@@ -3235,3 +3235,32 @@ QString MSGoogleDrive::getInfo(){
 
 
 
+
+
+bool MSGoogleDrive::remote_file_empty_trash(){
+
+    if(this->getFlag(QStringLiteral("dryRun"))){
+        return true;
+    }
+
+    MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
+
+    req->setRequestUrl(QStringLiteral("https://www.googleapis.com/drive/v2/files/trash"));
+    req->setMethod(QStringLiteral("delete"));
+
+    req->addHeader(QStringLiteral("Authorization"),                     QStringLiteral("Bearer ")+this->access_token);
+
+    req->exec();
+
+    if(!req->replyOK()){
+        req->printReplyError();
+        delete(req);
+        return false;
+    }
+
+    qStdOut() << endl;
+    qStdOut() << "Trash bin of cloud was been cleared"<<endl;
+    delete(req);
+    return true;
+
+}

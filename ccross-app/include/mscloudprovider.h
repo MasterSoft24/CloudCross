@@ -198,6 +198,7 @@ public:
     // ======= REMOTE FUNCTIONS BLOCK =======
 
     virtual bool remote_file_get(MSFSObject *object) =0;
+    virtual bool remote_file_empty_trash() =0;
 
 
     QTcpServer* oauthListener;
