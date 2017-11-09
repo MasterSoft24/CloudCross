@@ -1489,7 +1489,30 @@ bool MSOneDrive::readRemote(const QString &rootPath){
                 this->readRemote(fsObject.path+fsObject.fileName);
             }
 
+            //--patch by trufanov-nok
 
+            if(! this->filterServiceFileNames(fsObject.path+fsObject.fileName)){// skip service files and dirs
+
+                continue;
+            }
+
+
+            if(this->getFlag(QStringLiteral("useInclude")) && this->includeList != QStringLiteral("")){//  --use-include
+
+                if( this->filterIncludeFileNames(fsObject.path+fsObject.fileName)){
+
+                    continue;
+                }
+            }
+            else{// use exclude by default
+
+                if(this->excludeList != QStringLiteral("")){
+                    if(! this->filterExcludeFileNames(fsObject.path+fsObject.fileName)){
+
+                        continue;
+                    }
+                }
+            }
 
             this->syncFileList.insert(fsObject.path+fsObject.fileName, fsObject);
 
