@@ -104,6 +104,7 @@ afterReauth:
         }
     }
 
+    delete(req);
     return false;
 }
 
@@ -1535,7 +1536,7 @@ bool MSOneDrive::readRemote(const QString &rootPath){
 
 
             content= mrq->replyText;
-
+            delete(mrq);
 
             json = QJsonDocument::fromJson(content.toUtf8());
 
