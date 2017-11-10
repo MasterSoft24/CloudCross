@@ -1234,8 +1234,9 @@ void MSHttpRequest::readExecutorOutput(){ // read data from CurlExecutor and pla
     uint ebsz = e.size();
 
     free(this->cUrlObject->_errorBuffer);
-    this->cUrlObject->_errorBuffer = (char*) malloc(ebsz);
+    this->cUrlObject->_errorBuffer = (char*) malloc(ebsz+1);
     memcpy(this->cUrlObject->_errorBuffer, e.data(),ebsz);
+    this->cUrlObject->_errorBuffer[ebsz] = 0;
 
     QByteArray ru;
     ds >> ru;
