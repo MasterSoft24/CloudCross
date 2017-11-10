@@ -1426,6 +1426,7 @@ bool MSOneDrive::readRemote(const QString &rootPath){
 
 
     QString content= req->replyText;
+    delete(req);
 
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject job = json.object();
