@@ -89,7 +89,7 @@ bool MSCloudProvider::setProxyServer(const QString &type, const QString &proxy)
 
 bool MSCloudProvider::filterServiceFileNames(const QString &path){// return false if input path is service filename
 
-    QString reg=this->trashFileName+"*|"+this->tokenFileName+"|"+this->stateFileName+"|.include|.exclude|~";
+    QString reg = "ccrosstemp.*|"+this->trashFileName+"*|"+this->tokenFileName+"|"+this->stateFileName+"|.include|.exclude|~";
     QRegExp regex(reg);
     int ind = regex.indexIn(path);
 
@@ -378,6 +378,22 @@ void MSCloudProvider::local_createDirectory(const QString &path){
     QDir d;
     d.mkpath(path);
 
+}
+
+
+//=======================================================================================
+
+void MSCloudProvider::local_actualizeTempFile(QString tempPath){
+
+    QFile temp(tempPath);
+    QString realPath = tempPath.replace(CCROSS_TMP_PREFIX,"");
+    QFile real(realPath);
+
+    if(real.exists()){
+        real.remove();
+    }
+
+    temp.rename(realPath);
 }
 
 

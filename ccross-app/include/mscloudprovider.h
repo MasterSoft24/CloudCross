@@ -61,6 +61,9 @@
 #include "mshttprequest.h"
 
 
+#define CCROSS_TMP_PREFIX "ccrosstemp."
+
+
 class MSCloudProvider : public QObject
 {
 
@@ -156,6 +159,8 @@ public:
     virtual void local_removeFile(const QString &path) =0;
     virtual void local_removeFolder(const QString &path) =0;
     //void local_createDirectory(QString path);
+
+    void local_actualizeTempFile(QString tempPath);
 
 
     QString fileChecksum(const QString &fileName, QCryptographicHash::Algorithm hashAlgorithm);

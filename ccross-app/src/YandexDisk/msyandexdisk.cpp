@@ -31,8 +31,7 @@
   HE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-//#define qStdOut qStdOut
-//#define endl ""
+
 
 #include "msyandexdisk.h"
 
@@ -68,11 +67,11 @@ bool MSYandexDisk::auth(){
 
     this->startListener(1973);
 
-    qStdOut()<<"-------------------------------------" ;
-    qStdOut()<< tr("Please go to this URL and confirm application credentials\n") ;
+    qStdOut()<<"-------------------------------------"<<endl ;
+    qStdOut()<< tr("Please go to this URL and confirm application credentials\n")<<endl ;
 
 
-    qStdOut() << QStringLiteral("https://oauth.yandex.ru/authorize?force_confirm=yes&response_type=code&client_id=ba0517299fbc4e6db5ec7c040baccca7&state=") +this->generateRandom(20) ;
+    qStdOut() << QStringLiteral("https://oauth.yandex.ru/authorize?force_confirm=yes&response_type=code&client_id=ba0517299fbc4e6db5ec7c040baccca7&state=") +this->generateRandom(20)<<endl ;
 
 
 
@@ -131,7 +130,7 @@ Q_UNUSED(provider)
     if(v!=""){
 
         this->token=v;
-        qStdOut() << QStringLiteral("Token was succesfully accepted and saved. To start working with the program run ccross without any options for start full synchronize.") ;
+        qStdOut() << QStringLiteral("Token was succesfully accepted and saved. To start working with the program run ccross without any options for start full synchronize.") <<endl;
         this->providerAuthStatus=true;
         emit providerAuthComplete();
         return true;
@@ -164,7 +163,7 @@ bool MSYandexDisk::loadTokenFile(const QString &path){
 
     if(!key.open(QIODevice::ReadOnly))
     {
-        qStdOut() << QStringLiteral("Access key missing or corrupt. Start CloudCross with -a option for obtained private key.")   ;
+        qStdOut() << QStringLiteral("Access key missing or corrupt. Start CloudCross with -a option for obtained private key.")  <<endl ;
         return false;
     }
 
@@ -194,7 +193,7 @@ void MSYandexDisk::loadStateFile(){
 
     if(!key.open(QIODevice::ReadOnly))
     {
-        qStdOut() << QStringLiteral("Previous state file not found. Start in stateless mode.")  ;
+        qStdOut() << QStringLiteral("Previous state file not found. Start in stateless mode.")<<endl  ;
         return ;
     }
 
@@ -526,7 +525,7 @@ bool MSYandexDisk::createSyncFileList(){
             else
                 regex2.setPatternSyntax(QRegExp::Wildcard);
             if(!regex2.isValid()){
-                qStdOut()<<QStringLiteral("Include filelist contains errors. Program will be terminated.");
+                qStdOut()<<QStringLiteral("Include filelist contains errors. Program will be terminated.")<<endl;
                 return false;
             }
         }
@@ -562,13 +561,13 @@ bool MSYandexDisk::createSyncFileList(){
             else
                 regex2.setPatternSyntax(QRegExp::Wildcard);
             if(!regex2.isValid()){
-                qStdOut()<<QStringLiteral("Exclude filelist contains errors. Program will be terminated.");
+                qStdOut()<<QStringLiteral("Exclude filelist contains errors. Program will be terminated.")<<endl;
                 return false;
             }
         }
     }
 
-    qStdOut()<< QStringLiteral("Reading remote files") ;
+    qStdOut()<< QStringLiteral("Reading remote files")<<endl ;
 
 
     //this->createHashFromRemote();
@@ -578,15 +577,15 @@ bool MSYandexDisk::createSyncFileList(){
 
 
     if(!this->readRemote(QStringLiteral("/"))){// top level files and folders
-        qStdOut()<<QStringLiteral("Error occured on reading remote files")  ;
+        qStdOut()<<QStringLiteral("Error occured on reading remote files") <<endl ;
         return false;
 
     }
 
-    qStdOut()<<QStringLiteral("Reading local files and folders")  ;
+    qStdOut()<<QStringLiteral("Reading local files and folders")<<endl  ;
 
     if(!this->readLocal(this->workPath)){
-        qStdOut()<<QStringLiteral("Error occured on local files and folders")  ;
+        qStdOut()<<QStringLiteral("Error occured on local files and folders") <<endl ;
         return false;
 
     }
@@ -989,7 +988,7 @@ void MSYandexDisk::checkFolderStructures(){
 
         // create new folder structure on remote
 
-        qStdOut()<<QStringLiteral("Checking folder structure on remote")  ;
+        qStdOut()<<QStringLiteral("Checking folder structure on remote")<<endl  ;
 
         QHash<QString,MSFSObject> localFolders=this->filelist_getFSObjectsByTypeLocal(MSLocalFSObject::Type::folder);
         localFolders=this->filelist_getFSObjectsByState(localFolders,MSFSObject::ObjectState::NewLocal);
@@ -1007,7 +1006,7 @@ void MSYandexDisk::checkFolderStructures(){
 
         // create new folder structure on local
 
-        qStdOut()<<QStringLiteral("Checking folder structure on local")  ;
+        qStdOut()<<QStringLiteral("Checking folder structure on local") <<endl ;
 
         QHash<QString,MSFSObject> remoteFolders=this->filelist_getFSObjectsByTypeRemote(MSRemoteFSObject::Type::folder);
         remoteFolders=this->filelist_getFSObjectsByState(remoteFolders,MSFSObject::ObjectState::NewRemote);
@@ -1053,7 +1052,7 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
         if(this->getOption(QStringLiteral("force"))==QStringLiteral("download")){
 
-            qStdOut()<<QStringLiteral("Start downloading in force mode")  ;
+            qStdOut()<<QStringLiteral("Start downloading in force mode")<<endl  ;
 
             lf=fsObjectList.begin();
 
@@ -1069,7 +1068,7 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(obj.remote.objectType == MSRemoteFSObject::Type::file){
 
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Forced downloading.") ) ;
+                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Forced downloading.") )<<endl ;
 
                         this->remote_file_get(&obj);
                     }
@@ -1081,7 +1080,7 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
         else{
             if(this->getOption(QStringLiteral("force"))==QStringLiteral("upload")){
 
-                qStdOut()<<QStringLiteral("Start uploading in force mode")  ;
+                qStdOut()<<QStringLiteral("Start uploading in force mode")<<endl ;
 
                 lf=fsObjectList.begin();
 
@@ -1099,7 +1098,7 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                             if(obj.local.objectType == MSLocalFSObject::Type::file){
 
-                                qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Forced uploading.") ) ;
+                                qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Forced uploading.") )<<endl ;
 
                                 this->remote_file_update(&obj);
                             }
@@ -1108,7 +1107,7 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                             if(obj.local.objectType == MSLocalFSObject::Type::file){
 
-                                qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Forced uploading.") ) ;
+                                qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Forced uploading.") ) <<endl;
 
                                 this->remote_file_insert(&obj);
                             }
@@ -1135,7 +1134,7 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
 
 
-            qStdOut()<<QStringLiteral("Syncronization end")  ;
+            qStdOut()<<QStringLiteral("Syncronization end") <<endl ;
 
             return;
     }
@@ -1144,7 +1143,7 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
     // SYNC FILES AND FOLDERS
 
-    qStdOut()<<QStringLiteral("Start syncronization")  ;
+    qStdOut()<<QStringLiteral("Start syncronization") <<endl ;
 
     lf=fsObjectList.begin();
 
@@ -1161,7 +1160,7 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
             case MSFSObject::ObjectState::ChangedLocal:
 
-                qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Changed local. Uploading.") ) ;
+                qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Changed local. Uploading.") )<<endl ;
 
                 this->remote_file_update(&obj);
 
@@ -1171,7 +1170,7 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                 if((obj.local.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") ) ;
+                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") )<<endl ;
 
                     this->remote_file_insert(&obj);
 
@@ -1180,14 +1179,14 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") ) ;
+                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") )<<endl ;
 
                         this->remote_file_insert(&obj);
 
                     }
                     else{
 
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Delete local.") ) ;
+                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Delete local.") )<<endl ;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1205,7 +1204,7 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
             case MSFSObject::ObjectState::ChangedRemote:
 
-                qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Changed remote. Downloading.") ) ;
+                qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Changed remote. Downloading.") )<<endl ;
 
                 this->remote_file_get(&obj);
 
@@ -1218,13 +1217,13 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote."))  ;
+                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote."))<<endl  ;
 
                         this->remote_file_trash(&obj);
 
                     }
                     else{
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") ) ;
+                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") )<<endl ;
 
                         this->remote_file_get(&obj);
                     }
@@ -1235,13 +1234,13 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote.") ) ;
+                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote.") )<<endl ;
 
                         this->remote_file_trash(&obj);
                     }
                     else{
 
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") ) ;
+                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") ) <<endl;
 
                         this->remote_file_get(&obj);
                     }
@@ -1254,14 +1253,14 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                 if((obj.remote.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") ) ;
+                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") )<<endl ;
 
                     this->remote_file_get(&obj);
 
                     break;
                 }
 
-                qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote.") ) ;
+                qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote.") )<<endl ;
 
                 this->remote_file_trash(&obj);
 
@@ -1273,12 +1272,12 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") ) ;
+                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") ) <<endl;
 
                         this->remote_file_insert(&obj);
                     }
                     else{
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Deleting local.") ) ;
+                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Deleting local.") ) <<endl;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1293,14 +1292,14 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") ) ;
+                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") )<<endl ;
 
                         this->remote_file_insert(&obj);
 
                     }
                     else{
 
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Deleting local.") ) ;
+                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Deleting local.") ) <<endl;
 
                         if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                             this->local_removeFile(obj.path+obj.fileName);
@@ -1333,7 +1332,7 @@ void MSYandexDisk::doSync(QHash<QString, MSFSObject> fsObjectList){
 
 
 
-        qStdOut()<<QStringLiteral("Syncronization end")  ;
+        qStdOut()<<QStringLiteral("Syncronization end") <<endl ;
 
 }
 
@@ -1529,9 +1528,9 @@ bool MSYandexDisk::remote_file_get(MSFSObject* object){
 
     req->addHeader(QStringLiteral("Authorization"),                     QStringLiteral("OAuth ")+this->access_token);
     req->addHeader(QStringLiteral("Content-Type"),                      QStringLiteral("application/json; charset=UTF-8"));
-    req->addQueryItem(QStringLiteral("path"),                           object->path+object->fileName);
+    req->addQueryItem(QStringLiteral("path"),                           object->path + object->fileName);
 
-    QString filePath=this->workPath+object->path+object->fileName;
+    QString filePath=this->workPath+object->path+ CCROSS_TMP_PREFIX +object->fileName;
 
     req->exec();
 
@@ -1568,7 +1567,7 @@ bool MSYandexDisk::remote_file_get(MSFSObject* object){
     else{
 
         if(! this->getReplyErrorString(req->readReplyText()).contains( "path/not_file/")){
-            qStdOut() << QString(QStringLiteral("Service error. ")+ this->getReplyErrorString(req->readReplyText()));
+            qStdOut() << QString(QStringLiteral("Service error. ")+ this->getReplyErrorString(req->readReplyText()))<<endl;
             delete(req);
             return false;
         }
@@ -1586,7 +1585,7 @@ bool MSYandexDisk::remote_file_insert(MSFSObject *object){
 
     if(object->local.objectType==MSLocalFSObject::Type::folder){
 
-        qStdOut()<< QString(object->fileName + QStringLiteral(" is a folder. Skipped.") ) ;
+        qStdOut()<< QString(object->fileName + QStringLiteral(" is a folder. Skipped.") )<<endl ;
         return true;
     }
 
@@ -1649,7 +1648,7 @@ bool MSYandexDisk::remote_file_insert(MSFSObject *object){
     if (!file.open(QIODevice::ReadOnly)){
 
         //error file not found
-        qStdOut()<<QString(QStringLiteral("Unable to open of ")+filePath)  ;
+        qStdOut()<<QString(QStringLiteral("Unable to open of ")+filePath)<<endl  ;
         delete(req);
         return false;
     }
@@ -1682,7 +1681,7 @@ bool MSYandexDisk::remote_file_update(MSFSObject *object, const char *newParamet
 
     if(object->local.objectType==MSLocalFSObject::Type::folder){
 
-        qStdOut()<< QString(object->fileName + QStringLiteral(" is a folder. Skipped.") ) ;
+        qStdOut()<< QString(object->fileName + QStringLiteral(" is a folder. Skipped.") )<<endl ;
         return true;
     }
 
@@ -1740,7 +1739,7 @@ bool MSYandexDisk::remote_file_update(MSFSObject *object, const char *newParamet
     if (!file.open(QIODevice::ReadOnly)){
 
         //error file not found
-        qStdOut()<<QStringLiteral("Unable to open of ")+filePath  ;
+        qStdOut()<<QStringLiteral("Unable to open of ")+filePath <<endl ;
         delete(req);
         return false;
     }
@@ -1807,7 +1806,7 @@ bool MSYandexDisk::remote_file_makeFolder(MSFSObject *object){
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
-        qStdOut()<< QString(QStringLiteral("Service error. ") + this->getReplyErrorString(req->readReplyText()));
+        qStdOut()<< QString(QStringLiteral("Service error. ") + this->getReplyErrorString(req->readReplyText()))<<endl;
         delete(req);
         return false;
     }
@@ -1848,7 +1847,7 @@ bool MSYandexDisk::remote_file_makeFolder(MSFSObject *object){
     object->remote.exist=true;
 
     if(job[QStringLiteral("path")].toString()==QStringLiteral("")){
-        qStdOut()<< QString(QStringLiteral("Error when folder create ")+filePath+QStringLiteral(" on remote"))  ;
+        qStdOut()<< QString(QStringLiteral("Error when folder create ")+filePath+QStringLiteral(" on remote")) <<endl ;
     }
 
     delete(req);
@@ -1896,7 +1895,7 @@ bool MSYandexDisk::remote_file_trash(MSFSObject *object){
 
         if(! errt.contains(QStringLiteral("Resource not found"))){// ignore previous deleted files
 
-            qStdOut()<< QString(QStringLiteral("Service error. ") + this->getReplyErrorString(req->readReplyText()) );
+            qStdOut()<< QString(QStringLiteral("Service error. ") + this->getReplyErrorString(req->readReplyText()) )<<endl;
             delete(req);
             return false;
         }
@@ -2058,16 +2057,8 @@ bool MSYandexDisk::local_writeFileContent(const QString &filePath, const QString
 
     req->setMethod(QStringLiteral("get"));
 
-#ifndef CCROSS_LIB
-    //req->setQueryForDownload = false; // don't use a query parameters settings in syncDownloadWithGet function // NEWNEW
-
-    //req->syncDownloadWithGet(filePath);//NEWNEW
     req->setOutputFile(filePath);
     req->exec();
-#endif
-#ifdef CCROSS_LIB
-    req->download(hrefToDownload);
-#endif
 
 
     if(!req->replyOK()){
@@ -2077,21 +2068,9 @@ bool MSYandexDisk::local_writeFileContent(const QString &filePath, const QString
         return false;
     }
 
-#ifdef CCROSS_LIB
-    QFile file(filePath);
-    file.open(QIODevice::WriteOnly );
-    QDataStream outk(&file);
-
-//    QByteArray ba;
-//    ba.append(req->readReplyText());
-
-//    int sz=ba.size();
+    this->local_actualizeTempFile(filePath);
 
 
-    outk.writeRawData(req->readReplyText(),req->readReplyText().size()) ;
-
-    file.close();
-#endif
     return true;
 }
 
@@ -2209,7 +2188,7 @@ bool MSYandexDisk::directUpload(const QString &url, const QString &remotePath){
     if (!file.open(QIODevice::ReadOnly)){
 
         //error file not found
-        qStdOut()<<QString("Unable to open of "+filePath)  ;
+        qStdOut()<<QString("Unable to open of "+filePath)<<endl  ;
         delete(req);
         //exit(1);
         return false;
@@ -2256,13 +2235,13 @@ QString MSYandexDisk::getInfo(){
     if(!req0->replyOK()){
         req0->printReplyError();
 
-        qStdOut()<< req0->replyText;
+        qStdOut()<< req0->replyText<<endl;
         delete(req0);
         return QStringLiteral("false");
     }
 
     if(!this->testReplyBodyForError(req0->readReplyText())){
-        qStdOut()<< QString(QStringLiteral("Service error. ") + this->getReplyErrorString(req0->readReplyText()) );
+        qStdOut()<< QString(QStringLiteral("Service error. ") + this->getReplyErrorString(req0->readReplyText()) )<<endl;
         delete(req0);
         return QStringLiteral("false");
     }
@@ -2293,13 +2272,13 @@ QString MSYandexDisk::getInfo(){
     if(!req->replyOK()){
         req->printReplyError();
 
-        qStdOut()<< req->replyText;
+        qStdOut()<< req->replyText<<endl;
         delete(req);
         return QStringLiteral("false");
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
-        qStdOut()<< QString(QStringLiteral("Service error. ") + this->getReplyErrorString(req->readReplyText()) );
+        qStdOut()<< QString(QStringLiteral("Service error. ") + this->getReplyErrorString(req->readReplyText()) )<<endl;
         delete(req);
         return QStringLiteral("false");
     }
