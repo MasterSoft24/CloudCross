@@ -1233,6 +1233,7 @@ void MSHttpRequest::readExecutorOutput(){ // read data from CurlExecutor and pla
 
     uint ebsz = e.size();
 
+    free(this->cUrlObject->_errorBuffer);
     this->cUrlObject->_errorBuffer = (char*) malloc(ebsz);
     memcpy(this->cUrlObject->_errorBuffer, e.data(),ebsz);
 
