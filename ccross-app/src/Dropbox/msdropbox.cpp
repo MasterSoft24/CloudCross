@@ -1562,6 +1562,12 @@ bool MSDropbox::remote_file_get(MSFSObject* object){
         return true;
     }
 
+    if(object->remote.objectType == MSRemoteFSObject::Type::folder){
+
+         qStdOut()<< object->fileName << QStringLiteral(" is a folder. Skipped.") <<endl ;
+         return true;
+     }
+
     QString id=object->remote.data["id"].toString();
 
     MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
@@ -1594,7 +1600,7 @@ bool MSDropbox::remote_file_get(MSFSObject* object){
             tb.modtime=(this->toMilliseconds(object->remote.data[QStringLiteral("client_modified")].toString(),true))/1000;;
 
             filePath = this->workPath+object->path + object->fileName;
-            utime(filePath.toStdString().c_str(),&tb);
+            utime(filePath.toLocal8Bit().constData(),&tb);
         }
     }
     else{
@@ -1740,7 +1746,7 @@ bool MSDropbox::remote_file_insert(MSFSObject *object){
             tb.actime=(this->toMilliseconds(job[QStringLiteral("client_modified")].toString(),true))/1000;;
             tb.modtime=(this->toMilliseconds(job[QStringLiteral("client_modified")].toString(),true))/1000;;
 
-            utime(filePath.toStdString().c_str(),&tb);
+            utime(filePath.toLocal8Bit().constData(),&tb);
             //------------------------------------------------------------------------------------------------------------------
 
 
@@ -1892,7 +1898,7 @@ bool MSDropbox::remote_file_insert(MSFSObject *object){
         tb.actime=(this->toMilliseconds(job[QStringLiteral("client_modified")].toString(),true))/1000;;
         tb.modtime=(this->toMilliseconds(job[QStringLiteral("client_modified")].toString(),true))/1000;;
 
-        utime(filePath.toStdString().c_str(),&tb);
+        utime(filePath.toLocal8Bit().constData(),&tb);
         //------------------------------------------------------------------------------------------------------------------
 
 
@@ -2034,7 +2040,7 @@ bool MSDropbox::remote_file_update(MSFSObject *object){
             tb.actime=(this->toMilliseconds(job[QStringLiteral("client_modified")].toString(),true))/1000;;
             tb.modtime=(this->toMilliseconds(job[QStringLiteral("client_modified")].toString(),true))/1000;;
 
-            utime(filePath.toStdString().c_str(),&tb);
+            utime(filePath.toLocal8Bit().constData(),&tb);
             //------------------------------------------------------------------------------------------------------------------
 
 
@@ -2171,7 +2177,7 @@ bool MSDropbox::remote_file_update(MSFSObject *object){
         tb.actime=(this->toMilliseconds(job[QStringLiteral("client_modified")].toString(),true))/1000;;
         tb.modtime=(this->toMilliseconds(job[QStringLiteral("client_modified")].toString(),true))/1000;;
 
-        utime(filePath.toStdString().c_str(),&tb);
+        utime(filePath.toLocal8Bit().constData(),&tb);
         //------------------------------------------------------------------------------------------------------------------
 
 

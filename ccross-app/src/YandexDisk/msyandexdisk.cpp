@@ -1521,6 +1521,13 @@ bool MSYandexDisk::remote_file_get(MSFSObject* object){
         return true;
     }
 
+    if(object->local.objectType==MSLocalFSObject::Type::folder){
+
+        qStdOut()<< object->fileName << QStringLiteral(" is a folder. Skipped.")<<endl  ;
+        return true;
+    }
+
+
     MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 
     req->setRequestUrl(QStringLiteral("https://cloud-api.yandex.net/v1/disk/resources/download"));

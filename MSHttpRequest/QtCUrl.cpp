@@ -306,7 +306,7 @@ QString QtCUrl::exec( Options &opt) {
     if (_textCodec) {
         //        curl_easy_cleanup(_curl);
         //return _textCodec->toUnicode(reply);
-        return _textCodec->toUnicode(QByteArray(_buffer.data(), _buffer.size()).toStdString().c_str());
+        return _textCodec->toUnicode(QByteArray(_buffer.data(), _buffer.size()).constData());
     }
 
 

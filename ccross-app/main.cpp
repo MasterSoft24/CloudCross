@@ -878,52 +878,54 @@ void emptyTrashOneDrive(MSProvidersPool *providers){
 // ============= FUSE =======================
 
 bool fuseMount(ProviderType prov,QString workPath,QString mountPoint){
+Q_UNUSED(prov);
+Q_UNUSED(workPath);
+Q_UNUSED(mountPoint);
+//    struct sockaddr_un name;
+//    char buf[1000];
 
-    struct sockaddr_un name;
-    char buf[1000];
+//    memset(&name, '0', sizeof(name));
 
-    memset(&name, '0', sizeof(name));
+//    name.sun_family = AF_UNIX;
 
-    name.sun_family = AF_UNIX;
+//    snprintf(name.sun_path, 200, "%s", "/tmp/ccfd.sock");
 
-    snprintf(name.sun_path, 200, "%s", "/tmp/ccfd.sock");
+//    int s=socket(PF_UNIX,SOCK_STREAM,0);
 
-    int s=socket(PF_UNIX,SOCK_STREAM,0);
+//    if(s== -1){
+//        return false;
+//    }
 
-    if(s== -1){
-        return false;
-    }
+//    int r=connect(s, (struct sockaddr *)&name, sizeof(struct sockaddr_un));
 
-    int r=connect(s, (struct sockaddr *)&name, sizeof(struct sockaddr_un));
+//    if(r<0){
+//        perror ("connect");
+//        return false;
+//    }
 
-    if(r<0){
-        perror ("connect");
-        return false;
-    }
+//    int sz= read(s,&buf[0],100);
 
-    int sz= read(s,&buf[0],100);
+//    if(sz >0){
+//        QString reply=&buf[0];
 
-    if(sz >0){
-        QString reply=&buf[0];
+//        if(reply.contains("HELLO")){
 
-        if(reply.contains("HELLO")){
+//            // try to start worker
+//            snprintf(&buf[0], 1000, "%s^%d^%s^%s", "new_mount",prov,workPath.toStdString().c_str(),mountPoint.toStdString().c_str());
+//            write(s,&buf[0],1000);
 
-            // try to start worker
-            snprintf(&buf[0], 1000, "%s^%d^%s^%s", "new_mount",prov,workPath.toStdString().c_str(),mountPoint.toStdString().c_str());
-            write(s,&buf[0],1000);
+//            sz= read(s,&buf[0],100);
 
-            sz= read(s,&buf[0],100);
+//            if(sz >0){
 
-            if(sz >0){
+//                return true;
+//            }
+//            else{
+//                return false;
+//            }
 
-                return true;
-            }
-            else{
-                return false;
-            }
-
-        }
-    }
+//        }
+//    }
 
     return false;
 }

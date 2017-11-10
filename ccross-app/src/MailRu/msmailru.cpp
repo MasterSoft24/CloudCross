@@ -421,7 +421,7 @@ bool MSMailRu::remote_file_get(MSFSObject *object){
 
             filePath = this->workPath + object->path + object->fileName;
 
-            utime(filePath.toStdString().c_str(),&tb);
+            utime(filePath.toLocal8Bit().constData(),&tb);
         }
     }
     else{
@@ -630,7 +630,7 @@ bool MSMailRu::remote_file_insert(MSFSObject *object, const char *newParameter){
          tb.actime=(this->toMilliseconds(zzd,true))/1000;
          tb.modtime=(this->toMilliseconds(zzd,true))/1000;
 
-         utime(filePath.toStdString().c_str(),&tb);
+         utime(filePath.toLocal8Bit().constData(),&tb);
 
          return true;
      }

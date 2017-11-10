@@ -1859,6 +1859,13 @@ bool MSGoogleDrive::remote_file_get(MSFSObject* object){
         return true;
     }
 
+    if(object->remote.objectType == MSRemoteFSObject::Type::folder){
+
+         qStdOut()<< object->fileName << QStringLiteral(" is a folder. Skipped.") <<endl ;
+         return true;
+     }
+
+
     QString id = object->remote.extraData.find(QStringLiteral("id")).value().toString();// object->remote.data["id"].toString();
 
     MSHttpRequest *req = new MSHttpRequest(this->proxyServer);

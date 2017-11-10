@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
     rds << req->cUrlObject->replyHeaders;
     rds << QByteArray(req->cUrlObject->_buffer.c_str());
     rds << (uint)(req->cUrlObject->lastError().code());
-    rds << QByteArray(req->cUrlObject->errorBuffer().toStdString().c_str());
+    rds << QByteArray(req->cUrlObject->errorBuffer().toLocal8Bit());
 
     QByteArray ru(req->cUrlObject->replyURL.toLocal8Bit());
     rds << ru;
@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
     }
 
 
-    std::cout << d.toBase64().toStdString().c_str()  ;
+    std::cout << d.toBase64().constData()  ;
 
     std::cout << std::flush;
 

@@ -86,7 +86,7 @@ afterReauth:
         tb.modtime=(this->toMilliseconds(dd,true))/1000;;
 
 
-        utime(filePath.toStdString().c_str(),&tb);
+        utime(filePath.toLocal8Bit().constData(),&tb);
 
         delete(req);
         return true;

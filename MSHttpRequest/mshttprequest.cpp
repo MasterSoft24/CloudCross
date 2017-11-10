@@ -162,7 +162,7 @@ void MSHttpRequest::setInputDataStream(QMultiBuffer *data){
         }
         else{
             QFile* f = qvariant_cast<QFile*> (data->items[i].slot);
-            this->dataStreamMultiBuffer.append(QPair<dataStreamTypes,QByteArray>(dataStreamTypes::DS_File,f->fileName().toStdString().c_str()));
+            this->dataStreamMultiBuffer.append(QPair<dataStreamTypes,QByteArray>(dataStreamTypes::DS_File,f->fileName().toLocal8Bit()));
         }
 
 
@@ -350,7 +350,7 @@ void MSHttpRequest::post(const QByteArray &data){
 
     }
     else {
-        this->replyError = QNetworkReply::NetworkError::ContentGoneError;
+        this->replyError = QNetworkReply::NetworkError::UnknownContentError;
         qDebug() << (QString("MSRequest - GET Error: %1\nBuffer: %2").arg(this->cUrlObject->lastError().text()).arg(this->cUrlObject->errorBuffer()));
     }
 }
@@ -546,7 +546,7 @@ void MSHttpRequest::post(QIODevice *data){
 
     }
     else {
-        this->replyError = QNetworkReply::NetworkError::ContentGoneError;
+        this->replyError = QNetworkReply::NetworkError::UnknownContentError;
         qDebug() << (QString("MSRequest - GET Error: %1\nBuffer: %2").arg(this->cUrlObject->lastError().text()).arg(this->cUrlObject->errorBuffer()));
     }
 
@@ -709,7 +709,7 @@ void MSHttpRequest::put(const QByteArray &data){
 
     }
     else {
-        this->replyError = QNetworkReply::NetworkError::ContentGoneError;
+        this->replyError = QNetworkReply::NetworkError::UnknownContentError;
         qDebug() << (QString("MSRequest - GET Error: %1\nBuffer: %2").arg(this->cUrlObject->lastError().text()).arg(this->cUrlObject->errorBuffer()));
     }
 
@@ -895,7 +895,7 @@ void MSHttpRequest::put(QIODevice *data){
 
     }
     else {
-        this->replyError = QNetworkReply::NetworkError::ContentGoneError;
+        this->replyError = QNetworkReply::NetworkError::UnknownContentError;
         qDebug() << (QString("MSRequest - GET Error: %1\nBuffer: %2").arg(this->cUrlObject->lastError().text()).arg(this->cUrlObject->errorBuffer()));
     }
 
@@ -974,7 +974,7 @@ void MSHttpRequest::deleteResource(){
 
     }
     else {
-        this->replyError = QNetworkReply::NetworkError::ContentGoneError;
+        this->replyError = QNetworkReply::NetworkError::UnknownContentError;
         qDebug() << (QString("MSRequest - DELETE Error: %1\nBuffer: %2").arg(this->cUrlObject->lastError().text()).arg(this->cUrlObject->errorBuffer()));
     }
 
@@ -1052,7 +1052,7 @@ void MSHttpRequest::get(){
 
     }
     else {
-        this->replyError = QNetworkReply::NetworkError::ContentGoneError;
+        this->replyError = QNetworkReply::NetworkError::UnknownContentError;
         qDebug() << (QString("MSRequest - GET Error: %1\nBuffer: %2").arg(this->cUrlObject->lastError().text()).arg(this->cUrlObject->errorBuffer()));
     }
 
@@ -1098,10 +1098,10 @@ void MSHttpRequest::exec(){
     }
 
     if(this->cUrlObject->outFile == nullptr){
-        ds << "NO_OUTFILE";
+        ds << QByteArray("NO_OUTFILE");
     }
     else{
-        ds << this->cUrlObject->outFile->fileName().toStdString().c_str();
+        ds << this->cUrlObject->outFile->fileName().toLocal8Bit();
     }
 
 
@@ -1112,7 +1112,7 @@ void MSHttpRequest::exec(){
     }
 
     if(this->dataStreamType == MSHttpRequest::dataStreamTypes::DS_File){
-        ds << this->dataStreamFile.toStdString().c_str();
+        ds << this->dataStreamFile.toLocal8Bit();
     }
 
     if(this->dataStreamType == MSHttpRequest::dataStreamTypes::DS_MultiBuffer){
@@ -1209,7 +1209,7 @@ void MSHttpRequest::readExecutorOutput(){ // read data from CurlExecutor and pla
 
 
     QByteArray b64 = po->readAllStandardOutput();
-    QByteArray b64_decoded = QByteArray::fromBase64(b64);
+    //QByteArray b64_decoded = QByteArray::fromBase64(b64);
     //qint32 bzs=b64_decoded.size();
 
 
@@ -1223,7 +1223,9 @@ void MSHttpRequest::readExecutorOutput(){ // read data from CurlExecutor and pla
     ds >> this->cUrlObject->replyHeaders;
     ds >> b; // _buffer
 
-    this->cUrlObject->_buffer.append(b.toStdString().c_str());
+//    this->cUrlObject->_buffer.append(b.toStdString().c_str());
+    this->cUrlObject->_buffer.append(b.constData());
+
     ds >> curlcode; //
     this->cUrlObject->_lastCode._code = static_cast<CURLcode>(curlcode); ;
 
@@ -1263,7 +1265,7 @@ void MSHttpRequest::readExecutorOutput(){ // read data from CurlExecutor and pla
 
         this->replyErrorText = this->cUrlObject->lastError().text() + this->cUrlObject->errorBuffer();
 
-        this->replyError = QNetworkReply::NetworkError::ContentGoneError;
+        this->replyError = QNetworkReply::NetworkError::UnknownContentError;
         qDebug() << this->replyErrorText;//(QString("MSRequest - GET Error: %1\nBuffer: %2").arg(this->cUrlObject->lastError().text()).arg(this->cUrlObject->errorBuffer()));
     }
 
