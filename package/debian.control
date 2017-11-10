@@ -1,0 +1,18 @@
+Source: cloudcross
+Version: 1.4.1-rc2-1
+Section: extra
+Priority: optional
+Build-Depends: libqt5network5, qtbase5-dev, qt5-qmake, libcurl4-openssl-dev
+Maintainer: Kamensky Vladimir (mastersoft24@yandex.ru)
+
+Package: cloudcross
+Priority: extra
+Section: net
+Installed-Size: 180
+Maintainer: Kamensky Vladimir (mastersoft24@yandex.ru)
+Architecture: any
+Version: 1.4.2-rc2-1
+Depends: libqt5network5, qtbase5-dev, qt5-qmake, libcurl4-openssl-dev
+Provides: ccross
+Description: CloudCross
+	is a improved multi-cloud (Google, Dropbox, Yandex.Disk, Cloud Mail.ru and OneDrive) client with Google Docs support and many other features
