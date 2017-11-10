@@ -1,6 +1,7 @@
 ## Change log:
 
 ### v1.4.1
+- Fix bug with downloading files. Now files are downloads into temp files before replace existing files on disk.
 - New option --empty-trash added.  This option works only with Yandex and Google providers (for this version. In the future possible appears other providers with supporting this feature.).
 - New option --filter-type was added.
 - New option --low-memory added. 

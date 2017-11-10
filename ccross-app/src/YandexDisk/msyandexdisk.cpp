@@ -519,13 +519,13 @@ bool MSYandexDisk::createSyncFileList(){
             }
             this->includeList=this->includeList.left(this->includeList.size()-1);
 
-            QRegExp regex2(this->excludeList);
+            QRegExp regex2(this->includeList);
             if(this->getOption(QStringLiteral("filter-type")) == QStringLiteral("regexp"))
                 regex2.setPatternSyntax(QRegExp::RegExp);
             else
                 regex2.setPatternSyntax(QRegExp::Wildcard);
             if(!regex2.isValid()){
-                qStdOut()<<QStringLiteral("Include filelist contains errors. Program will be terminated.")<<endl;
+                qStdOut() << QStringLiteral("Include filelist contains errors. Program will be terminated.")<<endl;
                 return false;
             }
         }

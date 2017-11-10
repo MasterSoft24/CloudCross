@@ -1130,9 +1130,10 @@ bool MSGoogleDrive::createSyncFileList(){
                 }
                 this->includeList=this->includeList+line+"|";
             }
+
             this->includeList=this->includeList.left(this->includeList.size()-1);
 
-            QRegExp regex2(this->excludeList);
+            QRegExp regex2(this->includeList);
             if(this->getOption(QStringLiteral("filter-type")) == QStringLiteral("regexp"))
                 regex2.setPatternSyntax(QRegExp::RegExp);
             else
