@@ -101,7 +101,7 @@ size_t reader(char* buffer, size_t size,size_t nitems, void* userdata){
     quint64 fsz = curlPtr->inpFile->size();
     quint64 pos = curlPtr->inpFile->pos();
 
-//    qInfo()<<"POS is "<<pos;
+//    qStdOut()<<"POS is "<<pos;
 
     if(curlPtr->payloadChunkSize == 0){ // if the file will be processed as a single piece
 

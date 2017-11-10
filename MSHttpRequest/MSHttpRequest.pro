@@ -15,7 +15,8 @@ SOURCES += main.cpp \
     mshttprequest.cpp \
     QtCUrl.cpp \
     qmultibuffer.cpp \
-    msnetworkcookiejar.cpp
+    msnetworkcookiejar.cpp \
+    qstdout.cpp
 
 
 # The following define makes your compiler emit warnings if you use
@@ -34,7 +35,8 @@ HEADERS += \
     QtCUrl.h \
     qmultibuffer.h \
     msnetworkcookiejar.h \
-    msnetworkproxy.h
+    msnetworkproxy.h \
+    qstdout.h
 
 DISTFILES += \
     MSHttpRequest.pri

@@ -49,9 +49,9 @@ int main(int argc, char *argv[])
 
     for(int i=0;i < 10 ;i++){
 
-    qInfo() << "===============      GET     ========================="<<endl;
-    qInfo() << "======================================================"<<endl;
-    qInfo() << " Simple GET with 2 params"<<endl;
+    qDebug() << "===============      GET     ========================="<<endl;
+    qDebug() << "======================================================"<<endl;
+    qDebug() << " Simple GET with 2 params"<<endl;
 
     MSNetworkProxy* proxy = new MSNetworkProxy();
 
@@ -78,12 +78,12 @@ int main(int argc, char *argv[])
 #endif
 
 
-    qInfo() << req->replyText<<endl;
+    qDebug() << req->replyText<<endl;
 
     delete(req);
     req = nullptr;
-    qInfo() << "======================================================"<<endl;
-    qInfo() << " Simple GET must return 1024 random bytes as response"<<endl;
+    qDebug() << "======================================================"<<endl;
+    qDebug() << " Simple GET must return 1024 random bytes as response"<<endl;
 
     req = new MSHttpRequest(0);
     req->setMethod("get");
@@ -95,12 +95,12 @@ int main(int argc, char *argv[])
     req->get();
 #endif
 
-    qInfo() << req->replyText<<endl;
+    qDebug() << req->replyText<<endl;
 
     delete(req);
     req = nullptr;
-    qInfo() << "======================================================"<<endl;
-    qInfo() << " Simple GET must write file with random bytes (100K max)"<<endl;
+    qDebug() << "======================================================"<<endl;
+    qDebug() << " Simple GET must write file with random bytes (100K max)"<<endl;
 
     req = new MSHttpRequest(0);
     req->setMethod("get");
@@ -114,17 +114,17 @@ int main(int argc, char *argv[])
     req->get();
 #endif
 
-    qInfo() << req->replyText<<endl;
+    qDebug() << req->replyText<<endl;
 
     delete(req);
     req = nullptr;
-    qInfo() << "======================================================"<<endl;
+    qDebug() << "======================================================"<<endl;
 
-    qInfo() << "===============      POST    ========================="<<endl;
+    qDebug() << "===============      POST    ========================="<<endl;
 
-    qInfo() << "======================================================"<<endl;
+    qDebug() << "======================================================"<<endl;
 
-    qInfo() << " Simple POST with 2 params"<<endl;
+    qDebug() << " Simple POST with 2 params"<<endl;
 
     req = new MSHttpRequest(0);
     req->setMethod("post");
@@ -143,12 +143,12 @@ int main(int argc, char *argv[])
 #endif
 
 
-    qInfo() << req->replyText<<endl;
+    qDebug() << req->replyText<<endl;
 
     delete(req);
     req = nullptr;
-    qInfo() << "======================================================"<<endl;
-    qInfo() << " Simple POST miltipart in QByteArray (for small data)"<<endl;
+    qDebug() << "======================================================"<<endl;
+    qDebug() << " Simple POST miltipart in QByteArray (for small data)"<<endl;
 
     req = new MSHttpRequest(0);
     req->setMethod("post");
@@ -186,12 +186,12 @@ int main(int argc, char *argv[])
 #endif
 
 
-    qInfo() << req->replyText<<endl;
+    qDebug() << req->replyText<<endl;
 
     delete(req);
     req = nullptr;
-    qInfo() << "======================================================"<<endl;
-    qInfo() << " Simple POST with simple payload "<<endl;
+    qDebug() << "======================================================"<<endl;
+    qDebug() << " Simple POST with simple payload "<<endl;
 
     req = new MSHttpRequest(0);
     req->setMethod("post");
@@ -219,12 +219,12 @@ int main(int argc, char *argv[])
     req->post(payload);
 #endif
 
-    qInfo() << req->replyText<<endl;
+    qDebug() << req->replyText<<endl;
 
     delete(req);
     req = nullptr;
-    qInfo() << "======================================================"<<endl;
-    qInfo() << " Simple POST with payload from file  (upload for big data)"<<endl;
+    qDebug() << "======================================================"<<endl;
+    qDebug() << " Simple POST with payload from file  (upload for big data)"<<endl;
 
     req = new MSHttpRequest(0);
     req->setMethod("post");
@@ -257,13 +257,13 @@ int main(int argc, char *argv[])
 #endif
 
 
-    qInfo() << req->replyText<<endl;
+    qDebug() << req->replyText<<endl;
 
     delete(req);
     req = nullptr;
     file.close();
-    qInfo() << "======================================================"<<endl;
-    qInfo() << " Simple POST miltipart in QMultiBuffer  (for big data)"<<endl;
+    qDebug() << "======================================================"<<endl;
+    qDebug() << " Simple POST miltipart in QMultiBuffer  (for big data)"<<endl;
 
     req = new MSHttpRequest(0);
     req->setMethod("post");
@@ -306,17 +306,17 @@ int main(int argc, char *argv[])
     req->post(&mb);
 #endif
 
-    qInfo() << req->replyText<<endl;
+    qDebug() << req->replyText<<endl;
 
     delete(req);
     req = nullptr;
     file2.close();
-    qInfo() << "======================================================"<<endl;
-    qInfo() << "===============      PUT     ========================="<<endl;
+    qDebug() << "======================================================"<<endl;
+    qDebug() << "===============      PUT     ========================="<<endl;
 
-    qInfo() << "======================================================"<<endl;
+    qDebug() << "======================================================"<<endl;
 
-    qInfo() << " Simple PUT with 2 params and small payload"<<endl;
+    qDebug() << " Simple PUT with 2 params and small payload"<<endl;
 
     req = new MSHttpRequest(0);
     req->setMethod("put");
@@ -345,13 +345,13 @@ int main(int argc, char *argv[])
 #endif
 
 
-    qInfo() << req->replyText<<endl;
+    qDebug() << req->replyText<<endl;
 
     delete(req);
     req = nullptr;
-    qInfo() << "======================================================"<<endl;
+    qDebug() << "======================================================"<<endl;
 
-    qInfo() << " Simple PUT with 2 params and payload from file"<<endl;
+    qDebug() << " Simple PUT with 2 params and payload from file"<<endl;
 
     req = new MSHttpRequest(0);
     req->setMethod("put");
@@ -379,13 +379,13 @@ int main(int argc, char *argv[])
 #endif
 
 
-    qInfo() << req->replyText<<endl;
+    qDebug() << req->replyText<<endl;
 
     delete(req);
     req = nullptr;
-    qInfo() << "======================================================"<<endl;
+    qDebug() << "======================================================"<<endl;
 
-    qInfo() << " Simple DELETE with 2 params "<<endl;
+    qDebug() << " Simple DELETE with 2 params "<<endl;
 
     req = new MSHttpRequest(0);
     req->setMethod("delete");
@@ -413,14 +413,14 @@ int main(int argc, char *argv[])
     req->deleteResource();
 #endif
 
-    qInfo() << req->replyText<<endl;
+    qDebug() << req->replyText<<endl;
 
     delete(req);
     req = nullptr;
-    qInfo() << "======================================================"<<endl;
+    qDebug() << "======================================================"<<endl;
 
 
-    qInfo() << " Remote set cookie test "<<endl;
+    qDebug() << " Remote set cookie test "<<endl;
 
     req = new MSHttpRequest(0);
     req->setMethod("get");
@@ -441,15 +441,15 @@ int main(int argc, char *argv[])
 
     print_cookies(req->cUrlObject->_curl);
 
-    qInfo() << req->replyText<<endl;
+    qDebug() << req->replyText<<endl;
 
     //delete(req);
     MSHttpRequest* req1 = req;
     req = nullptr;
-    qInfo() << "======================================================"<<endl;
+    qDebug() << "======================================================"<<endl;
 
 
-    qInfo() << " Remote set cookie test2 (with previously setted cookies) "<<endl;
+    qDebug() << " Remote set cookie test2 (with previously setted cookies) "<<endl;
 
     req = new MSHttpRequest(0);
     req->setMethod("get");
@@ -470,12 +470,12 @@ int main(int argc, char *argv[])
 
     print_cookies(req->cUrlObject->_curl);
 
-    qInfo() << req->replyText<<endl;
+    qDebug() << req->replyText<<endl;
 
     delete(req);
     delete(req1);
     req = nullptr;
-    qInfo() << "======================================================"<<endl;
+    qDebug() << "======================================================"<<endl;
 
 
     }

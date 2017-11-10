@@ -1143,7 +1143,7 @@ void MSHttpRequest::exec(){
             // to do something for not executor found cause
         }
 
-//qInfo() << d.toBase64();
+//qStdOut() << d.toBase64();
         exe->write( d.toBase64());
         exe->closeWriteChannel();
         exe->waitForFinished(999999999);
@@ -1196,7 +1196,7 @@ bool MSHttpRequest::replyOK(){
 
 void MSHttpRequest::printReplyError(){
 
-    qInfo() << this->replyErrorText << endl;
+    qStdOut() << this->replyErrorText << endl;
 }
 
 //==============================================================================================

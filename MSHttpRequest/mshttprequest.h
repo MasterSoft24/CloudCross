@@ -11,6 +11,7 @@
 #include "msnetworkcookiejar.h"
 #include "qmultibuffer.h"
 #include "msnetworkproxy.h"
+#include "qstdout.h"
 
 class MSHttpRequest : public QObject
 {

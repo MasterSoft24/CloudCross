@@ -18,7 +18,8 @@ SOURCES += main.cpp \
     ../MSHttpRequest/mshttprequest.cpp \
     ../MSHttpRequest/QtCUrl.cpp \
     ../MSHttpRequest/msnetworkcookiejar.cpp \
-    ../MSHttpRequest/qmultibuffer.cpp
+    ../MSHttpRequest/qmultibuffer.cpp \
+    ../MSHttpRequest/qstdout.cpp
 
 
 
@@ -27,7 +28,8 @@ HEADERS += \
     ../MSHttpRequest/QtCUrl.h \
     ../MSHttpRequest/msnetworkcookiejar.h \
     ../MSHttpRequest/qmultibuffer.h \
-    ../MSHttpRequest/msnetworkproxy.h
+    ../MSHttpRequest/msnetworkproxy.h \
+    ../MSHttpRequest/qstdout.h
 
 
 # The following define makes your compiler emit warnings if you use
