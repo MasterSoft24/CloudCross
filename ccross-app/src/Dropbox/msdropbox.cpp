@@ -1645,7 +1645,7 @@ bool MSDropbox::remote_file_insert(MSFSObject *object){
     // read file content and put him into request body
     QFile file(filePath);
 
-    qint64 fSize=file.size();
+    //qint64 fSize=file.size();
 //    unsigned int passCount=(unsigned int)((unsigned int)fSize / (unsigned int)DROPBOX_CHUNK_SIZE);// count of 150MB blocks
 
 
@@ -1947,7 +1947,7 @@ bool MSDropbox::remote_file_update(MSFSObject *object){
     // read file content and put him into request body
     QFile file(filePath);
 
-    qint64 fSize=file.size();
+    //qint64 fSize=file.size();
     //int passCount=fSize/DROPBOX_CHUNK_SIZE;// count of 150MB blocks
 
     if (!file.open(QIODevice::ReadOnly)){

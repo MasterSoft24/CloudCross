@@ -95,11 +95,11 @@ size_t reader(char* buffer, size_t size,size_t nitems, void* userdata){
 
     QtCUrl* curlPtr = (QtCUrl*)userdata;
 
-    qint64 out = 0;
-    qint64 realCount = 0;
+    quint64 out = 0;
+    quint64 realCount = 0;
 
-    qint64 fsz = curlPtr->inpFile->size();
-    qint64 pos = curlPtr->inpFile->pos();
+    quint64 fsz = curlPtr->inpFile->size();
+    quint64 pos = curlPtr->inpFile->pos();
 
 //    qInfo()<<"POS is "<<pos;
 
@@ -115,9 +115,9 @@ size_t reader(char* buffer, size_t size,size_t nitems, void* userdata){
     }
     else{ // if the file splitted by chunks
 
-        qint64 relPos = pos-curlPtr->payloadFilePosition; //position relative of chunk beginning
+        quint64 relPos = pos-curlPtr->payloadFilePosition; //position relative of chunk beginning
 
-        if( relPos + (size * nitems) > curlPtr->payloadChunkSize){
+        if( relPos + (size * nitems) > (quint64)curlPtr->payloadChunkSize){
             realCount = curlPtr->payloadChunkSize - relPos;
         }
         else{
@@ -158,14 +158,14 @@ size_t reader(char* buffer, size_t size,size_t nitems, void* userdata){
 }
 
 
-void* run_easy_perform(void* obj){
+//void* run_easy_perform(void* obj){
 
-    QtCUrl* curlPtr = (QtCUrl*)obj;
+//    QtCUrl* curlPtr = (QtCUrl*)obj;
 
-    curlPtr->exec(curlPtr->requestOptions);
+//    curlPtr->exec(curlPtr->requestOptions);
 
 
-}
+//}
 
 #ifdef QTCURL_DEBUG
 int trace(CURL *handle, curl_infotype type, unsigned char *data, size_t size, void *userp)
@@ -216,9 +216,9 @@ QtCUrl::~QtCUrl() {
         i.next();
         QVariant value = i.value();
         QVariant::Type type = value.type();
-        int g =9;
 
-                    if (value.typeName() == "char*") {
+
+                    if (QString(value.typeName()) == "char*") {
                         delete( value.value<char*>());
         //                curl_easy_setopt(_curl, i.key(), value.value<char*>());
                     }

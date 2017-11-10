@@ -2,14 +2,7 @@
 
 typedef size_t(*hdr_callback)(char *buffer, size_t size,size_t nitems, void *userdata);
 
-size_t header_callback(char *buffer, size_t size,size_t nitems, void *userdata);
 
-size_t header_callback(char *buffer, size_t size,size_t nitems, void *userdata){
-
-    QByteArray hba(buffer, size*nitems);
-    //MSHttpRequest::setReplyHeader(hba,"fuck");
-
-}
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -1173,12 +1166,13 @@ void MSHttpRequest::raw_exec(const QString &reqestURL){
 //==============================================================================================
 
 void MSHttpRequest::download(const QString &url){
-
+Q_UNUSED(url);
 }
 //==============================================================================================
 
 void MSHttpRequest::download(const QString &url, const QString &path){
-
+Q_UNUSED(url);
+Q_UNUSED(path)    ;
 }
 //==============================================================================================
 
@@ -1216,7 +1210,7 @@ void MSHttpRequest::readExecutorOutput(){ // read data from CurlExecutor and pla
 
     QByteArray b64 = po->readAllStandardOutput();
     QByteArray b64_decoded = QByteArray::fromBase64(b64);
-    qint32 bzs=b64_decoded.size();
+    //qint32 bzs=b64_decoded.size();
 
 
 
@@ -1249,7 +1243,7 @@ void MSHttpRequest::readExecutorOutput(){ // read data from CurlExecutor and pla
     if((QString(cookie) != "NO_COOKIE")&&(QString(cookie) != "")&&(this->cookieJarObject != nullptr)){
 
         // set cookie object
-        int y =9999;
+
         this->cookieJarObject->cookieFile->seek(0);
         this->cookieJarObject->cookieFile->write(cookie);
         this->cookieJarObject->cookieFile->flush();
