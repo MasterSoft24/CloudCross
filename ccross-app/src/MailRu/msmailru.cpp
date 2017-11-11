@@ -1466,7 +1466,7 @@ bool MSMailRu::filelist_FSObjectHasParent(const MSFSObject &fsObject){
 //        return true;
 //    }
 
-    if(fsObject.path.count("/")>1){
+    if((fsObject.path.count(QStringLiteral("/"))>=1)&&(fsObject.path!=QStringLiteral("/"))){
         return true;
     }
     else{

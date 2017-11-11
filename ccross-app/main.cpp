@@ -66,7 +66,7 @@
 
 #define APP_MAJOR_VERSION 1
 #define APP_MINOR_VERSION 4
-#define APP_BUILD_NUMBER  1
+#define APP_BUILD_NUMBER  "1-rc2"
 
 #define CCROSS_HOME_DIR ".ccross"
 #define CCROSS_CONFIG_FILE "ccross.conf"
