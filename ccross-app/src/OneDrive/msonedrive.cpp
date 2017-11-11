@@ -1317,19 +1317,19 @@ QHash<QString, MSFSObject> MSOneDrive::filelist_getFSObjectsByTypeRemote(MSRemot
 
 bool MSOneDrive::filelist_FSObjectHasParent(const MSFSObject &fsObject){
 
-    if(fsObject.path==QStringLiteral("/")){
-        return false;
-    }
-    else{
-        return true;
-    }
-
-//    if(fsObject.path.count(QStringLiteral("/"))>=1){
-//        return true;
-//    }
-//    else{
+//    if(fsObject.path==QStringLiteral("/")){
 //        return false;
 //    }
+//    else{
+//        return true;
+//    }
+
+    if(fsObject.path.count(QStringLiteral("/"))>1){
+        return true;
+    }
+    else{
+        return false;
+    }
 
 
 }

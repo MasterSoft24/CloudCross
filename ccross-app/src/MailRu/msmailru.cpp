@@ -1459,19 +1459,19 @@ QHash<QString, MSFSObject> MSMailRu::filelist_getFSObjectsByTypeRemote(MSRemoteF
 
 bool MSMailRu::filelist_FSObjectHasParent(const MSFSObject &fsObject){
 
-    if(fsObject.path=="/"){
-        return false;
-    }
-    else{
-        return true;
-    }
-
-//    if(fsObject.path.count("/")>=1){
-//        return true;
-//    }
-//    else{
+//    if(fsObject.path=="/"){
 //        return false;
 //    }
+//    else{
+//        return true;
+//    }
+
+    if(fsObject.path.count("/")>1){
+        return true;
+    }
+    else{
+        return false;
+    }
 }
 
 //=======================================================================================

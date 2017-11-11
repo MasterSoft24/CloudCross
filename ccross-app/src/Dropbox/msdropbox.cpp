@@ -1456,19 +1456,19 @@ QHash<QString,MSFSObject>   MSDropbox::filelist_getFSObjectsByTypeRemote(MSRemot
 //=======================================================================================
 
 bool MSDropbox::filelist_FSObjectHasParent(const MSFSObject &fsObject){
-    if(fsObject.path==QStringLiteral("/")){
-        return false;
-    }
-    else{
-        return true;
-    }
-
-//    if(fsObject.path.count(QStringLiteral("/"))>=1){
-//        return true;
-//    }
-//    else{
+//    if(fsObject.path==QStringLiteral("/")){
 //        return false;
 //    }
+//    else{
+//        return true;
+//    }
+
+    if(fsObject.path.count(QStringLiteral("/"))>1){
+        return true;
+    }
+    else{
+        return false;
+    }
 
 }
 

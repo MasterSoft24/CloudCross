@@ -1422,19 +1422,19 @@ QHash<QString,MSFSObject> MSGoogleDrive::filelist_getFSObjectsByTypeRemote(MSRem
 
 bool MSGoogleDrive::filelist_FSObjectHasParent(const MSFSObject &fsObject){
 
-    if(fsObject.path==QStringLiteral("/")){
-        return false;
-    }
-    else{
-        return true;
-    }
-
-//    if(fsObject.path.count(QStringLiteral("/"))>=1){
-//        return true;
-//    }
-//    else{
+//    if(fsObject.path==QStringLiteral("/")){
 //        return false;
 //    }
+//    else{
+//        return true;
+//    }
+
+    if(fsObject.path.count(QStringLiteral("/"))>1){
+        return true;
+    }
+    else{
+        return false;
+    }
 }
 
 //=======================================================================================
