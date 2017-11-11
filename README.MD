@@ -26,7 +26,7 @@ a  CloudCross ebuild may be found in [programmador](https://bitbucket.org/progra
 
 ### For install on deb-based distributions (Debian,Ubuntu,Linux Mint):
 
-	sudo apt-get install build-essential qt5-default qtbase5-dev qt5-qmake
+	sudo apt-get install build-essential qt5-default qtbase5-dev qt5-qmake libcurl4-openssl-dev
 
 
 
@@ -34,7 +34,7 @@ a  CloudCross ebuild may be found in [programmador](https://bitbucket.org/progra
 
 	yum groupinstall 'Development Tools'
 
-	yum install qt5-qtbase qt5-qtbase-devel
+	yum install qt5-qtbase qt5-qtbase-devel curl-devel
 
 
 
