@@ -1324,12 +1324,12 @@ bool MSOneDrive::filelist_FSObjectHasParent(const MSFSObject &fsObject){
         return true;
     }
 
-    if(fsObject.path.count(QStringLiteral("/"))>=1){
-        return true;
-    }
-    else{
-        return false;
-    }
+//    if(fsObject.path.count(QStringLiteral("/"))>=1){
+//        return true;
+//    }
+//    else{
+//        return false;
+//    }
 
 
 }
@@ -1953,17 +1953,12 @@ bool MSOneDrive::createSyncFileList(){
         connect(thr3,SIGNAL(finished()),t3,SLOT(quit()));
 
 
-//        QHash<QString,MSFSObject> L1;
-//        QHash<QString,MSFSObject> L2;
-//        QHash<QString,MSFSObject> L3;
-
         MSSyncThread* threads[3] = {thr1, thr2, thr3};
         int j = 0;
         for(int i = 0; i<keys.size(); i++ ){
             threads[j++]->threadSyncList.insert(keys[i],this->syncFileList.find(keys[i]).value());
             if (j == 3) j = 0;
         }
-        //this->doSync(L2);
 
         this->checkFolderStructures();
 

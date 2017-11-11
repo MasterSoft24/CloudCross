@@ -1237,20 +1237,12 @@ bool MSGoogleDrive::createSyncFileList(){
         connect(t3,SIGNAL(finished()),thr3,SLOT(deleteLater()));
         connect(thr3,SIGNAL(finished()),t3,SLOT(quit()));
 
-        for(int i=0;i<keys.size();i+=3){
-
-            if(i<=keys.size()-1){
-                thr1->threadSyncList.insert(keys[i],this->syncFileList.find(keys[i]).value());
-            }
-            if(i+1 <= keys.size()-1){
-                thr2->threadSyncList.insert(keys[i+1],this->syncFileList.find(keys[i+1]).value());
-            }
-            if(i+2 <= keys.size()-1){
-                thr3->threadSyncList.insert(keys[i+2],this->syncFileList.find(keys[i+2]).value());
-            }
-
+        MSSyncThread* threads[3] = {thr1, thr2, thr3};
+        int j = 0;
+        for(int i = 0; i<keys.size(); i++ ){
+            threads[j++]->threadSyncList.insert(keys[i],this->syncFileList.find(keys[i]).value());
+            if (j == 3) j = 0;
         }
-        //this->doSync(L2);
 
         this->checkFolderStructures();
 
@@ -1437,12 +1429,12 @@ bool MSGoogleDrive::filelist_FSObjectHasParent(const MSFSObject &fsObject){
         return true;
     }
 
-    if(fsObject.path.count(QStringLiteral("/"))>=1){
-        return true;
-    }
-    else{
-        return false;
-    }
+//    if(fsObject.path.count(QStringLiteral("/"))>=1){
+//        return true;
+//    }
+//    else{
+//        return false;
+//    }
 }
 
 //=======================================================================================

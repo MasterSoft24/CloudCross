@@ -46,7 +46,7 @@ int writer(char* data, size_t size, size_t nmemb, void* userdata) {
 
     if(curlPtr->outFile != nullptr){
 
-        out = curlPtr->outFile->write(data, size * nmemb);
+        curlPtr->outFile->write(data, size * nmemb);
         out = size * nmemb;
     }
     else{
@@ -188,6 +188,11 @@ QtCUrl::QtCUrl(): _textCodec(0) {
 
     this->payloadChunkSize =0;
     this->payloadFilePosition =0;
+
+    this->inpFile =nullptr;
+    this->outFile = nullptr;
+    this->headerFunction = nullptr;
+    this->slist = nullptr;
 
     _curl = curl_easy_init();
 //    _errorBuffer = new char[CURL_ERROR_SIZE];

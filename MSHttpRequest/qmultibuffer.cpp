@@ -24,6 +24,7 @@
 QMultiBuffer::QMultiBuffer()
 {
 
+    this->cursor =0;
 }
 
 QMultiBuffer::~QMultiBuffer()
