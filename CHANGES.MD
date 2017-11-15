@@ -2,6 +2,7 @@
 
 ### v1.4.1
 - Fix bug with downloading files. Now files are downloads into temp files before replace existing files on disk.
+- New option --no-sync. Used for uploading without synchronization and reading remote file list.
 - New option --empty-trash added.  This option works only with Yandex and Google providers (for this version. In the future possible appears other providers with supporting this feature.).
 - New option --filter-type was added.
 - New option --low-memory added. 
@@ -9,6 +10,7 @@
 - Closed few issues #27, #26, #24, #14, #15, #22, #21
 - Added a multi-threaded uploading/downloading. This feature can de avoid by --single-thread option.
 - Many enhancements for a reduced memory utilization.
+- Remove --direct-upload option
 
 ### v1.4.0
 - OneDrive support added.

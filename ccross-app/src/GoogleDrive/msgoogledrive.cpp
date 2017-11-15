@@ -1181,23 +1181,25 @@ bool MSGoogleDrive::createSyncFileList(){
         }
     }
 
-    qStdOut()<< QStringLiteral("Reading remote files")<<endl ;
+    if(this->getFlag("noSync")){
+        qStdOut() << "Synchronization capability was disabled."<<endl;
+    }
+    else{
+        qStdOut()<< QStringLiteral("Reading remote files")<<endl ;
 
+        if(!this->createHashFromRemote()){
 
-    if(!this->createHashFromRemote()){
+            qStdOut() << QStringLiteral("Error occured on reading remote files") <<endl ;
+            return false;
+        }
 
-        qStdOut() << QStringLiteral("Error occured on reading remote files") <<endl ;
-        return false;
+        if(!this->readRemote(this->getRoot(),QStringLiteral("/"))){ // top level files and folders
+            qStdOut() << QStringLiteral("Error occured on reading remote files")<<endl  ;
+            return false;
+        }
     }
 
-    // begin create
 
-
-
-    if(!this->readRemote(this->getRoot(),QStringLiteral("/"))){ // top level files and folders
-        qStdOut() << QStringLiteral("Error occured on reading remote files")<<endl  ;
-        return false;
-    }
 
     this->driveJSONFileList.clear();
 

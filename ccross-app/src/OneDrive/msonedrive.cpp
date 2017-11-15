@@ -1898,14 +1898,21 @@ bool MSOneDrive::createSyncFileList(){
         }
     }
 
-    qStdOut()<< QStringLiteral("Reading remote files")<<endl ;
-
-
-    if(!this->readRemote(QStringLiteral(""))){// top level files and folders
-        qStdOut()<<QStringLiteral("Error occured on reading remote files")<<endl  ;
-        return false;
-
+    if(this->getFlag("noSync")){
+        qStdOut() << "Synchronization capability was disabled."<<endl;
     }
+    else{
+        qStdOut()<< QStringLiteral("Reading remote files")<<endl ;
+
+
+        if(!this->readRemote(QStringLiteral(""))){// top level files and folders
+            qStdOut()<<QStringLiteral("Error occured on reading remote files")<<endl  ;
+            return false;
+
+        }
+    }
+
+
 
     qStdOut()<<QStringLiteral("Reading local files and folders")<<endl  ;
 

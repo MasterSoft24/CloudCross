@@ -115,10 +115,10 @@ void printHelp(){
     qStdOut()<< QObject::tr("   --provider arg             Set cloud provider for current sync operation. On this moment this option can be \n"
                             "                              a \"google\", \"yandex\", \"mailru\", \"onedrive\" or \"dropbox\". Default provider is Google Drive") <<endl;
 
-    qStdOut()<< QObject::tr("   --direct-upload url path   Allow upload file directly to cloud from URL.\n"
-                            "                              All options, except --provider and --path, are ignored.\n"
-                            "                              Uploaded file will be stored on remote storage into location which was defined by path.\n"
-                            "                              NOTE: Direct upload to OneDrive does not supported.") <<endl;
+//    qStdOut()<< QObject::tr("   --direct-upload url path   Allow upload file directly to cloud from URL.\n"
+//                            "                              All options, except --provider and --path, are ignored.\n"
+//                            "                              Uploaded file will be stored on remote storage into location which was defined by path.\n"
+//                            "                              NOTE: Direct upload to OneDrive does not supported.") <<endl;
     qStdOut()<< QObject::tr("   --login arg                Set login for access to cloud provider. \n"
                             "                              Now it used only for Cloud Mail.ru") <<endl;
     qStdOut()<< QObject::tr("   --password arg             Set password for access to cloud provider. \n"
@@ -133,9 +133,13 @@ void printHelp(){
     qStdOut()<< QObject::tr("   --single-thread            Run as single threaded") <<endl;
 
     qStdOut()<< QObject::tr("   --low-memory               Reduce memory utilization during reading a remote file list. Using of this"
-                          "                              option may do increase of synchronization time ") <<endl;
+                          "                                option may do increase of synchronization time ") <<endl;
 
-    qStdOut()<< QObject::tr("   --empty-trash              Delete all files from cloud trash bin.");
+    qStdOut()<< QObject::tr("   --empty-trash              Delete all files from cloud trash bin.")<<endl;
+
+    qStdOut()<< QObject::tr("   --no-sync                  If this option is set synchronization mechanism will be disabled and remote file list"
+                            "                              not be a readed. Local files will be uploaded without consideration of existence"
+                            "                              of this files on remote. Use with carefully")<<endl;
 }
 
 
@@ -1107,7 +1111,7 @@ int main(int argc, char *argv[])
     parser->insertOption(11,"--convert-doc");
     parser->insertOption(12,"--force 1");
     parser->insertOption(13,"--provider 1"); // google, yandex, dropbox or mailru
-    parser->insertOption(14,"--direct-upload 2"); // upload file directly to cloud
+//    parser->insertOption(14,"--direct-upload 2"); // upload file directly to cloud
 
     parser->insertOption(15,"--login 1");
     parser->insertOption(16,"--password 1");
@@ -1126,6 +1130,7 @@ int main(int argc, char *argv[])
 
     parser->insertOption(23,"--empty-trash");
 
+    parser->insertOption(24,"--no-sync");
 
     //...............
 
@@ -1196,7 +1201,11 @@ int main(int argc, char *argv[])
 
 
 
+    // ATTENTION!! since v1.4.1 direct uploading is not supports
     if(parser->isParamExist("direct-upload")){
+
+        qStdOut() << "Direct uploading is not supports. Terminate"<<endl;
+        return 0;
 
         qStdOut() << "Start direct uploading..."<<endl;
 
@@ -1451,7 +1460,12 @@ int main(int argc, char *argv[])
                 }
             }
 
-            providers->setStrategy(s);
+            if(!parser->isParamExist("no-sync")){
+                providers->setStrategy(s);
+            }
+            else{
+                qStdOut()<< "--no-sync was defined. --prefer option will be ignored."<<endl;
+            }
             break;
 
         case 7:// --list
@@ -1639,6 +1653,13 @@ int main(int argc, char *argv[])
             }
 
             return 0;
+            break;
+
+        case 24: // --no-sync
+
+                providers->setFlag("noSync",true);
+                providers->setStrategy(MSCloudProvider::SyncStrategy::PreferLocal);
+
             break;
 
         default: // syn execute without any params by default
