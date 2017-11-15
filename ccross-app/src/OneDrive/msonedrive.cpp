@@ -73,9 +73,9 @@ afterReauth:
     req->exec();
 
 
-    QString c = req->readReplyText();
+    QString c = req->getReplyHeader("WWW-Authenticate");//req->readReplyText();
 
-    if((int)req->replyError == 0){
+    if(((int)req->replyError == 0) && (c.size() == 0)){
 
         this->local_actualizeTempFile(this->workPath + object->path + CCROSS_TMP_PREFIX +object->fileName);
 
@@ -93,7 +93,7 @@ afterReauth:
 
     }
     else{
-        if(req->replyErrorText.contains(QStringLiteral("Host requires authentication"))){
+       if(c.contains("expired_token")){
             delete(req);
             this->refreshToken();
             req = new MSHttpRequest(this->proxyServer);

@@ -495,7 +495,7 @@ bool MSCloudProvider::stopListener(){
 
     //this->oauthListener->pauseAccepting();
     this->oauthListener->close();
-    delete(this->oauthListener);
+
     return true;
 }
 
