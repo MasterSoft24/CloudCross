@@ -379,6 +379,7 @@ bool MSYandexDisk::readRemote(const QString &currentPath){ //QString parentId,QS
                          fsObject.remote.objectType=MSRemoteFSObject::Type::folder;
                          fsObject.remote.modifiedDate=this->toMilliseconds(o[QStringLiteral("modified")].toString(),true);
 
+                         this->readRemote(yPath);
                       }
 
                       if(! this->filterServiceFileNames(yPath)){// skip service files and dirs
@@ -396,18 +397,15 @@ bool MSYandexDisk::readRemote(const QString &currentPath){ //QString parentId,QS
                       }
                       else{// use exclude by default
 
-                      if(this->excludeList != QStringLiteral("")){
-                      if(! this->filterExcludeFileNames(yPath)){
+                          if(this->excludeList != QStringLiteral("")){
+                              if(! this->filterExcludeFileNames(yPath)){
 
-                          continue;
-                      }
-                      }
+                                  continue;
+                              }
+                          }
                       }
 
 
-                      if(this->isFolder(o)){
-                          this->readRemote(yPath);
-                      }
 
                       this->syncFileList.insert(yPath, fsObject);
 

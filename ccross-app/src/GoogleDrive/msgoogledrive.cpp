@@ -673,6 +673,7 @@ bool MSGoogleDrive::readRemote(const QString &parentId, const QString &currentPa
             fsObject.remote.objectType=MSRemoteFSObject::Type::folder;
             fsObject.remote.modifiedDate=this->toMilliseconds(o[QStringLiteral("modifiedDate")].toString(),true);
 
+            this->readRemote(o[QStringLiteral("id")].toString(),currentPath+fsObject.fileName+"/");
         }
 
 
@@ -682,9 +683,9 @@ bool MSGoogleDrive::readRemote(const QString &parentId, const QString &currentPa
         }
 
 
-        if(this->isFolder(o)){// recursive self calling
-            this->readRemote(o[QStringLiteral("id")].toString(),currentPath+fsObject.fileName+"/");
-        }
+//        if(this->isFolder(o)){// recursive self calling
+//            this->readRemote(o[QStringLiteral("id")].toString(),currentPath+fsObject.fileName+"/");
+//        }
 
         if(this->getFlag(QStringLiteral("useInclude")) && this->includeList != QStringLiteral("")){//  --use-include
 
