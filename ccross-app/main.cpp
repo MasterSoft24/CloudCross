@@ -1038,51 +1038,15 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
 
 
-    // Application instance definition
+    // Testing for an existence of all application files
 
-//    QString AAID=getAIID();
-//    QString OS=getOS();
+    QFile f("ccross-curl");
 
-////    QSysInfo sy;
+    if(!f.exists()){
 
-////    QStringList qv=QString(qVersion()).split(".");
-
-//    QString PLATFORM;
-//    QString DISTR;
-
-
-////    if(qv.at(0).toInt()<5){
-////        qDebug()<<"Qt version too low";
-////        return 0;
-////    }
-
-////    if(qv.at(1).toInt()<4){
-
-//        utsname u;
-//        uname(&u);
-
-//        PLATFORM=u.machine;
-//        DISTR=QString(u.sysname)+" "+QString(u.release);
-
-
-////    }
-////    else{
-
-////        PLATFORM=sy.currentCpuArchitecture();
-////        DISTR=sy.productType()+" "+sy.productVersion();
-////    }
-
-
-////    MSRequest* req=new MSRequest();
-////    req->setRequestUrl("http://cloudcross.mastersoft24.ru/stat");
-////    req->setMethod("get");
-////    req->addQueryItem("os",            OS);
-////    req->addQueryItem("distr",         DISTR);
-////    req->addQueryItem("platform",      PLATFORM);
-////    req->addQueryItem("aaid",          AAID);
-
-////    req->exec();
-
+        qStdOut() << "A part of CloudCross (ccross-curl) not found in PATH. Terminated..."<<endl;
+        return 0;
+    }
 
 //    QTextCodec *russian =QTextCodec::codecForName("unicode");
 //     QTextCodec::setCodecForLocale(russian);
