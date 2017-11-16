@@ -73,6 +73,11 @@ afterReauth:
     req->exec();
 
 
+    // test for error cause tracked below
+
+    //req->cUrlObject->replyHeaders.append(QPair<QByteArray,QByteArray>("WWW-Authenticate","Bearer realm=\"OneDriveAPI\", error=\"expired_token\", error_description=\"Auth token expired. Try refreshing.\""));
+
+
     QString c = req->getReplyHeader("WWW-Authenticate");//req->readReplyText();
 
     if(((int)req->replyError == 0) && (c.size() == 0)){

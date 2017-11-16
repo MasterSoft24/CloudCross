@@ -57,5 +57,5 @@ a  CloudCross ebuild may be found in [programmador](https://bitbucket.org/progra
 
 As a result, in the build directory will be appears a three subdirectories with a result of compilation. In a *ccross-app* folder we need a **ccross** file, in a *ccross-curl-executor* we need a **ccross-curl** file. These two file is a main CloudCross executables.
 
-For detailed usage instructions see https://cloudcross.mastersoft24.ru/#usage
+For detailed usage instructions see https://cloudcross.mastersoft24.ru/usage
 
