@@ -661,7 +661,7 @@ void syncMailru(MSProvidersPool* providers){
 
     mrp->createSyncFileList();
 
-    delete(mrp->cookies);
+    //delete(mrp->cookies);
 }
 
 
