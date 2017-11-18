@@ -661,7 +661,7 @@ void syncMailru(MSProvidersPool* providers){
 
     mrp->createSyncFileList();
 
-    //delete(mrp->cookies);
+    //delete(mrp->cookies);// segfault here
 }
 
 
@@ -1037,16 +1037,28 @@ int main(int argc, char *argv[])
 
     QCoreApplication a(argc, argv);
 
-
     // Testing for an existence of all application files
 
-    QFile f("ccross-curl");
+    QStringList p;
 
-    if(!f.exists()){
+    QProcess *exe = new QProcess();
 
+    exe->start("ccross-curl",p);
+    exe->write( "ku-ku");
+    exe->closeWriteChannel();
+    exe->waitForFinished(999999999);
+
+    QByteArray b64 = exe->readAllStandardOutput();
+
+    if( b64.size() == 0){
+
+        delete(exe);
         qStdOut() << "A part of CloudCross (ccross-curl) not found in PATH. Terminated..."<<endl;
         return 0;
     }
+
+    delete(exe);
+
 
 //    QTextCodec *russian =QTextCodec::codecForName("unicode");
 //     QTextCodec::setCodecForLocale(russian);

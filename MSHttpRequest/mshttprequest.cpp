@@ -131,6 +131,13 @@ QString MSHttpRequest::getReplyHeader(const QByteArray &headerName){
 void MSHttpRequest::setOutputFile(const QString &fileName){
 
     this->cUrlObject->outFile = new QFile(fileName);
+
+    QString pt=fileName.mid(0,fileName.lastIndexOf("/"));
+
+    if(pt != ""){
+        system(QString("mkdir -p \"" + pt + "\"").toLocal8Bit().constData());
+    }
+
 //    this->cUrlObject->outFile->open(QIODevice::WriteOnly);
 
 }
@@ -1139,11 +1146,11 @@ void MSHttpRequest::exec(){
 
         exe->start("ccross-curl",p);
 
-        Q_PID exe_pid = exe->pid();
-        if(exe_pid <= 0){
+//        Q_PID exe_pid = exe->pid();
+//        if(exe_pid <= 0){
 
-            // to do something for not executor found cause
-        }
+//            // to do something for not executor found cause
+//        }
 
 //qStdOut() << d.toBase64();
         exe->write( d.toBase64());
