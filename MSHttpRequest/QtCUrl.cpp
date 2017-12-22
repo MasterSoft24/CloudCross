@@ -288,13 +288,6 @@ QString QtCUrl::exec( Options &opt) {
 
     _lastCode = Code(curl_easy_perform(_curl));
 
-    //curl_easy_cleanup(_curl);
-    //const char* reply = opt[CURLOPT_WRITEDATA].value<std::string*>()->data();
-
-    //const char* reply = buffer().data();
-    // QByteArray(_buffer.data(), _buffer.size());
-
-
     curl_easy_getinfo(_curl, CURLINFO_EFFECTIVE_URL, &_replyURL);
 
     if(_replyURL != nullptr){
@@ -309,8 +302,7 @@ QString QtCUrl::exec( Options &opt) {
 
 
     if (_textCodec) {
-        //        curl_easy_cleanup(_curl);
-        //return _textCodec->toUnicode(reply);
+
         return _textCodec->toUnicode(QByteArray(_buffer.data(), _buffer.size()).constData());
     }
 
