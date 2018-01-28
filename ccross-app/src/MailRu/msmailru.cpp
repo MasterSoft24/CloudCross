@@ -573,11 +573,13 @@ bool MSMailRu::remote_file_insert(MSFSObject *object, const char *newParameter){
      req->exec();
 //     req->post("");
 
-     if(!req->replyOK()){
+     QString content=req->replyText;//cUrlObject->errorBuffer();
 
-         QString content=req->cUrlObject->errorBuffer();
+     if((!req->replyOK()) || (content.contains( QStringLiteral("400")))){
 
-         if(content.contains( QStringLiteral("400"))){// need remove and re-upload
+
+
+//         if(content.contains( QStringLiteral("400"))){// need remove and re-upload
 
              bool r=this->remote_file_trash(object);
              if(r == true){
@@ -592,7 +594,7 @@ bool MSMailRu::remote_file_insert(MSFSObject *object, const char *newParameter){
              }
 
 
-         }
+//         }
 
 
 
@@ -604,7 +606,7 @@ bool MSMailRu::remote_file_insert(MSFSObject *object, const char *newParameter){
          return false;
      }
 
-     QString content=req->readReplyText();
+    /* QString */content=req->readReplyText();
 
      QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
      QJsonObject job = json.object();
@@ -661,6 +663,10 @@ bool MSMailRu::remote_file_update(MSFSObject *object)
 
 
 bool MSMailRu::remote_file_makeFolder(MSFSObject *object){
+
+    if(this->getFlag(QStringLiteral("dryRun"))){
+        return true;
+    }
 
     this->auth();
 
@@ -750,6 +756,10 @@ Q_UNUSED(parentID);
 
 
 bool MSMailRu::remote_file_trash(MSFSObject *object){
+
+    if(this->getFlag(QStringLiteral("dryRun"))){
+        return true;
+    }
 
     this->auth();
 
