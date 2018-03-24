@@ -85,7 +85,8 @@ HEADERS += \
 
 
 target.path = /usr/bin
-INSTALLS += target
+ccross.target = /usr/bin/ccross
+INSTALLS += ccross
 
 DISTFILES += \
     README.MD \

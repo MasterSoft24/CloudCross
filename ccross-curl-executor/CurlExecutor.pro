@@ -45,5 +45,6 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 target.path = /usr/bin
-INSTALLS += target
+cccurl.target = /usr/bin/ccross-curl
+INSTALLS += cccurl
 
