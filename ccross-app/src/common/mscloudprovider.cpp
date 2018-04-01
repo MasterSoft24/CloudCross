@@ -299,6 +299,61 @@ qint64 MSCloudProvider::toMilliseconds(const QString &dateTimeString, bool isUTC
 
 }
 
+QString MSCloudProvider::toRFC3339(qint64 timestamp){
+    //https://api.kde.org/4.x-api/kdelibs-apidocs/kdecore/html/kdatetime_8cpp_source.html
+
+    QString s;
+    QString tz;
+    QString result="";
+    QDateTime d = QDateTime::fromMSecsSinceEpoch(timestamp);
+    QString sign="";
+
+    result += s.sprintf("%04d-%02d-%02dT%02d:%02d:%02d",
+    d.date().year(), d.date().month(), d.date().day(),
+    d.time().hour(), d.time().minute(), d.time().second());
+
+    int msec = d.time().msec();
+    if (msec){
+        int digits = 3;
+        if (!(msec % 10)){
+            msec /= 10, --digits;
+        }
+        if (!(msec % 10)){
+            msec /= 10, --digits;
+        }
+        result += s.sprintf(".%0*d", digits, d.time().msec());
+    }
+
+    if(d.timeSpec() == Qt::UTC){
+        return result+"Z";
+    }
+    if(d.timeSpec() == Qt::LocalTime){
+        //tz = d.timeZoneAbbreviation();
+
+        int offset = d.offsetFromUtc();
+
+        if(offset < 0){
+            offset = -offset;
+            sign="-";
+
+        }
+        else{
+            sign="+";
+        }
+
+        offset /= 60;
+        offset /= 60;
+
+        QString offDig=QString::number(offset);
+        if(offDig.length()<2){
+            offDig="0"+offDig;
+        }
+
+        return result +sign +offDig;
+    }
+
+}
+
 
 void MSCloudProvider::setFlag(const QString &flagName, bool flagVal){
 

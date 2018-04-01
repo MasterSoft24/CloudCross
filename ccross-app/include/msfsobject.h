@@ -67,6 +67,7 @@ public:
     bool isDocFormat;
 
     void getLocalMimeType(const QString &path);
+    QString getObjectExtension();
 
 };
 

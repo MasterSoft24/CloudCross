@@ -64,8 +64,6 @@ public:
     QString newRemoteID;// for files and folder who's will be uploaded. Set after upload procedure from server response
 
 
-
-
 };
 
 #endif // MSLOCALFSOBJECT_H

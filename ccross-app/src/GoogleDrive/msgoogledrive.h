@@ -39,6 +39,10 @@
 #include "include/mssyncthread.h"
 #include "include/qmultibuffer.h"
 
+#include <sys/types.h>
+#include <utime.h>
+#include <sys/time.h>
+
 
 class MSGoogleDrive : public MSCloudProvider
 {
@@ -109,6 +113,8 @@ public:
 
      bool filterGoogleDocsMimeTypes(const QString &mime);
      bool filterOfficeMimeTypes(const QString &mime);
+     bool filterOfficeFileExtensions(QString ext);
+     QString getOfficeFileExtensionByMimeType(QString mimeType);
 
 
      void checkFolderStructures();

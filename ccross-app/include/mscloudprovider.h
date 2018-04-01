@@ -170,7 +170,7 @@ public:
     // converts to milliseconds in UTC timezone
     qint64 toMilliseconds(QDateTime dateTime, bool isUTC=false);
     qint64 toMilliseconds(const QString &dateTimeString, bool isUTC=false);
-
+    QString toRFC3339(qint64 timestamp);
 
     // Modify Mode Flags
 

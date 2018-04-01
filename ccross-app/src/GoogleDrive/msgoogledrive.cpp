@@ -87,10 +87,10 @@ bool MSGoogleDrive::auth(){
 
     this->startListener(1973);
 
-//    if(!this->testReplyBodyForError(req->readReplyText())){
-//        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
-//        exit(0);
-//    }
+    //    if(!this->testReplyBodyForError(req->readReplyText())){
+    //        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+    //        exit(0);
+    //    }
 
 
     qStdOut()<< QStringLiteral("-------------------------------------")<<endl ;
@@ -98,7 +98,7 @@ bool MSGoogleDrive::auth(){
 
     qStdOut() << req->replyURL()<<endl;
     qStdOut()<<"" <<endl;
-;
+    ;
 
     delete(req);
 
@@ -123,7 +123,7 @@ bool MSGoogleDrive::auth(){
 
 bool MSGoogleDrive::onAuthFinished(const QString &html, MSCloudProvider *provider){
 
-Q_UNUSED(provider)
+    Q_UNUSED(provider)
 
     MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
@@ -183,11 +183,11 @@ Q_UNUSED(provider)
 
 void MSGoogleDrive::saveTokenFile(const QString &path){
 
-        QFile key(path+"/"+this->tokenFileName);
-        key.open(QIODevice::WriteOnly | QIODevice::Text);
-        QTextStream outk(&key);
-        outk << QStringLiteral("{\"refresh_token\" : \"") + this->token + QStringLiteral("\"}");
-        key.close();
+    QFile key(path+"/"+this->tokenFileName);
+    key.open(QIODevice::WriteOnly | QIODevice::Text);
+    QTextStream outk(&key);
+    outk << QStringLiteral("{\"refresh_token\" : \"") + this->token + QStringLiteral("\"}");
+    key.close();
 }
 
 //=======================================================================================
@@ -310,11 +310,11 @@ bool MSGoogleDrive::refreshToken(){
     QString v=job[QStringLiteral("access_token")].toString();
 
     if(v!=""){
-       this->access_token=v;
+        this->access_token=v;
 
-//        this->token=v;
+        //        this->token=v;
 
-//        this->saveTokenFile(this->workPath);
+        //        this->saveTokenFile(this->workPath);
 
 
         delete(req);
@@ -465,31 +465,31 @@ QString MSGoogleDrive::getRoot(){
     QString sl = job[QStringLiteral("items")].toArray()[0].toObject()[QStringLiteral("selfLink")].toString();
 
     return sl.mid(sl.indexOf(QStringLiteral("/files/"))+7,
-                            sl.indexOf(QStringLiteral("/children")) - sl.indexOf(QStringLiteral("/files/")) -7);
+                  sl.indexOf(QStringLiteral("/children")) - sl.indexOf(QStringLiteral("/files/")) -7);
 
 
-//    QHash<QString,QJsonValue>::iterator i=driveJSONFileList.begin();
-//    QJsonValue v;
+    //    QHash<QString,QJsonValue>::iterator i=driveJSONFileList.begin();
+    //    QJsonValue v;
 
-//    QHash<QString,QJsonValue> out;
+    //    QHash<QString,QJsonValue> out;
 
-//    while(i != driveJSONFileList.end()){
+    //    while(i != driveJSONFileList.end()){
 
-//        v= i.value();
+    //        v= i.value();
 
-//        bool isRoot=v.toObject()["parents"].toArray()[0].toObject()["isRoot"].toBool();
+    //        bool isRoot=v.toObject()["parents"].toArray()[0].toObject()["isRoot"].toBool();
 
-//        if(isRoot){
+    //        if(isRoot){
 
-//            QString yy = v.toObject()["parents"].toArray()[0].toObject()["id"].toString();
+    //            QString yy = v.toObject()["parents"].toArray()[0].toObject()["id"].toString();
 
-//        }
+    //        }
 
-//       i++;
+    //       i++;
 
-//    }
+    //    }
 
-//    return "";
+    //    return "";
 
 }
 
@@ -563,20 +563,20 @@ QHash<QString,QJsonValue> MSGoogleDrive::get(const QString &parentId, int target
 
             if(foldersAndFiles){
 
-                    if(!noTrash){
+                if(!noTrash){
+                    out.insert(v.toObject()[QStringLiteral("id")].toString(),v);
+                }
+                else{
+                    if(!oTrashed){
                         out.insert(v.toObject()[QStringLiteral("id")].toString(),v);
                     }
-                    else{
-                        if(!oTrashed){
-                            out.insert(v.toObject()[QStringLiteral("id")].toString(),v);
-                        }
-                    }
+                }
 
             }
 
         }
 
-       i++;
+        i++;
 
     }
 
@@ -625,7 +625,7 @@ bool MSGoogleDrive::readRemote(const QString &parentId, const QString &currentPa
         if( this->filterGoogleDocsMimeTypes(o["mimeType"].toString()) ){
             if(!this->getFlag("convertDoc")){
                 i++;
-                continue; // skip google docs objects
+                continue; // skip google docs objects if flag convertDoc not set
             }
         }
 
@@ -638,7 +638,10 @@ bool MSGoogleDrive::readRemote(const QString &parentId, const QString &currentPa
 
         fsObject.remote.extraData.insert(QStringLiteral("id"),o[QStringLiteral("id")].toString());
         fsObject.remote.extraData.insert(QStringLiteral("mimeType"),o[QStringLiteral("mimeType")].toString());
-        fsObject.remote.extraData.insert("exportLinks",o["exportLinks"].toObject());
+        QJsonObject expLink=o[QStringLiteral("exportLinks")].toObject();
+        QVariantHash qh= expLink.toVariantHash();
+        fsObject.remote.extraData.insert("exportLinks",QVariant(qh));
+        fsObject.remote.extraData.insert("modifiedDate",o[QStringLiteral("modifiedDate")].toString());
 
 
 
@@ -661,7 +664,7 @@ bool MSGoogleDrive::readRemote(const QString &parentId, const QString &currentPa
                 fsObject.fileName=o[QStringLiteral("title")].toString();
             }
             fsObject.remote.objectType=MSRemoteFSObject::Type::file;
-            fsObject.remote.modifiedDate=this->toMilliseconds(o[QStringLiteral("modifiedDate")].toString(),true);
+            fsObject.remote.modifiedDate=(this->toMilliseconds(o[QStringLiteral("modifiedDate")].toString(),true))/1000;
         }
 
         if(this->isFolder(o)){
@@ -671,7 +674,7 @@ bool MSGoogleDrive::readRemote(const QString &parentId, const QString &currentPa
                 fsObject.fileName=o[QStringLiteral("originalFilename")].toString();
             }
             fsObject.remote.objectType=MSRemoteFSObject::Type::folder;
-            fsObject.remote.modifiedDate=this->toMilliseconds(o[QStringLiteral("modifiedDate")].toString(),true);
+            fsObject.remote.modifiedDate=(this->toMilliseconds(o[QStringLiteral("modifiedDate")].toString(),true))/1000;
 
             this->readRemote(o[QStringLiteral("id")].toString(),currentPath+fsObject.fileName+"/");
         }
@@ -683,9 +686,9 @@ bool MSGoogleDrive::readRemote(const QString &parentId, const QString &currentPa
         }
 
 
-//        if(this->isFolder(o)){// recursive self calling
-//            this->readRemote(o[QStringLiteral("id")].toString(),currentPath+fsObject.fileName+"/");
-//        }
+        //        if(this->isFolder(o)){// recursive self calling
+        //            this->readRemote(o[QStringLiteral("id")].toString(),currentPath+fsObject.fileName+"/");
+        //        }
 
         if(this->getFlag(QStringLiteral("useInclude")) && this->includeList != QStringLiteral("")){//  --use-include
 
@@ -696,19 +699,19 @@ bool MSGoogleDrive::readRemote(const QString &parentId, const QString &currentPa
         }
         else{// use exclude by default
 
-        if(this->excludeList != QStringLiteral("")){
-		if(! this->filterExcludeFileNames(currentPath+fsObject.fileName)){
-		    i++;
-		    continue;
-		}
-	    }
+            if(this->excludeList != QStringLiteral("")){
+                if(! this->filterExcludeFileNames(currentPath+fsObject.fileName)){
+                    i++;
+                    continue;
+                }
+            }
         }
 
         this->syncFileList.insert(currentPath+fsObject.fileName, fsObject);
 
-//        if(this->isFolder(o)){// recursive self calling
-//            this->readRemote(o["id"].toString(),currentPath+fsObject.fileName+"/");
-//        }
+        //        if(this->isFolder(o)){// recursive self calling
+        //            this->readRemote(o["id"].toString(),currentPath+fsObject.fileName+"/");
+        //        }
 
 
         i++;
@@ -753,128 +756,140 @@ bool MSGoogleDrive::readLocal(const QString &path){
         entryInfoList_flags= entryInfoList_flags | QDir::System | QDir::Hidden;
     }
 
-        QFileInfoList files = dir.entryInfoList(entryInfoList_flags);
+    QFileInfoList files = dir.entryInfoList(entryInfoList_flags);
 
-        foreach(const QFileInfo &fi, files){
+    foreach(const QFileInfo &fi, files){
 
-            QString Path = fi.absoluteFilePath();
-            QString relPath=fi.absoluteFilePath().replace(this->workPath,"");
+        QString Path = fi.absoluteFilePath();
+        QString relPath=fi.absoluteFilePath().replace(this->workPath,"");
 
-            if(! this->filterServiceFileNames(relPath)){// skip service files and dirs
-                continue;
-            }
+        if(! this->filterServiceFileNames(relPath)){// skip service files and dirs
+            continue;
+        }
 
 
-            if(fi.isDir()){
+        if(fi.isDir()){
 
-                readLocal(Path);
-            }
+            readLocal(Path);
+        }
 
 
         if(this->getFlag(QStringLiteral("useInclude")) && this->includeList != QStringLiteral("")){//  --use-include
 
-		if( this->filterIncludeFileNames(relPath)){
+            if( this->filterIncludeFileNames(relPath)){
 
-		    continue;
-		}
-	    }
-	    else{// use exclude by default
-
-        if(this->excludeList != QStringLiteral("")){
-		    if(! this->filterExcludeFileNames(relPath)){
-
-			continue;
-		    }
-		}
-	    }
-
-
-
-            QHash<QString,MSFSObject>::iterator i=this->syncFileList.find(relPath);
-
-
-
-            if(i!=this->syncFileList.end()){// if object exists in Google Drive
-
-                MSFSObject* fsObject = &(i.value());
-
-
-                fsObject->local.fileSize=  fi.size();
-                fsObject->local.md5Hash= this->fileChecksum(Path,QCryptographicHash::Md5);
-                fsObject->local.exist=true;
-                fsObject->getLocalMimeType(this->workPath);
-
-                if(fi.isDir()){
-                    fsObject->local.objectType=MSLocalFSObject::Type::folder;
-                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
-                }
-                else{
-
-                    fsObject->local.objectType=MSLocalFSObject::Type::file;
-                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
-
-                }
-
-                if(this->getFlag(QStringLiteral("convertDoc")) && this->filterOfficeMimeTypes(fsObject->local.mimeType )){
-
-                    fsObject->isDocFormat=true;
-                }
-
-                fsObject->state=this->filelist_defineObjectState(fsObject->local,fsObject->remote);
-
+                continue;
             }
-            else{
+        }
+        else{// use exclude by default
 
-                MSFSObject fsObject;
+            if(this->excludeList != QStringLiteral("")){
+                if(! this->filterExcludeFileNames(relPath)){
 
-                fsObject.state=MSFSObject::ObjectState::NewLocal;
-
-                if(relPath.lastIndexOf(QStringLiteral("/"))==0){
-                    fsObject.path="/";
+                    continue;
                 }
-                else{
-                    fsObject.path=QString(relPath).left(relPath.lastIndexOf(QStringLiteral("/")))+QStringLiteral("/");
-                }
-
-                fsObject.fileName=fi.fileName();
-                fsObject.getLocalMimeType(this->workPath);
-
-                fsObject.local.fileSize=  fi.size();
-                fsObject.local.md5Hash= this->fileChecksum(Path,QCryptographicHash::Md5);
-                fsObject.local.exist=true;
-
-                if(fi.isDir()){
-                    fsObject.local.objectType=MSLocalFSObject::Type::folder;
-                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
-                }
-                else{
-
-                    fsObject.local.objectType=MSLocalFSObject::Type::file;
-                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
-
-                }
-
-                fsObject.state=this->filelist_defineObjectState(fsObject.local,fsObject.remote);
-
-                if(this->getFlag(QStringLiteral("convertDoc")) && this->filterOfficeMimeTypes(fsObject.local.mimeType )){
-
-                    fsObject.isDocFormat=true;
-                }
-
-                this->syncFileList.insert(relPath,fsObject);
-
             }
+        }
 
+        MSFSObject tmpObj;
+        tmpObj.fileName = relPath;
+        QString ext = tmpObj.getObjectExtension();
 
-//            if(fi.isDir()){
+        if(ext == "xlsx" || ext == "docx" || ext =="pptx" || ext=="odt" || ext=="ods" || ext == "odp"){
 
-//                readLocal(Path);
-//            }
-
+            if(this->getFlag(QStringLiteral("convertDoc"))){
+                relPath = relPath.left(relPath.lastIndexOf("."));
+            }
 
         }
 
-        return true;
+
+
+        QHash<QString,MSFSObject>::iterator i=this->syncFileList.find(relPath);
+
+
+
+        if(i!=this->syncFileList.end()){// if object exists in Google Drive
+
+            MSFSObject* fsObject = &(i.value());
+
+
+            fsObject->local.fileSize=  fi.size();
+            fsObject->local.md5Hash= this->fileChecksum(Path,QCryptographicHash::Md5);
+            fsObject->local.exist=true;
+            fsObject->getLocalMimeType(this->workPath);
+
+            if(fi.isDir()){
+                fsObject->local.objectType=MSLocalFSObject::Type::folder;
+                fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000;
+            }
+            else{
+
+                fsObject->local.objectType=MSLocalFSObject::Type::file;
+                fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000;
+
+            }
+
+            if(this->getFlag(QStringLiteral("convertDoc")) && (this->filterOfficeMimeTypes(fsObject->local.mimeType )||this->filterOfficeFileExtensions(ext/*fsObject->getObjectExtension()*/))){
+
+                fsObject->isDocFormat=true;
+            }
+
+            fsObject->state=this->filelist_defineObjectState(fsObject->local,fsObject->remote);
+
+        }
+        else{
+
+            MSFSObject fsObject;
+
+            fsObject.state=MSFSObject::ObjectState::NewLocal;
+
+            if(relPath.lastIndexOf(QStringLiteral("/"))==0){
+                fsObject.path="/";
+            }
+            else{
+                fsObject.path=QString(relPath).left(relPath.lastIndexOf(QStringLiteral("/")))+QStringLiteral("/");
+            }
+
+            fsObject.fileName=fi.fileName();
+            fsObject.getLocalMimeType(this->workPath);
+
+            fsObject.local.fileSize=  fi.size();
+            fsObject.local.md5Hash= this->fileChecksum(Path,QCryptographicHash::Md5);
+            fsObject.local.exist=true;
+
+            if(fi.isDir()){
+                fsObject.local.objectType=MSLocalFSObject::Type::folder;
+                fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000;
+            }
+            else{
+
+                fsObject.local.objectType=MSLocalFSObject::Type::file;
+                fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000;
+
+            }
+
+            fsObject.state=this->filelist_defineObjectState(fsObject.local,fsObject.remote);
+
+            if(this->getFlag(QStringLiteral("convertDoc"))  && (this->filterOfficeMimeTypes(fsObject.local.mimeType )||this->filterOfficeFileExtensions(fsObject.getObjectExtension()))){
+
+                fsObject.isDocFormat=true;
+            }
+
+            this->syncFileList.insert(relPath,fsObject);
+
+        }
+
+
+        //            if(fi.isDir()){
+
+        //                readLocal(Path);
+        //            }
+
+
+    }
+
+    return true;
 
 }
 
@@ -883,115 +898,128 @@ bool MSGoogleDrive::readLocal(const QString &path){
 
 bool MSGoogleDrive::readLocalSingle(const QString &path){
 
-       QFileInfo fi(path);
+    QFileInfo fi(path);
 
 
-            QString Path = fi.absoluteFilePath();
-            QString relPath=fi.absoluteFilePath().replace(this->workPath,"");
+    QString Path = fi.absoluteFilePath();
+    QString relPath=fi.absoluteFilePath().replace(this->workPath,"");
 
-            if(! this->filterServiceFileNames(relPath)){// skip service files and dirs
-                return false;
-            }
+    if(! this->filterServiceFileNames(relPath)){// skip service files and dirs
+        return false;
+    }
 
 
-        if(this->getFlag(QStringLiteral("useInclude")) && this->includeList != QStringLiteral("")){//  --use-include
+    if(this->getFlag(QStringLiteral("useInclude")) && this->includeList != QStringLiteral("")){//  --use-include
 
-            if( this->filterIncludeFileNames(relPath)){
+        if( this->filterIncludeFileNames(relPath)){
+
+            return false;
+        }
+    }
+    else{// use exclude by default
+
+        if(this->excludeList != QStringLiteral("")){
+            if(! this->filterExcludeFileNames(relPath)){
 
                 return false;
             }
         }
-        else{// use exclude by default
+    }
 
-            if(this->excludeList != QStringLiteral("")){
-                if(! this->filterExcludeFileNames(relPath)){
+    MSFSObject tmpObj;
+    tmpObj.fileName = relPath;
+    QString ext = tmpObj.getObjectExtension();
 
-                    return false;
-                }
-            }
+    if(ext == "xlsx" || ext == "docx" || ext =="pptx" || ext=="odt" || ext=="ods" || ext == "odp"){
+
+        if(this->getFlag(QStringLiteral("convertDoc"))){
+            relPath = relPath.left(relPath.lastIndexOf("."));
         }
 
-
-
-            QHash<QString,MSFSObject>::iterator i=this->syncFileList.find(relPath);
-
-
-
-            if(i!=this->syncFileList.end()){// if object exists in Google Drive
-
-                MSFSObject* fsObject = &(i.value());
-
-
-                fsObject->local.fileSize=  fi.size();
-                fsObject->local.md5Hash= this->fileChecksum(Path,QCryptographicHash::Md5);
-                fsObject->local.exist=true;
-                fsObject->getLocalMimeType(this->workPath);
-
-                if(fi.isDir()){
-                    fsObject->local.objectType=MSLocalFSObject::Type::folder;
-                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
-                }
-                else{
-
-                    fsObject->local.objectType=MSLocalFSObject::Type::file;
-                    fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
-
-                }
-
-                if(this->getFlag(QStringLiteral("convertDoc")) && this->filterOfficeMimeTypes(fsObject->local.mimeType )){
-
-                    fsObject->isDocFormat=true;
-                }
-
-                fsObject->state=this->filelist_defineObjectState(fsObject->local,fsObject->remote);
-
-            }
-            else{
-
-                MSFSObject fsObject;
-
-                fsObject.state=MSFSObject::ObjectState::NewLocal;
-
-                if(relPath.lastIndexOf(QStringLiteral("/"))==0){
-                    fsObject.path=QStringLiteral("/");
-                }
-                else{
-                    fsObject.path=QString(relPath).left(relPath.lastIndexOf(QStringLiteral("/")))+QStringLiteral("/");
-                }
-
-                fsObject.fileName=fi.fileName();
-                fsObject.getLocalMimeType(this->workPath);
-
-                fsObject.local.fileSize=  fi.size();
-                fsObject.local.md5Hash= this->fileChecksum(Path,QCryptographicHash::Md5);
-                fsObject.local.exist=true;
-
-                if(fi.isDir()){
-                    fsObject.local.objectType=MSLocalFSObject::Type::folder;
-                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
-                }
-                else{
-
-                    fsObject.local.objectType=MSLocalFSObject::Type::file;
-                    fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true);
-
-                }
-
-                fsObject.state=this->filelist_defineObjectState(fsObject.local,fsObject.remote);
-
-                if(this->getFlag(QStringLiteral("convertDoc")) && this->filterOfficeMimeTypes(fsObject.local.mimeType )){
-
-                    fsObject.isDocFormat=true;
-                }
-
-                this->syncFileList.insert(relPath,fsObject);
-
-            }
+    }
 
 
 
 
-        return true;
+    QHash<QString,MSFSObject>::iterator i=this->syncFileList.find(relPath);
+
+
+
+    if(i!=this->syncFileList.end()){// if object exists in Google Drive
+
+        MSFSObject* fsObject = &(i.value());
+
+
+        fsObject->local.fileSize=  fi.size();
+        fsObject->local.md5Hash= this->fileChecksum(Path,QCryptographicHash::Md5);
+        fsObject->local.exist=true;
+        fsObject->getLocalMimeType(this->workPath);
+
+        if(fi.isDir()){
+            fsObject->local.objectType=MSLocalFSObject::Type::folder;
+            fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000;
+        }
+        else{
+
+            fsObject->local.objectType=MSLocalFSObject::Type::file;
+            fsObject->local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000;
+
+        }
+
+        if(this->getFlag(QStringLiteral("convertDoc"))  && (this->filterOfficeMimeTypes(fsObject->local.mimeType )||this->filterOfficeFileExtensions(fsObject->getObjectExtension()))){
+
+            fsObject->isDocFormat=true;
+        }
+
+        fsObject->state=this->filelist_defineObjectState(fsObject->local,fsObject->remote);
+
+    }
+    else{
+
+        MSFSObject fsObject;
+
+        fsObject.state=MSFSObject::ObjectState::NewLocal;
+
+        if(relPath.lastIndexOf(QStringLiteral("/"))==0){
+            fsObject.path=QStringLiteral("/");
+        }
+        else{
+            fsObject.path=QString(relPath).left(relPath.lastIndexOf(QStringLiteral("/")))+QStringLiteral("/");
+        }
+
+        fsObject.fileName=fi.fileName();
+        fsObject.getLocalMimeType(this->workPath);
+
+        fsObject.local.fileSize=  fi.size();
+        fsObject.local.md5Hash= this->fileChecksum(Path,QCryptographicHash::Md5);
+        fsObject.local.exist=true;
+
+        if(fi.isDir()){
+            fsObject.local.objectType=MSLocalFSObject::Type::folder;
+            fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000;
+        }
+        else{
+
+            fsObject.local.objectType=MSLocalFSObject::Type::file;
+            fsObject.local.modifiedDate=this->toMilliseconds(fi.lastModified(),true)/1000;
+
+        }
+
+        fsObject.state=this->filelist_defineObjectState(fsObject.local,fsObject.remote);
+
+        if(this->getFlag(QStringLiteral("convertDoc"))  && (this->filterOfficeMimeTypes(fsObject.local.mimeType )||this->filterOfficeFileExtensions(fsObject.getObjectExtension()))){
+
+            fsObject.isDocFormat=true;
+        }
+
+        this->syncFileList.insert(relPath,fsObject);
+
+    }
+
+
+
+
+    return true;
 
 }
 
@@ -1003,8 +1031,8 @@ bool MSGoogleDrive::readLocalSingle(const QString &path){
 bool MSGoogleDrive::filterGoogleDocsMimeTypes(const QString &mime){// return true if this mime is Google document
 
     if((mime == QStringLiteral("application/vnd.google-apps.document"))||
-       (mime == QStringLiteral("application/vnd.google-apps.presentation"))||
-       (mime == QStringLiteral("application/vnd.google-apps.spreadsheet"))){
+            (mime == QStringLiteral("application/vnd.google-apps.presentation"))||
+            (mime == QStringLiteral("application/vnd.google-apps.spreadsheet"))){
 
         return true;
     }
@@ -1030,6 +1058,34 @@ bool MSGoogleDrive::filterOfficeMimeTypes(const QString &mime){// return true if
         return false;
     }
 
+}
+
+bool MSGoogleDrive::filterOfficeFileExtensions(QString ext){
+
+    if(ext == "xlsx" || ext == "docx" || ext =="pptx" || ext=="odt" || ext=="ods" || ext == "odp"){
+        return true;
+    }
+    else{
+        return false;
+    }
+
+}
+
+QString MSGoogleDrive::getOfficeFileExtensionByMimeType(QString mimeType){
+//if((mime == QStringLiteral("application/vnd.google-apps.document"))||
+//        (mime == QStringLiteral("application/vnd.google-apps.presentation"))||
+//        (mime == QStringLiteral("application/vnd.google-apps.spreadsheet"))){
+
+    if(mimeType == QStringLiteral("application/vnd.google-apps.document")){
+        return "docx";
+    }
+    if(mimeType == QStringLiteral("application/vnd.google-apps.presentation")){
+        return "pptx";
+    }
+    if(mimeType == QStringLiteral("application/vnd.google-apps.spreadsheet")){
+        return "xlsx";
+    }
+    return "";
 }
 
 void MSGoogleDrive::checkFolderStructures(){
@@ -1275,63 +1331,71 @@ MSFSObject::ObjectState MSGoogleDrive::filelist_defineObjectState(const MSLocalF
 
 
 
-        if((local.exist)&&(remote.exist)){ //exists both files
+    if((local.exist)&&(remote.exist)){ //exists both files
 
-            if(local.md5Hash==remote.md5Hash){
+        if(this->filterGoogleDocsMimeTypes(remote.extraData.find("mimeType").value().toString()) && this->getFlag(QStringLiteral("convertDoc"))){
 
-
-                    return MSFSObject::ObjectState::Sync;
-
+            if(local.modifiedDate==remote.modifiedDate){
+                return MSFSObject::ObjectState::Sync;
             }
-            else{
 
-                // compare last modified date for local and remote
-                if(local.modifiedDate==remote.modifiedDate){
+        }
 
-                    if(this->strategy==MSCloudProvider::SyncStrategy::PreferLocal){
-                        return MSFSObject::ObjectState::ChangedLocal;
-                    }
-                    else{
-                        return MSFSObject::ObjectState::ChangedRemote;
-                    }
+        if(local.md5Hash==remote.md5Hash){
 
+
+            return MSFSObject::ObjectState::Sync;
+
+        }
+        else{
+
+            // compare last modified date for local and remote
+            if(local.modifiedDate==remote.modifiedDate){
+
+                if(this->strategy==MSCloudProvider::SyncStrategy::PreferLocal){
+                    return MSFSObject::ObjectState::ChangedLocal;
                 }
                 else{
-
-                    if(local.modifiedDate > remote.modifiedDate){
-                        return MSFSObject::ObjectState::ChangedLocal;
-                    }
-                    else{
-                        return MSFSObject::ObjectState::ChangedRemote;
-                    }
-
+                    return MSFSObject::ObjectState::ChangedRemote;
                 }
-            }
 
-
-        }
-
-
-        if((local.exist)&&(!remote.exist)){ //exist only local file
-
-            if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
-                return  MSFSObject::ObjectState::NewLocal;
             }
             else{
-                return  MSFSObject::ObjectState::DeleteRemote;
+
+                if(local.modifiedDate > remote.modifiedDate){
+                    return MSFSObject::ObjectState::ChangedLocal;
+                }
+                else{
+                    return MSFSObject::ObjectState::ChangedRemote;
+                }
+
             }
         }
 
 
-        if((!local.exist)&&(remote.exist)){ //exist only remote file
+    }
 
-            if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
-                return  MSFSObject::ObjectState::DeleteLocal;
-            }
-            else{
-                return  MSFSObject::ObjectState::NewRemote;
-            }
+
+    if((local.exist)&&(!remote.exist)){ //exist only local file
+
+        if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
+            return  MSFSObject::ObjectState::NewLocal;
         }
+        else{
+            return  MSFSObject::ObjectState::DeleteRemote;
+        }
+    }
+
+
+    if((!local.exist)&&(remote.exist)){ //exist only remote file
+
+        if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
+            return  MSFSObject::ObjectState::DeleteLocal;
+        }
+        else{
+            return  MSFSObject::ObjectState::NewRemote;
+        }
+    }
 
 
 
@@ -1425,12 +1489,12 @@ QHash<QString,MSFSObject> MSGoogleDrive::filelist_getFSObjectsByTypeRemote(MSRem
 
 bool MSGoogleDrive::filelist_FSObjectHasParent(const MSFSObject &fsObject){
 
-//    if(fsObject.path==QStringLiteral("/")){
-//        return false;
-//    }
-//    else{
-//        return true;
-//    }
+    //    if(fsObject.path==QStringLiteral("/")){
+    //        return false;
+    //    }
+    //    else{
+    //        return true;
+    //    }
 
     if((fsObject.path.count(QStringLiteral("/"))>=1)&&(fsObject.path!=QStringLiteral("/"))){
         return true;
@@ -1507,10 +1571,10 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
                 MSFSObject obj=lf.value();
 
                 if((obj.state == MSFSObject::ObjectState::Sync)||
-                   (obj.state == MSFSObject::ObjectState::NewRemote)||
-                   (obj.state == MSFSObject::ObjectState::DeleteLocal)||
-                   (obj.state == MSFSObject::ObjectState::ChangedLocal)||
-                   (obj.state == MSFSObject::ObjectState::ChangedRemote) ){              
+                        (obj.state == MSFSObject::ObjectState::NewRemote)||
+                        (obj.state == MSFSObject::ObjectState::DeleteLocal)||
+                        (obj.state == MSFSObject::ObjectState::ChangedLocal)||
+                        (obj.state == MSFSObject::ObjectState::ChangedRemote) ){
 
                     if(obj.remote.objectType == MSRemoteFSObject::Type::file){
 
@@ -1535,10 +1599,10 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
                     MSFSObject obj=lf.value();
 
                     if((obj.state == MSFSObject::ObjectState::Sync)||
-                       (obj.state == MSFSObject::ObjectState::NewLocal)||
-                       (obj.state == MSFSObject::ObjectState::DeleteRemote)||
-                       (obj.state == MSFSObject::ObjectState::ChangedLocal)||
-                       (obj.state == MSFSObject::ObjectState::ChangedRemote) ){
+                            (obj.state == MSFSObject::ObjectState::NewLocal)||
+                            (obj.state == MSFSObject::ObjectState::DeleteRemote)||
+                            (obj.state == MSFSObject::ObjectState::ChangedLocal)||
+                            (obj.state == MSFSObject::ObjectState::ChangedRemote) ){
 
 
 
@@ -1580,9 +1644,9 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
         this->saveStateFile();
 
-            qStdOut()<<QStringLiteral("Syncronization end")<<endl  ;
+        qStdOut()<<QStringLiteral("Syncronization end")<<endl  ;
 
-            return;
+        return;
     }
 
 
@@ -1604,17 +1668,26 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
         switch((int)(obj.state)){
 
-            case MSFSObject::ObjectState::ChangedLocal:
+        case MSFSObject::ObjectState::ChangedLocal:
 
-                qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Changed local. Uploading.") )<<endl ;
+            qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Changed local. Uploading.") )<<endl ;
 
-                this->remote_file_update(&obj);
+            this->remote_file_update(&obj);
 
-                break;
+            break;
 
-            case MSFSObject::ObjectState::NewLocal:
+        case MSFSObject::ObjectState::NewLocal:
 
-                if((obj.local.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
+            if((obj.local.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
+
+                qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") )<<endl ;
+
+                this->remote_file_insert(&obj);
+
+            }
+            else{
+
+                if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
                     qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") )<<endl ;
 
@@ -1623,143 +1696,134 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
                 }
                 else{
 
-                    if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
+                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Delete local.") )<<endl ;
 
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") )<<endl ;
-
-                        this->remote_file_insert(&obj);
-
+                    if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
+                        this->local_removeFile(obj.path+obj.fileName);
                     }
                     else{
-
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Delete local.") )<<endl ;
-
-                        if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
-                            this->local_removeFile(obj.path+obj.fileName);
-                        }
-                        else{
-                            this->local_removeFolder(obj.path+obj.fileName);
-                        }
-
-
+                        this->local_removeFolder(obj.path+obj.fileName);
                     }
+
+
+                }
+            }
+
+
+            break;
+
+        case MSFSObject::ObjectState::ChangedRemote:
+
+            qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Changed remote. Downloading.") )<<endl ;
+
+            this->remote_file_get(&obj);
+
+            break;
+
+
+        case MSFSObject::ObjectState::NewRemote:
+
+            if((obj.remote.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
+
+                if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
+
+                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote.") )<<endl ;
+
+                    this->remote_file_trash(&obj);
+
+                }
+                else{
+                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") ) <<endl;
+
+                    this->remote_file_get(&obj);
                 }
 
 
-                break;
+            }
+            else{
 
-            case MSFSObject::ObjectState::ChangedRemote:
+                if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Changed remote. Downloading.") )<<endl ;
+                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote.") )<<endl ;
+
+                    this->remote_file_trash(&obj);
+                }
+                else{
+
+                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") )<<endl ;
+
+                    this->remote_file_get(&obj);
+                }
+            }
+
+            break;
+
+
+        case MSFSObject::ObjectState::DeleteLocal:
+
+            if((obj.remote.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
+
+                qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") ) <<endl;
 
                 this->remote_file_get(&obj);
 
                 break;
+            }
 
+            qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote.") ) <<endl;
 
-            case MSFSObject::ObjectState::NewRemote:
+            this->remote_file_trash(&obj);
 
-                if((obj.remote.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
+            break;
 
-                    if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
+        case MSFSObject::ObjectState::DeleteRemote:
 
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote.") )<<endl ;
+            if((obj.local.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                        this->remote_file_trash(&obj);
+                if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
+                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") )<<endl ;
+
+                    this->remote_file_insert(&obj);
+                }
+                else{
+                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Deleting local.") )<<endl ;
+
+                    if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
+                        this->local_removeFile(obj.path+obj.fileName);
                     }
                     else{
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") ) <<endl;
-
-                        this->remote_file_get(&obj);
+                        this->local_removeFolder(obj.path+obj.fileName);
                     }
 
+                }
+            }
+            else{
+
+                if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
+
+                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") )<<endl ;
+
+                    this->remote_file_insert(&obj);
 
                 }
                 else{
 
-                    if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
+                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Deleting local.") ) <<endl;
 
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote.") )<<endl ;
-
-                        this->remote_file_trash(&obj);
+                    if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
+                        this->local_removeFile(obj.path+obj.fileName);
                     }
                     else{
-
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") )<<endl ;
-
-                        this->remote_file_get(&obj);
+                        this->local_removeFolder(obj.path+obj.fileName);
                     }
+
+
                 }
-
-                break;
-
-
-            case MSFSObject::ObjectState::DeleteLocal:
-
-                if((obj.remote.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
-
-                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") ) <<endl;
-
-                    this->remote_file_get(&obj);
-
-                    break;
-                }
-
-                qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote.") ) <<endl;
-
-                this->remote_file_trash(&obj);
-
-                break;
-
-            case MSFSObject::ObjectState::DeleteRemote:
-
-                if((obj.local.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
-
-                    if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
-
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") )<<endl ;
-
-                        this->remote_file_insert(&obj);
-                    }
-                    else{
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Deleting local.") )<<endl ;
-
-                        if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
-                            this->local_removeFile(obj.path+obj.fileName);
-                        }
-                        else{
-                            this->local_removeFolder(obj.path+obj.fileName);
-                        }
-
-                    }
-                }
-                else{
-
-                    if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
-
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") )<<endl ;
-
-                        this->remote_file_insert(&obj);
-
-                    }
-                    else{
-
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Deleting local.") ) <<endl;
-
-                        if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
-                            this->local_removeFile(obj.path+obj.fileName);
-                        }
-                        else{
-                            this->local_removeFolder(obj.path+obj.fileName);
-                        }
+            }
 
 
-                    }
-                }
-
-
-                break;
+            break;
 
 
         }
@@ -1857,9 +1921,9 @@ bool MSGoogleDrive::remote_file_get(MSFSObject* object){
 
     if(object->remote.objectType == MSRemoteFSObject::Type::folder){
 
-         qStdOut()<< object->fileName << QStringLiteral(" is a folder. Skipped.") <<endl ;
-         return true;
-     }
+        qStdOut()<< object->fileName << QStringLiteral(" is a folder. Skipped.") <<endl ;
+        return true;
+    }
 
 
     QString id = object->remote.extraData.find(QStringLiteral("id")).value().toString();// object->remote.data["id"].toString();
@@ -1873,81 +1937,54 @@ afterReauth:
 
     req->addHeader(QStringLiteral("Authorization"),QStringLiteral("Bearer ")+this->access_token);
 
-    req->addQueryItem(QStringLiteral("alt"),                    QStringLiteral("media"));
+
 
     // document conversion support
     if(object->isDocFormat && this->getFlag(QStringLiteral("convertDoc"))){
 
+        req->setRequestUrl(QStringLiteral("https://www.googleapis.com/drive/v2/files/")+id+"/export");
+
+
         QString ftype= object->fileName.right(object->fileName.size()- object->fileName.lastIndexOf(QStringLiteral("."))-1)  ;
 
-        if(  object->remote.extraData.find(QStringLiteral("id")).value().toString() == QStringLiteral("application/vnd.google-apps.spreadsheet")){
+        if(  object->remote.extraData.find(QStringLiteral("mimeType")).value().toString() == QStringLiteral("application/vnd.google-apps.spreadsheet")){
 
             object->local.mimeType=QStringLiteral("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            req->addQueryItem("mimeType", object->local.mimeType);
 
-            if(object->local.exist== false){
+            if(/*(object->local.exist == false)&&*/(object->getObjectExtension().isEmpty())){
                 object->fileName=object->fileName+QStringLiteral(".xlsx");
             }
 
 
-//            req->setRequestUrl(object->remote.data["exportLinks"].toObject()[object->local.mimeType].toString());
-            req->setRequestUrl(qvariant_cast <QJsonObject>(object->remote.extraData.find(QStringLiteral("exportLinks")).value())[object->local.mimeType].toString()  );
-
-            req->addQueryItem(QStringLiteral("id"),id);
-
-            if(ftype==QStringLiteral("ods")){
-                req->addQueryItem(QStringLiteral("exportFormat"),QStringLiteral("ods"));
-            }
-            else{
-                req->addQueryItem(QStringLiteral("exportFormat"),QStringLiteral("xlsx"));
-            }
-
         }
 
-//        if(object->remote.data["mimeType"].toString()=="application/vnd.google-apps.document"){
-          if(object->remote.extraData.find(QStringLiteral("mimeType")).value().toString() ==QStringLiteral("application/vnd.google-apps.document")){
+        if(object->remote.extraData.find(QStringLiteral("mimeType")).value().toString() ==QStringLiteral("application/vnd.google-apps.document")){
 
             object->local.mimeType=QStringLiteral("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+            req->addQueryItem("mimeType", object->local.mimeType);
 
-            if(object->local.exist== false){
+            if((object->local.exist == false)&&(object->getObjectExtension().isEmpty())){
                 object->fileName=object->fileName+QStringLiteral(".docx");
             }
 
-//            req->setRequestUrl(object->remote.data["exportLinks"].toObject()[object->local.mimeType].toString());
-            req->setRequestUrl(qvariant_cast <QJsonObject>(object->remote.extraData.find(QStringLiteral("exportLinks")).value())[object->local.mimeType].toString()  );
-
-            req->addQueryItem(QStringLiteral("id"),id);
-
-            if(ftype=="odt"){
-                req->addQueryItem(QStringLiteral("exportFormat"),QStringLiteral("odt"));
-            }
-            else{
-                req->addQueryItem(QStringLiteral("exportFormat"),QStringLiteral("docx"));
-            }
         }
 
-//        if(object->remote.data["mimeType"].toString()=="application/vnd.google-apps.presentation"){
         if(object->remote.extraData.find(QStringLiteral("mimeType")).value().toString() == QStringLiteral("application/vnd.google-apps.presentation")){
 
             object->local.mimeType=QStringLiteral("application/vnd.openxmlformats-officedocument.presentationml.presentation");
+            req->addQueryItem("mimeType", object->local.mimeType);
 
-            if(object->local.exist== false){
+            if((object->local.exist == false)&&(object->getObjectExtension().isEmpty())){
                 object->fileName=object->fileName+QStringLiteral(".pptx");
             }
 
-//            req->setRequestUrl(object->remote.data["exportLinks"].toObject()[object->local.mimeType].toString());
-            req->setRequestUrl(qvariant_cast <QJsonObject>(object->remote.extraData.find(QStringLiteral("exportLinks")).value())[object->local.mimeType].toString()  );
-
-            req->addQueryItem(QStringLiteral("id"),id);
-            req->addQueryItem(QStringLiteral("exportFormat"),QStringLiteral("pptx"));
-//            if(ftype=="odp"){
-//                req->addQueryItem("exportFormat","odp");
-//            }
-//            else{
-//                req->addQueryItem("exportFormat","pptx");
-//            }
-
         }
 
+    }
+    else{
+
+        req->addQueryItem(QStringLiteral("alt"),   QStringLiteral("media"));
     }
 
 
@@ -1970,6 +2007,20 @@ afterReauth:
     if(this->testReplyBodyForError(req->readReplyText())){
 
         this->local_actualizeTempFile(filePath);
+
+        // document conversion support (change modified date to remote value)
+        if(object->isDocFormat && this->getFlag(QStringLiteral("convertDoc"))){
+            utimbuf tb;
+
+            QString dd=(object->remote.extraData.find(QStringLiteral("modifiedDate")).value().toString());
+            tb.actime=(this->toMilliseconds(dd,true)/1000);
+            tb.modtime=(this->toMilliseconds(dd,true)/1000);
+
+            filePath=this->workPath+object->path + object->fileName;
+
+            utime(filePath.toLocal8Bit().constData(),&tb);
+        }
+
     }
     else{
         qStdOut() << QStringLiteral("Service error. ")<< this->getReplyErrorString(req->readReplyText())<< endl;
@@ -2043,9 +2094,9 @@ afterReauth:
             object->local.mimeType=QStringLiteral("application/vnd.ms-powerpoint");
         }
 
-//        if(ftype=="odp"){
-//            object->local.mimeType="application/vnd.oasis.opendocument.presentation";
-//        }
+        //        if(ftype=="odp"){
+        //            object->local.mimeType="application/vnd.oasis.opendocument.presentation";
+        //        }
 
         if(ftype==QStringLiteral("ods")){
             object->local.mimeType=QStringLiteral("application/vnd.oasis.opendocument.spreadsheet");
@@ -2073,6 +2124,12 @@ afterReauth:
     else{
         metaJson.insert(QStringLiteral("title"),object->fileName);
     }
+
+
+    QString rfcDate = this->toRFC3339(object->local.modifiedDate*1000);
+
+    metaJson.insert(QStringLiteral("modifiedDate"),rfcDate);
+
 
     if(parentID != QStringLiteral("")){
         // create parents section
@@ -2120,7 +2177,7 @@ afterReauth:
 
     req->addHeader(QStringLiteral("Content-Length"),QString::number(metaData.length()).toLocal8Bit());
 
-//    req->post(metaData);
+    //    req->post(metaData);
     req->setInputDataStream(metaData);
     req->exec();
 
@@ -2208,8 +2265,8 @@ afterReauth:
 
             upsize+=blsz;
 
-//            req->put(&file);
-//            req->put(file.read(GOOGLEDRIVE_CHUNK_SIZE));
+            //            req->put(&file);
+            //            req->put(file.read(GOOGLEDRIVE_CHUNK_SIZE));
 
             if(!req->replyOK()){
 
@@ -2264,8 +2321,8 @@ afterReauth2:
         req->setInputDataStream(&mb);
         req->exec();
 
-//        req->put(&mb);
-//        req->put(file.readAll());
+        //        req->put(&mb);
+        //        req->put(file.readAll());
 
         file.close();
 
@@ -2296,7 +2353,7 @@ afterReauth2:
         }
 
         req->replyText.clear();
-         ;
+        ;
 
 
         // delete(req->query);
@@ -2323,7 +2380,6 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
         return true;
     }
 
-    //QString bound="ccross-data";
 
     QString id = object->remote.extraData.find("id").value().toString();//  object->remote.data["id"].toString();
 
@@ -2348,29 +2404,30 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
         req->addQueryItem(QStringLiteral("pinned"),                          QStringLiteral("true"));
     }
 
+    req->addQueryItem(QStringLiteral("setModifiedDate"),                     QStringLiteral("true"));
 
     // collect request data body
 
     QByteArray metaData;
 
-//    for(int r=0; r < req->query->queryItems().size();r++){
-
-//        metaData.append(QString("--"+bound+"\r\n").toLocal8Bit());
-//        metaData.append(QString("Content-Disposition: form-data; name=" + req->query->queryItems().at(r).first.toLocal8Bit() + "\r\n\r\n").toLocal8Bit());
-//        metaData.append(QString( req->query->queryItems().at(r).second.toLocal8Bit() +"\r\n").toLocal8Bit());
-//    }
-
-
-//    metaData.append(QString("--"+bound+"\r\n").toLocal8Bit());
-//    metaData.append(QString("Content-Type: application/json; charset=UTF-8\r\n\r\n").toLocal8Bit());
-
     //make file metadata in json representation
     QJsonObject metaJson;
 
-    //metaJson.insert("id",object->remote.data["id"].toString());
-    metaJson.insert(QStringLiteral("id") , object->remote.extraData.find(QStringLiteral("id")).value().toString());
+    if(object->isDocFormat && this->getFlag(QStringLiteral("convertDoc"))){
 
-    if(parentID != ""){
+        // remove file extension
+
+        metaJson.insert(QStringLiteral("title"),object->fileName.left(object->fileName.lastIndexOf(".")));
+    }
+    else{
+        metaJson.insert(QStringLiteral("title"),object->fileName);
+    }
+
+    QString rfcDate = this->toRFC3339(object->local.modifiedDate*1000);
+
+    metaJson.insert(QStringLiteral("modifiedDate"),rfcDate);
+
+    if(parentID != QStringLiteral("")){
         // create parents section
         QJsonArray parents;
         QJsonObject par;
@@ -2380,16 +2437,16 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
         metaJson.insert(QStringLiteral("parents"),parents);
     }
 
-    metaData.append(QString(QJsonDocument(metaJson).toJson()).toLocal8Bit());
-    //metaData.append(QString("\r\n--"+bound+"\r\n").toLocal8Bit());
+    metaData.append((QJsonDocument(metaJson).toJson()));
 
-    req->addHeader(QStringLiteral("X-Upload-Content-Type"),                      object->local.mimeType);
-
-
-//    QByteArray mediaData;
-//    mediaData.append(QString("Content-Type: "+object->local.mimeType+"\r\n\r\n").toLocal8Bit());
+    req->addHeader(QStringLiteral("X-Upload-Content-Type"), object->local.mimeType);
 
     QString filePath=this->workPath+object->path+object->fileName;
+
+    if(object->isDocFormat && this->getFlag(QStringLiteral("convertDoc"))){
+        filePath+=QStringLiteral(".")+this->getOfficeFileExtensionByMimeType(object->remote.extraData.find("mimeType").value().toString());
+    }
+
 
     // read file content and put him into request body
     QFile file(filePath);
@@ -2400,17 +2457,16 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
         delete(req);
         return false;
     }
-//    mediaData.append(file.readAll());
-//    file.close();
 
-
-//    mediaData.append(QString("\r\n--"+bound+"--").toLocal8Bit());
+    QMultiBuffer mb;
+    mb.append(&file);
+    mb.open(QIODevice::ReadOnly);
 
     req->addHeader(QStringLiteral("Content-Length"),QString::number(metaData.length()).toLocal8Bit());
 
     req->setInputDataStream(metaData);
     req->exec();
-//    req->put(metaData);
+    //    req->put(metaData);
 
 
     if(!req->replyOK()){
@@ -2504,11 +2560,15 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
 #ifndef CCROSS_LIB
         //req->query = new QUrlQuery(req->url->query());// extract query string and setup his separately
 #endif
+        req->setMethod("put");
+
         req->addHeader(QStringLiteral("Authorization"),                     QStringLiteral("Bearer ")+this->access_token);
         req->addHeader(QStringLiteral("Content-Type"),                      object->local.mimeType);
         req->addHeader(QStringLiteral("Content-Length"),                      QString::number(file.size()));
 
-        req->put(file.readAll());
+        req->setInputDataStream(&mb);
+        req->exec();
+
 
         file.close();
 
@@ -2562,7 +2622,7 @@ bool MSGoogleDrive::remote_file_makeFolder(MSFSObject *object){
     //metaData.append(QString(QJsonDocument(metaJson).toJson()).toLocal8Bit());
     metaData.append((QJsonDocument(metaJson).toJson()));
 
-//    req->post(metaData);
+    //    req->post(metaData);
 
     req->setInputDataStream(metaData);
     req->exec();
@@ -2645,7 +2705,7 @@ bool MSGoogleDrive::remote_file_makeFolder(MSFSObject *object, const QString &pa
     //metaData.append(QString(QJsonDocument(metaJson).toJson()).toLocal8Bit());
     metaData.append((QJsonDocument(metaJson).toJson()));
 
-//    req->post(metaData);
+    //    req->post(metaData);
     req->setInputDataStream(metaData);
     req->exec();
 
@@ -2676,7 +2736,7 @@ bool MSGoogleDrive::remote_file_makeFolder(MSFSObject *object, const QString &pa
     object->remote.extraData.insert(QStringLiteral("mimeType"),job[QStringLiteral("mimeType")].toString());
     object->remote.extraData.insert(QStringLiteral("exportLinks"),job[QStringLiteral("exportLinks")].toObject());
 
-   // object->remote.data=job;
+    // object->remote.data=job;
     object->remote.exist=true;
 
     if(job["id"].toString()==QStringLiteral("")){
@@ -2767,7 +2827,7 @@ bool MSGoogleDrive::remote_createDirectory(const QString &path){
             if(this->filelist_FSObjectHasParent(f.value())){
 
                 MSFSObject parObj=this->filelist_getParentFSObject(f.value());
-//                this->remote_file_makeFolder(&f.value(),parObj.remote.data["id"].toString());
+                //                this->remote_file_makeFolder(&f.value(),parObj.remote.data["id"].toString());
                 this->remote_file_makeFolder(&f.value(),parObj.remote.extraData.find(QStringLiteral("id")).value().toString());
 
             }
@@ -2776,18 +2836,18 @@ bool MSGoogleDrive::remote_createDirectory(const QString &path){
                 this->remote_file_makeFolder(&f.value());
             }
         }
-//        else{// if this path not exists on remote and not listed as local because include/exclude filter working
+        //        else{// if this path not exists on remote and not listed as local because include/exclude filter working
 
-//            currPath=currPath+"/"+dirs[i];
+        //            currPath=currPath+"/"+dirs[i];
 
-//            if(this->filelist_FSObjectHasParent(currPath)){
+        //            if(this->filelist_FSObjectHasParent(currPath)){
 
-//            }
-//            else{
-//                this->remote_file_makeFolder();
-//            }
+        //            }
+        //            else{
+        //                this->remote_file_makeFolder();
+        //            }
 
-//        }
+        //        }
     }
     return true;
 }
@@ -2997,12 +3057,12 @@ bool MSGoogleDrive::directUpload(const QString &url, const QString &remotePath){
             }
 
 
-//            obj=new MSFSObject();
-//            obj->path="/"+dirs[i];
-//            obj->fileName="";
-//            obj->remote.exist=false;
-//            this->remote_file_makeFolder(obj);
-//            delete(obj);
+            //            obj=new MSFSObject();
+            //            obj->path="/"+dirs[i];
+            //            obj->fileName="";
+            //            obj->remote.exist=false;
+            //            this->remote_file_makeFolder(obj);
+            //            delete(obj);
 
             if(dirs[i] != QStringLiteral("")){
                 cPath+=dirs[i]+QStringLiteral("/");
@@ -3024,14 +3084,14 @@ bool MSGoogleDrive::directUpload(const QString &url, const QString &remotePath){
 
     while(lf != localFolders.end()){
 
-	if(lf.value().path == "/"){
-	    lf++;
-	    continue;
-	}
+        if(lf.value().path == "/"){
+            lf++;
+            continue;
+        }
 
-	this->remote_createDirectory(lf.key());
+        this->remote_createDirectory(lf.key());
 
-	lf++;
+        lf++;
     }
 
 
@@ -3041,11 +3101,11 @@ bool MSGoogleDrive::directUpload(const QString &url, const QString &remotePath){
     // upload file to remote ------------------------------------------------------------------------
 
 
-        MSFSObject *object=0;
-	object=new MSFSObject();
-        object->path=path+QStringLiteral("/");
-        object->fileName=tempFileName;
-        object->getLocalMimeType(this->workPath+QStringLiteral("/")+tempFileName);
+    MSFSObject *object=0;
+    object=new MSFSObject();
+    object->path=path+QStringLiteral("/");
+    object->fileName=tempFileName;
+    object->getLocalMimeType(this->workPath+QStringLiteral("/")+tempFileName);
 
     cPath=cPath.left(cPath.lastIndexOf(QStringLiteral("/")));
 
@@ -3053,7 +3113,7 @@ bool MSGoogleDrive::directUpload(const QString &url, const QString &remotePath){
     MSFSObject po;
     QString parentID="";
     if(cPath !=""){
-	po=this->syncFileList.find(cPath).value();
+        po=this->syncFileList.find(cPath).value();
     }
 
     if(po.path != ""){
@@ -3079,7 +3139,7 @@ bool MSGoogleDrive::directUpload(const QString &url, const QString &remotePath){
     QJsonObject metaJson;
 
 
-        metaJson.insert(QStringLiteral("title"),targetFileName);
+    metaJson.insert(QStringLiteral("title"),targetFileName);
 
 
     if(parentID != ""){
@@ -3124,7 +3184,7 @@ bool MSGoogleDrive::directUpload(const QString &url, const QString &remotePath){
 
     req->setInputDataStream(metaData+mediaData);
     req->exec();
-//    req->post(metaData+mediaData);
+    //    req->post(metaData+mediaData);
 
 
 
@@ -3163,12 +3223,12 @@ bool MSGoogleDrive::directUpload(const QString &url, const QString &remotePath){
 
 QString MSGoogleDrive::getInfo(){
 
-//    "storageQuota": {
-//        "limit": long,
-//        "usage": long,
-//        "usageInDrive": long,
-//        "usageInDriveTrash": long
-//      }
+    //    "storageQuota": {
+    //        "limit": long,
+    //        "usage": long,
+    //        "usageInDrive": long,
+    //        "usageInDriveTrash": long
+    //      }
 
     MSHttpRequest *req = new MSHttpRequest(this->proxyServer);
 

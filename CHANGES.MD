@@ -1,5 +1,7 @@
 ## Change log:
 
+### v1.4.2
+
 ### v1.4.1
 - Fix bug with downloading files. Now files are downloads into temp files before replace existing files on disk.
 - New option --no-sync. Used for uploading without synchronization and reading remote file list.

@@ -53,3 +53,14 @@ void MSFSObject::getLocalMimeType(const QString &path){
         this->local.mimeType=type.name();
         this->isDocFormat=false;
 }
+
+QString MSFSObject::getObjectExtension(){
+
+    int p = this->fileName.lastIndexOf(".");
+    if(p >= 0){
+        return this->fileName.right(this->fileName.length() - p - 1);
+    }
+    else{
+        return QString("");
+    }
+}
