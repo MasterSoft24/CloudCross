@@ -2009,7 +2009,7 @@ afterReauth:
         this->local_actualizeTempFile(filePath);
 
         // document conversion support (change modified date to remote value)
-        if(object->isDocFormat && this->getFlag(QStringLiteral("convertDoc"))){
+//        if(object->isDocFormat && this->getFlag(QStringLiteral("convertDoc"))){
             utimbuf tb;
 
             QString dd=(object->remote.extraData.find(QStringLiteral("modifiedDate")).value().toString());
@@ -2019,7 +2019,7 @@ afterReauth:
             filePath=this->workPath+object->path + object->fileName;
 
             utime(filePath.toLocal8Bit().constData(),&tb);
-        }
+//        }
 
     }
     else{
@@ -2889,7 +2889,8 @@ void MSGoogleDrive::local_removeFile(const QString &path){
     QFileInfo tfi(trashedPath);
     QDir tfs(tfi.absolutePath().replace(this->workPath,QStringLiteral("")));
     if(!tfs.exists()){
-        tfs.mkdir(this->workPath + tfi.absolutePath().replace(this->workPath,QStringLiteral("")));
+        //tfs.mkdir(this->workPath + tfi.absolutePath().replace(this->workPath,QStringLiteral("")));
+        this->createDirectoryPath(this->workPath + tfi.absolutePath().replace(this->workPath,QStringLiteral("")));
     }
 
 
@@ -2926,7 +2927,7 @@ void MSGoogleDrive::local_removeFolder(const QString &path){
     QFileInfo tfi(trashedPath);
     QDir tfs(tfi.absolutePath().replace(this->workPath,QStringLiteral("")));
     if(!tfs.exists()){
-        tfs.mkdir(this->workPath + tfi.absolutePath().replace(this->workPath,QStringLiteral("")));
+        this->createDirectoryPath(this->workPath + tfi.absolutePath().replace(this->workPath,QStringLiteral("")));
     }
 
     QDir f;

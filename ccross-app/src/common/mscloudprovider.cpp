@@ -246,6 +246,19 @@ QString MSCloudProvider::fileChecksum(const QString &fileName, QCryptographicHas
     return QString();
 }
 
+bool MSCloudProvider::createDirectoryPath(const QString &path){
+
+    int r= system(QString("mkdir -p \""+path+"\"").toStdString().c_str());
+    if(r == 0){
+
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+
+
 // convert to milliseconds in UTC timezone
 qint64 MSCloudProvider::toMilliseconds( QDateTime dateTime, bool isUTC){
 

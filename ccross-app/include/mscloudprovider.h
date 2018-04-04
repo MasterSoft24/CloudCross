@@ -164,6 +164,7 @@ public:
 
 
     QString fileChecksum(const QString &fileName, QCryptographicHash::Algorithm hashAlgorithm);
+    bool createDirectoryPath(const QString &path);
 
     QString generateRandom(int count);
 

@@ -891,7 +891,7 @@ void MSMailRu::local_removeFile(const QString &path){
     QFileInfo tfi(trashedPath);
     QDir tfs(tfi.absolutePath().replace(this->workPath,""));
     if(!tfs.exists()){
-        tfs.mkdir(this->workPath + tfi.absolutePath().replace(this->workPath,""));
+        this->createDirectoryPath(this->workPath + tfi.absolutePath().replace(this->workPath,""));
     }
 
     QFile f;
@@ -929,7 +929,7 @@ void MSMailRu::local_removeFolder(const QString &path){
     QFileInfo tfi(trashedPath);
     QDir tfs(tfi.absolutePath().replace(this->workPath,""));
     if(!tfs.exists()){
-        tfs.mkdir(this->workPath + tfi.absolutePath().replace(this->workPath,""));
+        this->createDirectoryPath(this->workPath + tfi.absolutePath().replace(this->workPath,""));
     }
 
     QDir f;

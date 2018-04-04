@@ -30,7 +30,7 @@ TARGET = ccross
 CONFIG += console
 CONFIG -= app_bundle
 
-TEMPLATE = app
+#TEMPLATE = app
 
 
 QMAKE_CXXFLAGS_WARN_OFF -= -Wno-unused-parameter
