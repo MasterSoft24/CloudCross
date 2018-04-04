@@ -1,6 +1,9 @@
 ## Change log:
 
 ### v1.4.2
+- Fixed few issue (#50, #53, #54, #57)
+- For Google Drive  fix a bug in updating a remote files, fix a looped uploading/downloading a converted docs, RFC3339 date conversion added.
+- fixed a local deleting nested folders and files
 
 ### v1.4.1
 - Fix bug with downloading files. Now files are downloads into temp files before replace existing files on disk.
