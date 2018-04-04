@@ -86,6 +86,7 @@ HEADERS += \
 
 target.path = /usr/bin
 ccross.target = /usr/bin/ccross
+ccross.path = /usr/bin
 INSTALLS += ccross
 
 DISTFILES += \

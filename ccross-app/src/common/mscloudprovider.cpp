@@ -340,7 +340,9 @@ QString MSCloudProvider::toRFC3339(qint64 timestamp){
     if(d.timeSpec() == Qt::UTC){
         return result+"Z";
     }
-    if(d.timeSpec() == Qt::LocalTime){
+    else{
+
+    //if(d.timeSpec() == Qt::LocalTime){
         //tz = d.timeZoneAbbreviation();
 
         int offset = d.offsetFromUtc();
@@ -364,6 +366,7 @@ QString MSCloudProvider::toRFC3339(qint64 timestamp){
 
         return result +sign +offDig;
     }
+
 
 }
 

@@ -639,8 +639,19 @@ bool MSGoogleDrive::readRemote(const QString &parentId, const QString &currentPa
         fsObject.remote.extraData.insert(QStringLiteral("id"),o[QStringLiteral("id")].toString());
         fsObject.remote.extraData.insert(QStringLiteral("mimeType"),o[QStringLiteral("mimeType")].toString());
         QJsonObject expLink=o[QStringLiteral("exportLinks")].toObject();
+#if QT_VERSION >= QT_VERSION_CHECK(5, 5, 0)
         QVariantHash qh= expLink.toVariantHash();
         fsObject.remote.extraData.insert("exportLinks",QVariant(qh));
+#else
+        QHash<QString,QVariant> qh;
+
+        QJsonObject::iterator eli=expLink.begin();
+        for(;eli != expLink.end();eli++){
+            qh.insert(eli.key(),eli.value());
+            fsObject.remote.extraData.insert("exportLinks",QVariant(qh));
+        }
+
+#endif
         fsObject.remote.extraData.insert("modifiedDate",o[QStringLiteral("modifiedDate")].toString());
 
 
