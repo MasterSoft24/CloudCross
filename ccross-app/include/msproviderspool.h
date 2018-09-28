@@ -103,6 +103,8 @@ public:
 
     void setOption(const QString &optionName, const QString &optVal);
 
+
+
 };
 
 #endif // MSPROVIDERSPOOL_H

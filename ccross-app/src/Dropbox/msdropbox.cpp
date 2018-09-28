@@ -81,6 +81,7 @@ bool MSDropbox::auth(){
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
+        this->providerAuthStatus=false;
         return false;
     }
 
@@ -639,7 +640,7 @@ bool MSDropbox::createSyncFileList(){
         this->threadsRunning = new QSemaphore(3);
 
         QThread* t1 = new QThread(this);
-        QThread* t2 = new QThread();
+        QThread* t2 = new QThread(this);
         QThread* t3 = new QThread(this);
 
         MSSyncThread* thr1 = new MSSyncThread(nullptr,this);
@@ -2751,10 +2752,12 @@ QString MSDropbox::getInfo(){
     req0->setMethod(QStringLiteral("post"));
 
     req0->addHeader(QStringLiteral("Authorization"),                     QStringLiteral("Bearer ")+this->access_token);
+    req0->addHeader(QStringLiteral("Content-Type"),                     QStringLiteral(""));
 
 //    req0->notUseContentType=true;// NEWNEW
 
     req0->exec();
+    //req0->post(QByteArray("[]"));
 
 
     if(!req0->replyOK()){
@@ -2789,6 +2792,7 @@ QString MSDropbox::getInfo(){
     req->setMethod(QStringLiteral("post"));
 
     req->addHeader(QStringLiteral("Authorization"),                     QStringLiteral("Bearer ")+this->access_token);
+    req->addHeader(QStringLiteral("Content-Type"),                     QStringLiteral(""));
 
 //    req->notUseContentType=true;// NEWNEW
 

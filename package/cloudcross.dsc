@@ -1,6 +1,6 @@
 Format: 1.0
 Source: cloudcross
-Version: 1.4.2-rc2-1
+Version: 1.4.4
 Binary: cloudcross
 Maintainer: Kamensky Vladimir (mastersoft24@yandex.ru)
 Architecture: any

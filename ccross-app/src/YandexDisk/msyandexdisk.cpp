@@ -603,7 +603,7 @@ bool MSYandexDisk::createSyncFileList(){
         this->threadsRunning = new QSemaphore(3);
 
         QThread* t1 = new QThread(this);
-        QThread* t2 = new QThread();
+        QThread* t2 = new QThread(this);
         QThread* t3 = new QThread(this);
 
         MSSyncThread* thr1 = new MSSyncThread(nullptr,this);

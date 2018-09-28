@@ -1,6 +1,6 @@
 Summary:            CloudCross is a improved multi-cloud (Google, Dropbox, OneDrive, Yandex.Disk, Cloud Mail.ru) client with Google Docs support and many other features
 Name:               cloudcross
-Version: 1.4.1_rc2
+Version: 1.4.4
 Release: 1
 License:            BSD
 #Group:              System Environment/Base

@@ -62,11 +62,11 @@
 #include <unistd.h>
 
 
-
+#include <signal.h>
 
 #define APP_MAJOR_VERSION 1
 #define APP_MINOR_VERSION 4
-#define APP_BUILD_NUMBER  "2"
+#define APP_BUILD_NUMBER  "4"
 
 #define CCROSS_HOME_DIR ".ccross"
 #define CCROSS_CONFIG_FILE "ccross.conf"
@@ -144,7 +144,7 @@ void printHelp(){
 
 
 
-void authGrive(MSProvidersPool* providers){
+bool authGrive(MSProvidersPool* providers){
 
     MSGoogleDrive* gdp=new MSGoogleDrive();
 
@@ -158,11 +158,13 @@ void authGrive(MSProvidersPool* providers){
     }
     else{
        qStdOut() << "Authentication failed"<<endl;
+       return  false;
     }
+    return true;
 }
 
 
-void listGrive(MSProvidersPool* providers){
+bool listGrive(MSProvidersPool* providers){
 
     MSGoogleDrive* gdp=new MSGoogleDrive();
 
@@ -170,13 +172,13 @@ void listGrive(MSProvidersPool* providers){
 
     providers->addProvider(gdp,true);
     if(!providers->loadTokenFile("GoogleDrive")){
-        return ;
+        return false;
     }
 
     if(! providers->refreshToken("GoogleDrive")){
 
         qStdOut()<< "Unauthorized client"<<endl;
-       return;
+       return false;
     }
 
 
@@ -184,7 +186,11 @@ void listGrive(MSProvidersPool* providers){
     QMap<QString,bool>sorted;
     QMap<QString,bool>::iterator si;
 
-    QHash<QString,MSFSObject> list=gdp->getRemoteFileList();
+    if(!gdp->getRemoteFileList()){
+        return false;
+    }
+
+    QHash<QString,MSFSObject> list= gdp->syncFileList;
 
     // sort remote file list
     QHash<QString,MSFSObject>::iterator li=list.begin();
@@ -201,11 +207,11 @@ void listGrive(MSProvidersPool* providers){
         qStdOut() << si.key()<< endl;
         si++;
     }
-
+    return true;
 }
 
 
-void syncGrive(MSProvidersPool* providers){
+bool syncGrive(MSProvidersPool* providers){
 
     MSGoogleDrive* gdp=new MSGoogleDrive();
 
@@ -213,20 +219,22 @@ void syncGrive(MSProvidersPool* providers){
 
     providers->addProvider(gdp);
     if(! providers->loadTokenFile("GoogleDrive")){
-        exit(0);
+        //exit(0);
+        return false;
     }
 
     if(!providers->refreshToken("GoogleDrive")){
         qStdOut()<<"Unauthorized access. Aborted."<<endl;
-        exit(0);
+        //exit(0);
+        return false;
     }
 
-    gdp->createSyncFileList();
+    return gdp->createSyncFileList();
 
 }
 
 
-void infoGrive(MSProvidersPool* providers){
+bool infoGrive(MSProvidersPool* providers){
 
     MSGoogleDrive* gdp=new MSGoogleDrive();
 
@@ -234,13 +242,13 @@ void infoGrive(MSProvidersPool* providers){
 
     providers->addProvider(gdp,true);
     if(!providers->loadTokenFile("GoogleDrive")){
-        return ;
+        return false ;
     }
 
     if(! providers->refreshToken("GoogleDrive")){
 
         qStdOut()<< "Unauthorized client"<<endl;
-       return;
+       return false;
     }
 
 
@@ -249,7 +257,7 @@ void infoGrive(MSProvidersPool* providers){
     if(info == "false"){
 
         qStdOut()<< "Error getting cloud information " <<endl;
-        return;
+        return false;
     }
 
     QJsonDocument json = QJsonDocument::fromJson(info.toUtf8());
@@ -261,13 +269,14 @@ void infoGrive(MSProvidersPool* providers){
 
     qStdOut()<< job["account"].toString()<< endl << endl << "total: "<< (uint64_t)total <<endl << "usage: "<< (uint64_t)usage << endl << "free: "<< (uint64_t)free <<endl;
     qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1048576<<" MB" <<endl << "usage: "<< (uint64_t)usage/1048576<<" MB"  << endl << "free: "<< (uint64_t)free/1048576<<" MB"  <<endl;
-    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)free/1073741824<<" GB"  <<endl;
+//    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)free/1073741824<<" GB"  <<endl;
+    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)qRound(free/1073741824.0)<<" GB"  <<endl;
 
-
+    return true;
 }
 
 
-void emptyTrashGrive(MSProvidersPool* providers){
+bool emptyTrashGrive(MSProvidersPool* providers){
 
     MSGoogleDrive* gdp=new MSGoogleDrive();
 
@@ -275,20 +284,22 @@ void emptyTrashGrive(MSProvidersPool* providers){
 
     providers->addProvider(gdp);
     if(! providers->loadTokenFile("GoogleDrive")){
-        exit(0);
+        //exit(0);
+        return false;
     }
 
     if(!providers->refreshToken("GoogleDrive")){
         qStdOut()<<"Unauthorized access. Aborted."<<endl;
-        exit(0);
+        //exit(0);
+        return false;
     }
 
-    gdp->remote_file_empty_trash();
+    return gdp->remote_file_empty_trash();
 
 }
 
 
-void authDropbox(MSProvidersPool* providers){
+bool authDropbox(MSProvidersPool* providers){
 
     MSDropbox* dbp=new MSDropbox();
 
@@ -302,11 +313,14 @@ void authDropbox(MSProvidersPool* providers){
     }
     else{
        qStdOut() << "Authentication failed"<<endl;
+       return false;
     }
+
+    return true;
 }
 
 
-void listDropbox(MSProvidersPool* providers){
+bool listDropbox(MSProvidersPool* providers){
 
     MSDropbox* dbp=new MSDropbox();
 
@@ -314,16 +328,19 @@ void listDropbox(MSProvidersPool* providers){
 
     providers->addProvider(dbp,true);
     if(!providers->loadTokenFile("Dropbox")){
-        return ;
+        return false;
     }
 
     if(! providers->refreshToken("Dropbox")){
 
         qStdOut()<< "Unauthorized client"<<endl;
-        exit(0);
+        //exit(0);
+        return false;
     }
 
-    dbp->readRemote();
+    if(!dbp->readRemote()){
+            return false;
+    }
 
 
 
@@ -346,10 +363,11 @@ void listDropbox(MSProvidersPool* providers){
         si++;
     }
 
+    return true;
 }
 
 
-void syncDropbox(MSProvidersPool* providers){
+bool syncDropbox(MSProvidersPool* providers){
 
     MSDropbox* dbp=new MSDropbox();
 
@@ -357,20 +375,22 @@ void syncDropbox(MSProvidersPool* providers){
 
     providers->addProvider(dbp);
     if(! providers->loadTokenFile("Dropbox")){
-        exit(0);
+        //exit(0);
+        return false;
     }
 
     if(!providers->refreshToken("Dropbox")){
         qStdOut()<<"Unauthorized access. Aborted."<<endl;
-        exit(0);
+        //exit(0);
+        return false;
     }
 
-    dbp->createSyncFileList();
+    return dbp->createSyncFileList();
 
 }
 
 
-void infoDropbox(MSProvidersPool* providers){
+bool infoDropbox(MSProvidersPool* providers){
 
     MSDropbox* dbp=new MSDropbox();
 
@@ -378,13 +398,13 @@ void infoDropbox(MSProvidersPool* providers){
 
     providers->addProvider(dbp,true);
     if(!providers->loadTokenFile("Dropbox")){
-        return ;
+        return false;
     }
 
     if(! providers->refreshToken("Dropbox")){
 
         qStdOut()<< "Unauthorized client"<<endl;
-       return;
+       return false;
     }
 
 
@@ -393,7 +413,7 @@ void infoDropbox(MSProvidersPool* providers){
     if(info == "false"){
 
         qStdOut()<< "Error getting cloud information " <<endl;
-        return;
+        return false;
     }
 
     QJsonDocument json = QJsonDocument::fromJson(info.toUtf8());
@@ -405,12 +425,13 @@ void infoDropbox(MSProvidersPool* providers){
 
     qStdOut()<< job["account"].toString()<< endl << endl << "total: "<< (uint64_t)total <<endl << "usage: "<< (uint64_t)usage << endl << "free: "<< (uint64_t)free <<endl;
     qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1048576<<" MB" <<endl << "usage: "<< (uint64_t)usage/1048576<<" MB"  << endl << "free: "<< (uint64_t)free/1048576<<" MB"  <<endl;
-    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)free/1073741824<<" GB"  <<endl;
+//    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)free/1073741824<<" GB"  <<endl;
+    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)qRound(free/1073741824.0)<<" GB"  <<endl;
 
-
+    return true;
 }
 
-void emptyTrashDropbox(MSProvidersPool* providers){
+bool emptyTrashDropbox(MSProvidersPool* providers){
 
     MSDropbox* dbp=new MSDropbox();
 
@@ -418,19 +439,21 @@ void emptyTrashDropbox(MSProvidersPool* providers){
 
     providers->addProvider(dbp);
     if(! providers->loadTokenFile("Dropbox")){
-        exit(0);
+        //exit(0);
+        return false;
     }
 
     if(!providers->refreshToken("Dropbox")){
         qStdOut()<<"Unauthorized access. Aborted."<<endl;
-        exit(0);
+        //exit(0);
+        return false;
     }
 
-    dbp->remote_file_empty_trash();
+    return dbp->remote_file_empty_trash();
 }
 
 
-void authYandex(MSProvidersPool* providers){
+bool authYandex(MSProvidersPool* providers){
 
     MSYandexDisk* ydp=new MSYandexDisk();
 
@@ -444,11 +467,13 @@ void authYandex(MSProvidersPool* providers){
     }
     else{
        qStdOut() << "Authentication failed"<<endl;
+       return false;
     }
+    return true;
 }
 
 
-void listYandex(MSProvidersPool* providers){
+bool listYandex(MSProvidersPool* providers){
 
     MSYandexDisk* ydp=new MSYandexDisk();
 
@@ -456,16 +481,18 @@ void listYandex(MSProvidersPool* providers){
 
     providers->addProvider(ydp,true);
     if(!providers->loadTokenFile("YandexDisk")){
-        return ;
+        return false;
     }
 
     if(! providers->refreshToken("YandexDisk")){
 
         qStdOut()<< "Unauthorized client"<<endl;
-        return;
+        return false;
     }
 
-    ydp->readRemote("/");
+    if(!ydp->readRemote("/")){
+        return false;
+    }
 
 
 
@@ -487,11 +514,11 @@ void listYandex(MSProvidersPool* providers){
         qStdOut() << si.key()<< endl;
         si++;
     }
-
+    return true;
 }
 
 
-void syncYandex(MSProvidersPool* providers){
+bool syncYandex(MSProvidersPool* providers){
 
     MSYandexDisk* ydp=new MSYandexDisk();
 
@@ -499,20 +526,22 @@ void syncYandex(MSProvidersPool* providers){
 
     providers->addProvider(ydp);
     if(! providers->loadTokenFile("YandexDisk")){
-        exit(0);
+        //exit(0);
+        return false;
     }
 
     if(!providers->refreshToken("YandexDisk")){
         qStdOut()<<"Unauthorized access. Aborted."<<endl;
-        exit(0);
+        //exit(0);
+        return false;
     }
 
-    ydp->createSyncFileList();
+    return ydp->createSyncFileList();
 
 }
 
 
-void infoYandex(MSProvidersPool* providers){
+bool infoYandex(MSProvidersPool* providers){
 
     MSYandexDisk* dbp=new MSYandexDisk();
 
@@ -520,13 +549,13 @@ void infoYandex(MSProvidersPool* providers){
 
     providers->addProvider(dbp,true);
     if(!providers->loadTokenFile("YandexDisk")){
-        return ;
+        return false;
     }
 
     if(! providers->refreshToken("YandexDisk")){
 
         qStdOut()<< "Unauthorized client"<<endl;
-       return;
+       return false;
     }
 
 
@@ -535,7 +564,7 @@ void infoYandex(MSProvidersPool* providers){
     if(info == "false"){
 
         qStdOut()<< "Error getting cloud information " <<endl;
-        return;
+        return false;
     }
 
     QJsonDocument json = QJsonDocument::fromJson(info.toUtf8());
@@ -547,13 +576,14 @@ void infoYandex(MSProvidersPool* providers){
 
     qStdOut()<< job["account"].toString()<< endl << endl << "total: "<< (uint64_t)total <<endl << "usage: "<< (uint64_t)usage << endl << "free: "<< (uint64_t)free <<endl;
     qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1048576<<" MB" <<endl << "usage: "<< (uint64_t)usage/1048576<<" MB"  << endl << "free: "<< (uint64_t)free/1048576<<" MB"  <<endl;
-    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)free/1073741824<<" GB"  <<endl;
+//    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)free/1073741824<<" GB"  <<endl;
+    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)qRound(free/1073741824.0)<<" GB"  <<endl;
 
-
+    return true;
 }
 
 
-void emptyTrashYandex(MSProvidersPool* providers){
+bool emptyTrashYandex(MSProvidersPool* providers){
 
     MSYandexDisk* ydp=new MSYandexDisk();
 
@@ -561,19 +591,21 @@ void emptyTrashYandex(MSProvidersPool* providers){
 
     providers->addProvider(ydp);
     if(! providers->loadTokenFile("YandexDisk")){
-        exit(0);
+        //exit(0);
+        return false;
     }
 
     if(!providers->refreshToken("YandexDisk")){
         qStdOut()<<"Unauthorized access. Aborted."<<endl;
-        exit(0);
+        //exit(0);
+        return false;
     }
 
-    ydp->remote_file_empty_trash();
+    return ydp->remote_file_empty_trash();
 }
 
 
-void authMailru(MSProvidersPool* providers,QString login,QString password){
+bool authMailru(MSProvidersPool* providers,QString login,QString password){
 
     MSMailRu* mrp=new MSMailRu();
 
@@ -592,13 +624,15 @@ void authMailru(MSProvidersPool* providers,QString login,QString password){
     }
     else{
        qStdOut() << "Authentication failed"<<endl;
+       return false;
     }
 
     delete(mrp->cookies);
+    return true;
 }
 
 
-void listMailru(MSProvidersPool* providers){
+bool listMailru(MSProvidersPool* providers){
 
     MSMailRu* mrp=new MSMailRu();
 
@@ -606,16 +640,18 @@ void listMailru(MSProvidersPool* providers){
 
     providers->addProvider(mrp,true);
     if(!providers->loadTokenFile("MailRu")){
-        return ;
+        return false;
     }
 
     if(! providers->refreshToken("MailRu")){
 
         qStdOut()<< "Unauthorized client"<<endl;
-        return;
+        return false;
     }
 
-    mrp->readRemote("/",NULL);
+    if(!mrp->readRemote("/",NULL)){
+        return false;
+    }
 
 
 
@@ -637,11 +673,11 @@ void listMailru(MSProvidersPool* providers){
         qStdOut() << si.key()<< endl;
         si++;
     }
-
+    return true;
 }
 
 
-void syncMailru(MSProvidersPool* providers){
+bool syncMailru(MSProvidersPool* providers){
 
     MSMailRu* mrp=new MSMailRu();
 
@@ -650,22 +686,24 @@ void syncMailru(MSProvidersPool* providers){
     providers->addProvider(mrp);
     if(! providers->loadTokenFile("MailRu")){
         delete(mrp->cookies);
-        exit(0);
+        //exit(0);
+        return false;
     }
 
     if(!providers->refreshToken("MailRu")){
         qStdOut()<<"Unauthorized access. Aborted."<<endl;
         delete(mrp->cookies);
-        exit(0);
+        //exit(0);
+        return false;
     }
 
-    mrp->createSyncFileList();
+    return mrp->createSyncFileList();
 
     //delete(mrp->cookies);// segfault here
 }
 
 
-void infoMailru(MSProvidersPool* providers){
+bool infoMailru(MSProvidersPool* providers){
 
     MSMailRu* dbp=new MSMailRu();
 
@@ -674,14 +712,14 @@ void infoMailru(MSProvidersPool* providers){
     providers->addProvider(dbp,true);
     if(!providers->loadTokenFile("MailRu")){
         delete(dbp->cookies);
-        return ;
+        return false;
     }
 
     if(! providers->refreshToken("MailRu")){
 
         delete(dbp->cookies);
         qStdOut()<< "Unauthorized client"<<endl;
-       return;
+        return false;
     }
 
 
@@ -691,7 +729,7 @@ void infoMailru(MSProvidersPool* providers){
 
         qStdOut()<< "Error getting cloud information " <<endl;
         delete(dbp->cookies);
-        return;
+        return false;
     }
 
     QJsonDocument json = QJsonDocument::fromJson(info.toUtf8());
@@ -703,14 +741,16 @@ void infoMailru(MSProvidersPool* providers){
 
     qStdOut()<< job["account"].toString()<< endl << endl << "total: n/d" <<endl << "usage: n/d" << endl << "free: n/d" <<endl;
     qStdOut()<< "" << endl << "total: "<< (uint64_t)total<<" MB" <<endl << "usage: "<< (uint64_t)usage<<" MB"  << endl << "free: "<< (uint64_t)free<<" MB"  <<endl;
-    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1000<<" GB" <<endl << "usage: "<< (uint64_t)usage/1000<<" GB"  << endl << "free: "<< (uint64_t)free/1000<<" GB"  <<endl;
+//    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1000<<" GB" <<endl << "usage: "<< (uint64_t)usage/1000<<" GB"  << endl << "free: "<< (uint64_t)free/1000<<" GB"  <<endl;
+    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1000<<" GB" <<endl << "usage: "<< (uint64_t)usage/1000<<" GB"  << endl << "free: "<< (uint64_t)qRound(free/1000.0)<<" GB"  <<endl;
 
 
     delete(dbp->cookies);
+    return true;
 }
 
 
-void emptyTrashMailru(MSProvidersPool* providers){
+bool emptyTrashMailru(MSProvidersPool* providers){
 
     MSMailRu* mrp=new MSMailRu();
 
@@ -719,22 +759,26 @@ void emptyTrashMailru(MSProvidersPool* providers){
     providers->addProvider(mrp);
     if(! providers->loadTokenFile("MailRu")){
         delete(mrp->cookies);
-        exit(0);
+        //exit(0);
+        return false;
     }
 
     if(!providers->refreshToken("MailRu")){
         qStdOut()<<"Unauthorized access. Aborted."<<endl;
         delete(mrp->cookies);
-        exit(0);
+        //exit(0);
+        return false;
     }
 
-    mrp->remote_file_empty_trash();
+    bool r = mrp->remote_file_empty_trash();
 
     delete(mrp->cookies);
+
+    return r;
 }
 
 
-void authOneDrive(MSProvidersPool* providers){
+bool authOneDrive(MSProvidersPool* providers){
 
     MSOneDrive* odp=new MSOneDrive();
 
@@ -748,12 +792,13 @@ void authOneDrive(MSProvidersPool* providers){
     }
     else{
        qStdOut() << "Authentication failed"<<endl;
+       return false;
     }
-
+    return true;
 }
 
 
-void listOneDrive(MSProvidersPool* providers){
+bool listOneDrive(MSProvidersPool* providers){
 
     MSOneDrive* gdp=new MSOneDrive();
 
@@ -761,18 +806,20 @@ void listOneDrive(MSProvidersPool* providers){
 
     providers->addProvider(gdp,true);
     if(!providers->loadTokenFile("OneDrive")){
-        return ;
+        return false;
     }
 
     if(! providers->refreshToken("OneDrive")){
 
         qStdOut()<< "Unauthorized client"<<endl;
-       return;
+        return false;
     }
 
 
 
-    gdp->readRemote("");
+    if(!gdp->readRemote("")){
+        return false;
+    }
 
 
 
@@ -794,10 +841,10 @@ void listOneDrive(MSProvidersPool* providers){
         qStdOut() << si.key()<< endl;
         si++;
     }
-
+    return true;
 }
 
-void syncOneDrive(MSProvidersPool* providers){
+bool syncOneDrive(MSProvidersPool* providers){
 
     MSOneDrive* odp=new MSOneDrive();
 
@@ -805,19 +852,21 @@ void syncOneDrive(MSProvidersPool* providers){
 
     providers->addProvider(odp);
     if(! providers->loadTokenFile("OneDrive")){
-        exit(0);
+        //exit(0);
+        return false;
     }
 
     if(!providers->refreshToken("OneDrive")){
         qStdOut()<<"Unauthorized access. Aborted."<<endl;
-        exit(0);
+        //exit(0);
+        return false;
     }
 
-    odp->createSyncFileList();
+    return odp->createSyncFileList();
 }
 
 
-void infoOneDrive(MSProvidersPool* providers){
+bool infoOneDrive(MSProvidersPool* providers){
 
     MSOneDrive* dbp=new MSOneDrive();
 
@@ -825,13 +874,13 @@ void infoOneDrive(MSProvidersPool* providers){
 
     providers->addProvider(dbp,true);
     if(!providers->loadTokenFile("OneDrive")){
-        return ;
+        return false;
     }
 
     if(! providers->refreshToken("OneDrive")){
 
         qStdOut()<< "Unauthorized client"<<endl;
-       return;
+       return false;
     }
 
 
@@ -840,7 +889,7 @@ void infoOneDrive(MSProvidersPool* providers){
     if(info == "false"){
 
         qStdOut()<< "Error getting cloud information " <<endl;
-        return;
+        return false;
     }
 
     QJsonDocument json = QJsonDocument::fromJson(info.toUtf8());
@@ -852,14 +901,15 @@ void infoOneDrive(MSProvidersPool* providers){
 
     qStdOut()<< job["account"].toString()<<" at OneDrive.com"<< endl << endl << "total: "<< (uint64_t)total <<endl << "usage: "<< (uint64_t)usage << endl << "free: "<< (uint64_t)free <<endl;
     qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1048576<<" MB" <<endl << "usage: "<< (uint64_t)usage/1048576<<" MB"  << endl << "free: "<< (uint64_t)free/1048576<<" MB"  <<endl;
-    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)free/1073741824<<" GB"  <<endl;
+//    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)free/1073741824<<" GB"  <<endl;
+    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)qRound(free/1073741824.0)<<" GB"  <<endl;
 
 
-
+    return true;
 }
 
 
-void emptyTrashOneDrive(MSProvidersPool *providers){
+bool emptyTrashOneDrive(MSProvidersPool *providers){
 
     MSOneDrive* odp=new MSOneDrive();
 
@@ -867,15 +917,17 @@ void emptyTrashOneDrive(MSProvidersPool *providers){
 
     providers->addProvider(odp);
     if(! providers->loadTokenFile("OneDrive")){
-        exit(0);
+        //exit(0);
+        return false;
     }
 
     if(!providers->refreshToken("OneDrive")){
         qStdOut()<<"Unauthorized access. Aborted."<<endl;
-        exit(0);
+        //exit(0);
+        return false;
     }
 
-    odp->remote_file_empty_trash();
+    return odp->remote_file_empty_trash();
 }
 
 
@@ -1027,15 +1079,14 @@ return QLatin1String("unknown");
 
 
 
-
-
-
 int main(int argc, char *argv[])
 {
     qputenv("QT_LOGGING_RULES", "qt.network.ssl.warning=false");
 
 
     QCoreApplication a(argc, argv);
+
+
 
     // Testing for an existence of all application files
 
@@ -1067,7 +1118,6 @@ int main(int argc, char *argv[])
     // create main objects
 
     MSProvidersPool* providers=new MSProvidersPool();
-
 
     QStringList opts=a.arguments();
 
@@ -1354,7 +1404,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-
+    bool r;
 
     while((ret=parser->get())!=-1){
         switch(ret){
@@ -1363,20 +1413,19 @@ int main(int argc, char *argv[])
 
             printHelp();
             return 0;
-            //qStdOut()<< "HELP arg="+parser->optarg;
-            break;
 
         case 2: //-- auth
 
+
             switch(currentProvider){
             case ProviderType::Google:
-                authGrive(providers);
+                r = authGrive(providers);
                 break;
             case ProviderType::Dropbox:
-                authDropbox(providers);
+                r = authDropbox(providers);
                 break;
             case ProviderType::Yandex:
-                authYandex(providers);
+                r = authYandex(providers);
                 break;
             case ProviderType::Mailru:
 
@@ -1388,29 +1437,30 @@ int main(int argc, char *argv[])
                      return 1;
                 }
 
-
-                authMailru(providers,mailru_login[0], mailru_password[0]);
-
+                r = authMailru(providers,mailru_login[0], mailru_password[0]);
                 break;
 
             case ProviderType::OneDrive:
-                authOneDrive(providers);
+                r = authOneDrive(providers);
 
                 break;
 
-            default:
-                break;
+/*            default:
+                break*/;
             }
 
-            return 0;
-            break;
+            if(r){
+                return 0;
+            }
+            else{
+                return 1;
+            }
+
 
         case 3: // --version
 
             printVersion();
             return 0;
-            break;
-
 
         case 4: // --path
 
@@ -1448,27 +1498,31 @@ int main(int argc, char *argv[])
 
             switch(currentProvider){
             case ProviderType::Google:
-                listGrive(providers);
+                r = listGrive(providers);
                 break;
             case ProviderType::Dropbox:
-                listDropbox(providers);
+                r = listDropbox(providers);
                 break;
             case ProviderType::Yandex:
-                listYandex(providers);
+                r = listYandex(providers);
                 break;
             case ProviderType::Mailru:
-                listMailru(providers);
+                r = listMailru(providers);
                 break;
             case ProviderType::OneDrive:
-                listOneDrive(providers);
+                r = listOneDrive(providers);
                 break;
 
-            default:
-                break;
+//            default:
+//                break;
             }
 
-            return 0;
-            break;
+            if(r){
+                return 0;
+            }
+            else{
+                return 1;
+            }
 
         case 6: // --no-hidden
 
@@ -1502,6 +1556,7 @@ int main(int argc, char *argv[])
             }
             else{
                 qStdOut()<< "--convert-doc option doesn't matter for this provider. "<<endl;
+                return 1;
             }
             break;
 
@@ -1525,8 +1580,8 @@ int main(int argc, char *argv[])
             }
             else{
                 qStdOut()<< "--force option value must be an one of \"upload\" or \"download\""<<endl;
-                return 0;
-                break;
+                return 1;
+
             }
             break;
 
@@ -1568,28 +1623,34 @@ int main(int argc, char *argv[])
 
             switch(currentProvider){
                 case ProviderType::Google:
-                    infoGrive(providers);
+                    r = infoGrive(providers);
                     break;
                 case ProviderType::Dropbox:
-                    infoDropbox(providers);
+                    r = infoDropbox(providers);
                     break;
                 case ProviderType::Yandex:
-                    infoYandex(providers);
+                    r = infoYandex(providers);
                     break;
                 case ProviderType::Mailru:
-                    infoMailru(providers);
+                    r = infoMailru(providers);
                     break;
                 case ProviderType::OneDrive:
-                    infoOneDrive(providers);
+                    r = infoOneDrive(providers);
                     break;
 
-                default:
-                    break;
+//                default:
+//                    break;
 
             }
 
-            return 0;
-            break;
+            if(r){
+                return 0;
+            }
+            else{
+                return 1;
+            }
+
+
         case 20: // --filter-type
             providers->setOption("filter-type",parser->optarg[0]);
             break;
@@ -1608,28 +1669,33 @@ int main(int argc, char *argv[])
 
             switch(currentProvider){
                 case ProviderType::Google:
-                    emptyTrashGrive(providers);
+                    r = emptyTrashGrive(providers);
                     break;
                 case ProviderType::Dropbox:
-                    emptyTrashDropbox(providers);
+                    r = emptyTrashDropbox(providers);
                     break;
                 case ProviderType::Yandex:
-                    emptyTrashYandex(providers);
+                    r = emptyTrashYandex(providers);
                     break;
                 case ProviderType::Mailru:
-                    emptyTrashMailru(providers);
+                    r = emptyTrashMailru(providers);
                     break;
                 case ProviderType::OneDrive:
-                    emptyTrashOneDrive(providers);
+                    r = emptyTrashOneDrive(providers);
                     break;
 
-                default:
-                    break;
+//                default:
+//                    break;
 
             }
 
-            return 0;
-            break;
+            if(r){
+                return 0;
+            }
+            else{
+                return 1;
+            }
+
 
         case 24: // --no-sync
 
@@ -1642,32 +1708,36 @@ int main(int argc, char *argv[])
 
             switch(currentProvider){
             case ProviderType::Google:
-                syncGrive(providers);
+                r = syncGrive(providers);
                 break;
             case ProviderType::Dropbox:
-                syncDropbox(providers);
+                r = syncDropbox(providers);
 //                qStdOut()<< "sync dropbox"<<endl;
                 break;
             case ProviderType::Yandex:
-                syncYandex(providers);
+                r = syncYandex(providers);
 //                qStdOut()<< "sync yandex"<<endl;
                 break;
             case ProviderType::Mailru:
-                syncMailru(providers);
+                r = syncMailru(providers);
 //                qStdOut()<< "sync mailru"<<endl;
                 break;
             case ProviderType::OneDrive:
-                syncOneDrive(providers);
+                r = syncOneDrive(providers);
 //                qStdOut()<< "sync onedrive"<<endl;
                 break;
 
-            default:
-                break;
+//            default:
+//                break;
             }
 
-            //exit(0);
-            return 0;
-            break;
+            if(r){
+                return 0;
+            }
+            else{
+                return 1;
+            }
+
         }
     }
 

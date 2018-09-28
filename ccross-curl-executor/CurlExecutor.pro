@@ -44,7 +44,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 
-target.path = /usr/bin
-cccurl.target = /usr/bin/ccross-curl
+cccurl.path = /usr/bin
+cccurl.files += ccross-curl
+#cccurl.target = /usr/bin/ccross-curl
 INSTALLS += cccurl
 

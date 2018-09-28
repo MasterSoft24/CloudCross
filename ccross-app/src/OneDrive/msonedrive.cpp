@@ -1943,7 +1943,7 @@ bool MSOneDrive::createSyncFileList(){
         this->threadsRunning = new QSemaphore(3);
 
         QThread* t1 = new QThread(this);
-        QThread* t2 = new QThread();
+        QThread* t2 = new QThread(this);
         QThread* t3 = new QThread(this);
 
         MSSyncThread* thr1 = new MSSyncThread(nullptr,this);
@@ -2102,6 +2102,7 @@ bool MSOneDrive::onAuthFinished(const QString &html, MSCloudProvider *provider){
 
         if(!req->replyOK()){
             req->printReplyError();
+            this->providerAuthStatus=false;
             delete(req);
             return false;
         }

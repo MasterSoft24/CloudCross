@@ -82,6 +82,7 @@ bool MSGoogleDrive::auth(){
     if(!req->replyOK()){
         req->printReplyError();
         delete(req);
+        this->providerAuthStatus=false;
         return false;
     }
 
@@ -1161,14 +1162,26 @@ void MSGoogleDrive::checkFolderStructures(){
 
 //=======================================================================================
 
-QHash<QString,MSFSObject> MSGoogleDrive::getRemoteFileList(){
+//QHash<QString,MSFSObject> MSGoogleDrive::getRemoteFileList(){
+bool MSGoogleDrive::getRemoteFileList(){
 
 
+//    this->createHashFromRemote();
+//    this->readRemote(this->getRoot(),"/");// top level files and folders
 
-    this->createHashFromRemote();
-    this->readRemote(this->getRoot(),"/");// top level files and folders
+//    return this->syncFileList;
 
-    return this->syncFileList;
+    bool r = this->createHashFromRemote();
+    if(!r){
+        return false;
+    }
+
+    r = this->readRemote(this->getRoot(),"/");// top level files and folders
+    if(!r){
+        return false;
+    }
+
+    return true;
 }
 
 //=======================================================================================
@@ -1286,7 +1299,7 @@ bool MSGoogleDrive::createSyncFileList(){
         this->threadsRunning = new QSemaphore(3);
 
         QThread* t1 = new QThread(this);
-        QThread* t2 = new QThread();
+        QThread* t2 = new QThread(this);
         QThread* t3 = new QThread(this);
 
         MSSyncThread* thr1 = new MSSyncThread(nullptr,this);

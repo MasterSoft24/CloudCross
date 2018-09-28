@@ -1,7 +1,7 @@
 # The CloudCross Project
 
-## Current version: 1.4.2
-Release date: **2017-04-04**
+## Current version: 1.4.4
+Release date: **2018-09-29**
 
 Author: **Kamensky Vladimir**
 

@@ -109,7 +109,7 @@ public:
 
      bool createSyncFileList();
 
-     QHash<QString,MSFSObject> getRemoteFileList();
+     bool getRemoteFileList();
 
      bool filterGoogleDocsMimeTypes(const QString &mime);
      bool filterOfficeMimeTypes(const QString &mime);

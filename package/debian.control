@@ -1,5 +1,5 @@
 Source: cloudcross
-Version: 1.4.1-rc2-1
+Version: 1.4.4-1
 Section: extra
 Priority: optional
 Build-Depends: libqt5network5, qtbase5-dev, qt5-qmake, libcurl4-openssl-dev
@@ -11,7 +11,7 @@ Section: net
 Installed-Size: 180
 Maintainer: Kamensky Vladimir (mastersoft24@yandex.ru)
 Architecture: any
-Version: 1.4.2-rc2-1
+Version: 1.4.4-1
 Depends: libqt5network5, qtbase5, qt5-qmake, libcurl4-openssl
 Provides: ccross
 Description: CloudCross
