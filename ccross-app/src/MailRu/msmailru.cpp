@@ -109,7 +109,7 @@ bool MSMailRu::auth(){
     if(start > 0){
 
         start=start+8;
-        r_out= r.mid(start,32);
+        r_out= r.mid(start+1,32);
         this->providerAuthStatus=true;
         this->token=r_out;
 
@@ -2425,8 +2425,8 @@ QString MSMailRu::getInfo(){
 
     QJsonObject out; //1048576
     out["account"]=job["email"].toString();
-    out["total"]= QString::number(  (uint64_t)job["body"].toObject()["total"].toDouble());
-    out["usage"]= QString::number( (uint64_t)job["body"].toObject()["used"].toDouble());
+    out["total"]= QString::number(  (uint64_t)job["body"].toObject()["bytes_total"].toDouble());
+    out["usage"]= QString::number( (uint64_t)job["body"].toObject()["bytes_used"].toDouble());
 
     return QString( QJsonDocument(out).toJson());
 

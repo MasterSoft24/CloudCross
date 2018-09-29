@@ -739,10 +739,10 @@ bool infoMailru(MSProvidersPool* providers){
     double total=  job["total"].toString().toDouble();
     double free= total - usage;
 
-    qStdOut()<< job["account"].toString()<< endl << endl << "total: n/d" <<endl << "usage: n/d" << endl << "free: n/d" <<endl;
-    qStdOut()<< "" << endl << "total: "<< (uint64_t)total<<" MB" <<endl << "usage: "<< (uint64_t)usage<<" MB"  << endl << "free: "<< (uint64_t)free<<" MB"  <<endl;
+    qStdOut()<< job["account"].toString()<< endl << endl << "total: "<< (uint)total <<endl << "usage: "<< (uint)usage << endl << "free: "<< (uint)free <<endl;
+    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1048576<<" MB" <<endl << "usage: "<< (uint64_t)usage/1048576<<" MB"  << endl << "free: "<< (uint64_t)free/1048576<<" MB"  <<endl;
 //    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1000<<" GB" <<endl << "usage: "<< (uint64_t)usage/1000<<" GB"  << endl << "free: "<< (uint64_t)free/1000<<" GB"  <<endl;
-    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1000<<" GB" <<endl << "usage: "<< (uint64_t)usage/1000<<" GB"  << endl << "free: "<< (uint64_t)qRound(free/1000.0)<<" GB"  <<endl;
+    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)qRound(free/1073741824.0)<<" GB"  <<endl;
 
 
     delete(dbp->cookies);
