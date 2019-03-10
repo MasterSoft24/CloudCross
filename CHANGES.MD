@@ -1,5 +1,7 @@
 ## Change log:
 
+### v1.4.5
+- fix working with Mail.Ru cloud
 ### v1.4.4
 - changes for returning non-zero codes for execution errors (#62)
 - fix for Dropbox query capacity error (#61)

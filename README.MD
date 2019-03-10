@@ -1,7 +1,7 @@
 # The CloudCross Project
 
-## Current version: 1.4.4
-Release date: **2018-09-29**
+## Current version: 1.4.5
+Release date: **2019-03-11**
 
 Author: **Kamensky Vladimir**
 
@@ -55,7 +55,7 @@ a  CloudCross ebuild may be found in [programmador](https://bitbucket.org/progra
 6. qmake ../CloudCross.pro
 7. make
 
-As a result, in the build directory will be appears a three subdirectories with a result of compilation. In a *ccross-app* folder we need a **ccross** file, in a *ccross-curl-executor* we need a **ccross-curl** file. These two file is a main CloudCross executables.
+As a result, in the build directory will be appears a three subdirectories with a result of compilation. In a *ccross-app* folder we need a **ccross** file, in a *ccross-curl-executor* we need a **ccross-curl** file. These two file is a main CloudCross executables. Copy these files to /usr/bin directory.
 
 For detailed usage instructions see https://cloudcross.mastersoft24.ru/usage
 

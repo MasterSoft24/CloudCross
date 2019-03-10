@@ -58,6 +58,7 @@ MSMailRu::MSMailRu()
 
 
 bool MSMailRu::auth(){
+//curl -b /home/user/mail.ru.cookie  -c /home/user/mail.ru.cookie -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.122 Safari/537.36 Vivaldi/2.3.1440.60" -o /home/user/mail.ru.log -L -v -d "page=https://cloud.mail.ru/?from-page=promo%26from-promo=blue-2018%26from=signin&FailPage=&Domain=mail.ru&Login=%LOGIN%&Password=%PASSWORD%&new_auth_form=1" -X POST https://auth.mail.ru/cgi-bin/auth?lang=ru_RU&from=authpopup
 
 
     MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
@@ -73,16 +74,17 @@ bool MSMailRu::auth(){
 
     req->MSsetCookieJar(this->cookies);
 
-    req->setRequestUrl(QStringLiteral("http://auth.mail.ru/cgi-bin/auth?lang=ru_RU&from=authpopup"));
-//    req->setRequestUrl("https://auth.mail.ru/cgi-bin/auth");
+    req->setRequestUrl(QStringLiteral("https://auth.mail.ru/cgi-bin/auth?lang=ru_RU&from=authpopup"));
+
     req->setMethod(QStringLiteral("post"));
 
-    req->addQueryItem(QStringLiteral("page"),           QStringLiteral("https://cloud.mail.ru/?from=promo"));
-    req->addQueryItem(QStringLiteral("FailPage"),       QStringLiteral(""));
+
+    req->addQueryItem(QStringLiteral("page"),           QStringLiteral("https://cloud.mail.ru/?from-page=promo%26from-promo=blue-2018%26from=signin"));
     req->addQueryItem(QStringLiteral("Domain"),         QStringLiteral("mail.ru"));
     req->addQueryItem(QStringLiteral("Login"),          this->login);
     req->addQueryItem(QStringLiteral("Password"),       this->password);
     req->addQueryItem(QStringLiteral("new_auth_form"),  "1");
+    req->addQueryItem(QStringLiteral("FailPage"),       QStringLiteral(""));
 
 
     req->exec();
@@ -101,15 +103,15 @@ bool MSMailRu::auth(){
 
     QString r=req->replyText;
 
-    int start =  r.indexOf("\"csrf\"");
+    int start =  r.indexOf("\"csrf\":");
     QString r_out;
 
     //delete(req);
 
     if(start > 0){
 
-        start=start+8;
-        r_out= r.mid(start+1,32);
+        start=start+9;
+        r_out= r.mid(start+0,32);
         this->providerAuthStatus=true;
         this->token=r_out;
 
@@ -117,7 +119,7 @@ bool MSMailRu::auth(){
         start =r.indexOf("\"x-page-id\":");
         if(start >0){
 
-            start+=13;
+            start+=14;
             r_out=r.mid(start,10);
 
             this->x_page_id=r_out;
@@ -131,7 +133,7 @@ bool MSMailRu::auth(){
         start =r.indexOf("\"BUILD\":");
         if(start >0){
 
-            start+=9;
+            start+=10;
             QString r_tmp=r.mid(start,100);
             int end=r.indexOf("\"",start);
 

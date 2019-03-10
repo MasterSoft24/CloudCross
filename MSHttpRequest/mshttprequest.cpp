@@ -205,7 +205,7 @@ MSNetworkCookieJar *MSHttpRequest::getCookieJar(){
 
 void MSHttpRequest::post(const QByteArray &data){
 
-    this->cUrlObject->requestOptions[CURLOPT_USERAGENT] = "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:15.0) Gecko/20100101 Firefox/15.0.1";
+    this->cUrlObject->requestOptions[CURLOPT_USERAGENT] = "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.122 Safari/537.36 Vivaldi/2.3.1440.60";
 
     //hdr_callback hcb = header_callback;
 
@@ -368,7 +368,7 @@ void MSHttpRequest::post(const QByteArray &data){
 void MSHttpRequest::post(QIODevice *data){
 
 
-    this->cUrlObject->requestOptions[CURLOPT_USERAGENT] = "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:15.0) Gecko/20100101 Firefox/15.0.1";
+    this->cUrlObject->requestOptions[CURLOPT_USERAGENT] = "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.122 Safari/537.36 Vivaldi/2.3.1440.60";
 
     //hdr_callback hcb = header_callback;
 
