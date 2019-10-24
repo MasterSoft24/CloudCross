@@ -473,19 +473,13 @@ bool MSYandexDisk::_readRemote(const QString &rootPath){
 
 
 bool MSYandexDisk::isFile(const QJsonValue &remoteObject){
-    if(remoteObject.toObject()[QStringLiteral("type")].toString()==QStringLiteral("file")){
-        return true;
-    }
-    return false;
+    return remoteObject.toObject()[QStringLiteral("type")].toString()==QStringLiteral("file");
 }
 
 //=======================================================================================
 
 bool MSYandexDisk::isFolder(const QJsonValue &remoteObject){
-    if(remoteObject.toObject()[QStringLiteral("type")].toString()==QStringLiteral("dir")){
-        return true;
-    }
-    return false;
+    return remoteObject.toObject()[QStringLiteral("type")].toString()==QStringLiteral("dir");
 }
 
 //=======================================================================================
@@ -598,7 +592,7 @@ bool MSYandexDisk::createSyncFileList(){
     // make separately lists of objects
     QList<QString> keys = this->syncFileList.uniqueKeys();
 
-    if((keys.size()>3) && (this->getFlag(QStringLiteral("singleThread")) == false)){// split list to few parts
+    if((keys.size()>3) && (!this->getFlag(QStringLiteral("singleThread")))){// split list to few parts
 
         this->threadsRunning = new QSemaphore(3);
 
@@ -1422,12 +1416,7 @@ bool MSYandexDisk::filelist_FSObjectHasParent(const MSFSObject &fsObject){
 //        return true;
 //    }
 
-    if((fsObject.path.count(QStringLiteral("/"))>=1)&&(fsObject.path!=QStringLiteral("/"))){
-        return true;
-    }
-    else{
-        return false;
-    }
+    return (fsObject.path.count(QStringLiteral("/"))>=1)&&(fsObject.path!=QStringLiteral("/"));
 
 }
 
@@ -1479,11 +1468,7 @@ bool MSYandexDisk::testReplyBodyForError(const QString &body) {
         QJsonObject job = json.object();
 
         QJsonValue e=(job[QStringLiteral("error")]);
-        if(e.isNull()){
-            return true;
-        }
-
-        return false;
+        return e.isNull();
 
 
 }

@@ -93,10 +93,7 @@ bool MSCloudProvider::filterServiceFileNames(const QString &path){// return fals
     QRegExp regex(reg);
     int ind = regex.indexIn(path);
 
-    if(ind != -1){
-        return false;
-    }
-    return true;
+    return ind == -1;
 
 }
 
@@ -130,12 +127,7 @@ bool MSCloudProvider::filterIncludeFileNames(const QString &path){// return fals
             return false;
         }
         else{
-            if(isBegin){
-                return false;
-            }
-            else{
-                return true;
-            }
+            return !isBegin;
         }
     }
     else{
@@ -188,12 +180,7 @@ bool MSCloudProvider::filterExcludeFileNames(const QString &path){// return fals
             return false;
         }
         else{
-            if(isBegin){
-                return false;
-            }
-            else{
-                return true;
-            }
+            return !isBegin;
         }
     }
     else{
@@ -249,13 +236,7 @@ QString MSCloudProvider::fileChecksum(const QString &fileName, QCryptographicHas
 bool MSCloudProvider::createDirectoryPath(const QString &path){
 
     int r= system(QString("mkdir -p \""+path+"\"").toStdString().c_str());
-    if(r == 0){
-
-        return true;
-    }
-    else{
-        return false;
-    }
+    return r == 0;
 }
 
 

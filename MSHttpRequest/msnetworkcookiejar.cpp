@@ -72,12 +72,7 @@ MSNetworkCookieJar::~MSNetworkCookieJar(){
 }
 
 bool MSNetworkCookieJar::isCookieRemoved(){
-    if(this->cookieFile == nullptr){
-        return true;
-    }
-    else{
-        return false;
-    }
+    return this->cookieFile == nullptr;
 }
 
 //MSNetworkCookieJar MSNetworkCookieJar::operator =(MSNetworkCookieJar c)

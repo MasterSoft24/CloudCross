@@ -491,7 +491,7 @@ bool MSDropbox::readRemote(){ //QString parentId,QString currentPath
 
 
 
-    }while(hasMore==true);
+    }while(hasMore);
 
 
     return true;
@@ -511,19 +511,13 @@ bool MSDropbox::_readRemote(const QString &rootPath){
 
 
 bool MSDropbox::isFile(const QJsonValue &remoteObject){
-    if(remoteObject.toObject()[".tag"].toString()=="file"){
-        return true;
-    }
-    return false;
+    return remoteObject.toObject()[".tag"].toString()=="file";
 }
 
 //=======================================================================================
 
 bool MSDropbox::isFolder(const QJsonValue &remoteObject){
-    if(remoteObject.toObject()[QStringLiteral(".tag")].toString()==QStringLiteral("folder")){
-        return true;
-    }
-    return false;
+    return remoteObject.toObject()[QStringLiteral(".tag")].toString()==QStringLiteral("folder");
 }
 
 //=======================================================================================
@@ -635,7 +629,7 @@ bool MSDropbox::createSyncFileList(){
     // make separately lists of objects
     QList<QString> keys = this->syncFileList.uniqueKeys();
 
-    if((keys.size()>3) && (this->getFlag(QStringLiteral("singleThread")) == false)){// split list to few parts
+    if((keys.size()>3) && (!this->getFlag(QStringLiteral("singleThread")))){// split list to few parts
 
         this->threadsRunning = new QSemaphore(3);
 
@@ -1462,12 +1456,7 @@ bool MSDropbox::filelist_FSObjectHasParent(const MSFSObject &fsObject){
 //        return true;
 //    }
 
-    if((fsObject.path.count(QStringLiteral("/"))>=1)&&(fsObject.path!=QStringLiteral("/"))){
-        return true;
-    }
-    else{
-        return false;
-    }
+    return (fsObject.path.count(QStringLiteral("/"))>=1)&&(fsObject.path!=QStringLiteral("/"));
 
 }
 
@@ -1515,14 +1504,7 @@ void MSDropbox::filelist_populateChanges(const MSFSObject &changedFSObject){
 
 bool MSDropbox::testReplyBodyForError(const QString &body) {
 
-    if(body.contains(QStringLiteral("\"error\": {"))){
-
-        return false;
-
-    }
-    else{
-        return true;
-    }
+    return !body.contains(QStringLiteral("\"error\": {"));
 
 }
 

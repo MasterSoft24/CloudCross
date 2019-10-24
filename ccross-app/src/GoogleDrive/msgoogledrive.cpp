@@ -589,19 +589,13 @@ QHash<QString,QJsonValue> MSGoogleDrive::get(const QString &parentId, int target
 //=======================================================================================
 
 bool MSGoogleDrive::isFile(const QJsonValue &remoteObject){
-    if(remoteObject.toObject()[QStringLiteral("mimeType")].toString() != QStringLiteral("application/vnd.google-apps.folder")){
-        return true;
-    }
-    return false;
+    return remoteObject.toObject()[QStringLiteral("mimeType")].toString() != QStringLiteral("application/vnd.google-apps.folder");
 }
 
 //=======================================================================================
 
 bool MSGoogleDrive::isFolder(const QJsonValue &remoteObject){
-    if(remoteObject.toObject()[QStringLiteral("mimeType")].toString() == QStringLiteral("application/vnd.google-apps.folder")){
-        return true;
-    }
-    return false;
+    return remoteObject.toObject()[QStringLiteral("mimeType")].toString() == QStringLiteral("application/vnd.google-apps.folder");
 }
 
 //=======================================================================================
@@ -1042,15 +1036,9 @@ bool MSGoogleDrive::readLocalSingle(const QString &path){
 
 bool MSGoogleDrive::filterGoogleDocsMimeTypes(const QString &mime){// return true if this mime is Google document
 
-    if((mime == QStringLiteral("application/vnd.google-apps.document"))||
-            (mime == QStringLiteral("application/vnd.google-apps.presentation"))||
-            (mime == QStringLiteral("application/vnd.google-apps.spreadsheet"))){
-
-        return true;
-    }
-    else{
-        return false;
-    }
+    return (mime == QStringLiteral("application/vnd.google-apps.document"))
+        || (mime == QStringLiteral("application/vnd.google-apps.presentation"))
+        || (mime == QStringLiteral("application/vnd.google-apps.spreadsheet"));
 }
 
 //=======================================================================================
@@ -1063,23 +1051,13 @@ bool MSGoogleDrive::filterOfficeMimeTypes(const QString &mime){// return true if
 
     QRegularExpressionMatch m = regex2.match(mime);
 
-    if(m.hasMatch()){
-        return true;
-    }
-    else{
-        return false;
-    }
+    return m.hasMatch();
 
 }
 
 bool MSGoogleDrive::filterOfficeFileExtensions(QString ext){
 
-    if(ext == "xlsx" || ext == "docx" || ext =="pptx" || ext=="odt" || ext=="ods" || ext == "odp"){
-        return true;
-    }
-    else{
-        return false;
-    }
+    return ext == "xlsx" || ext == "docx" || ext =="pptx" || ext=="odt" || ext=="ods" || ext == "odp";
 
 }
 
@@ -1171,17 +1149,11 @@ bool MSGoogleDrive::getRemoteFileList(){
 
 //    return this->syncFileList;
 
-    bool r = this->createHashFromRemote();
-    if(!r){
+    if(!this->createHashFromRemote()){
         return false;
     }
 
-    r = this->readRemote(this->getRoot(),"/");// top level files and folders
-    if(!r){
-        return false;
-    }
-
-    return true;
+    return this->readRemote(this->getRoot(),"/");// top level files and folders
 }
 
 //=======================================================================================
@@ -1294,7 +1266,7 @@ bool MSGoogleDrive::createSyncFileList(){
     // make separately lists of objects
     QList<QString> keys = this->syncFileList.uniqueKeys();
 
-    if((keys.size()>3) && (this->getFlag(QStringLiteral("singleThread")) == false)){// split list to few parts
+    if((keys.size()>3) && (!this->getFlag(QStringLiteral("singleThread")))){// split list to few parts
 
         this->threadsRunning = new QSemaphore(3);
 
@@ -1520,12 +1492,7 @@ bool MSGoogleDrive::filelist_FSObjectHasParent(const MSFSObject &fsObject){
     //        return true;
     //    }
 
-    if((fsObject.path.count(QStringLiteral("/"))>=1)&&(fsObject.path!=QStringLiteral("/"))){
-        return true;
-    }
-    else{
-        return false;
-    }
+    return (fsObject.path.count(QStringLiteral("/"))>=1)&&(fsObject.path!=QStringLiteral("/"));
 }
 
 //=======================================================================================
@@ -1988,7 +1955,7 @@ afterReauth:
             object->local.mimeType=QStringLiteral("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
             req->addQueryItem("mimeType", object->local.mimeType);
 
-            if((object->local.exist == false)&&(object->getObjectExtension().isEmpty())){
+            if((!object->local.exist)&&(object->getObjectExtension().isEmpty())){
                 object->fileName=object->fileName+QStringLiteral(".docx");
             }
 
@@ -1999,7 +1966,7 @@ afterReauth:
             object->local.mimeType=QStringLiteral("application/vnd.openxmlformats-officedocument.presentationml.presentation");
             req->addQueryItem("mimeType", object->local.mimeType);
 
-            if((object->local.exist == false)&&(object->getObjectExtension().isEmpty())){
+            if((!object->local.exist)&&(object->getObjectExtension().isEmpty())){
                 object->fileName=object->fileName+QStringLiteral(".pptx");
             }
 
@@ -2980,12 +2947,7 @@ bool MSGoogleDrive::testReplyBodyForError(const QString &body){// return true if
         else{
 
             int code=e.toInt(0);
-            if(code != 0){
-                return false;
-            }
-            else{
-                return true;
-            }
+            return code == 0;
         }
 
     }

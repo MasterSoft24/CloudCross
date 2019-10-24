@@ -1329,12 +1329,7 @@ bool MSOneDrive::filelist_FSObjectHasParent(const MSFSObject &fsObject){
 //        return true;
 //    }
 
-    if((fsObject.path.count(QStringLiteral("/"))>=1)&&(fsObject.path!=QStringLiteral("/"))){
-        return true;
-    }
-    else{
-        return false;
-    }
+    return (fsObject.path.count(QStringLiteral("/"))>=1)&&(fsObject.path!=QStringLiteral("/"));
 
 
 }
@@ -1381,14 +1376,7 @@ void MSOneDrive::filelist_populateChanges(const MSFSObject &changedFSObject){
 
 bool MSOneDrive::testReplyBodyForError(const QString &body){
 
-    if(body.contains(QStringLiteral("\"error\":"))){
-
-        return false;
-
-    }
-    else{
-        return true;
-    }
+    return !body.contains(QStringLiteral("\"error\":"));
 
 
 }
@@ -1443,12 +1431,7 @@ bool MSOneDrive::readRemote(const QString &rootPath){
 
     do{
 
-        if(job[QStringLiteral("@odata.nextLink")].toString() != QStringLiteral("")){
-            hasMore=true;
-        }
-        else{
-            hasMore=false;
-        }
+        hasMore = job[QStringLiteral("@odata.nextLink")].toString() != QStringLiteral("");
 
         int sz=items.size();
 
@@ -1807,11 +1790,7 @@ bool MSOneDrive::isFolder(const QJsonValue &remoteObject){
 
     QJsonValue s=remoteObject.toObject()[QStringLiteral("folder")];
 
-    if(s != QJsonValue()){
-        return true;
-    }
-
-    return false;
+    return s != QJsonValue();
 }
 
 
@@ -1820,11 +1799,7 @@ bool MSOneDrive::isFile(const QJsonValue &remoteObject){
 
     QJsonValue s=remoteObject.toObject()[QStringLiteral("file")];
 
-    if(s != QJsonValue()){
-        return true;
-    }
-
-    return false;
+    return s != QJsonValue();
 
 }
 
@@ -1938,7 +1913,7 @@ bool MSOneDrive::createSyncFileList(){
     // make separately lists of objects
     QList<QString> keys = this->syncFileList.uniqueKeys();
 
-    if((keys.size()>3) && (this->getFlag(QStringLiteral("singleThread")) == false)){// split list to few parts
+    if((keys.size()>3) && (!this->getFlag(QStringLiteral("singleThread")))){// split list to few parts
 
         this->threadsRunning = new QSemaphore(3);
 

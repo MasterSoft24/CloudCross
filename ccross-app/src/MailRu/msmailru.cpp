@@ -584,7 +584,7 @@ bool MSMailRu::remote_file_insert(MSFSObject *object, const char *newParameter){
 //         if(content.contains( QStringLiteral("400"))){// need remove and re-upload
 
              bool r=this->remote_file_trash(object);
-             if(r == true){
+             if(r){
 
                  this->remote_file_insert(object);
                  //delete(this->cookies);
@@ -703,7 +703,7 @@ bool MSMailRu::remote_file_makeFolder(MSFSObject *object){
         if(error == "exists"){// need remove and re-upload
 
             bool r=this->remote_file_trash(object);
-            if(r == true){
+            if(r){
 
                 this->remote_file_makeFolder(object);
                 ////this->cookies->deleteLater();//delete(this->cookies);
@@ -735,12 +735,7 @@ bool MSMailRu::remote_file_makeFolder(MSFSObject *object){
     delete(this->cookies);
     delete(req);
 
-    if(status == 200){
-        return true;
-    }
-    else{
-        return false;
-    }
+    return status == 200;
 
 }
 
@@ -804,12 +799,7 @@ bool MSMailRu::remote_file_trash(MSFSObject *object){
     delete(this->cookies);
     delete(req);
 
-    if(status == 200){
-        return true;
-    }
-    else{
-        return false;
-    }
+    return status == 200;
 
 
 }
@@ -1478,12 +1468,7 @@ bool MSMailRu::filelist_FSObjectHasParent(const MSFSObject &fsObject){
 //        return true;
 //    }
 
-    if((fsObject.path.count(QStringLiteral("/"))>=1)&&(fsObject.path!=QStringLiteral("/"))){
-        return true;
-    }
-    else{
-        return false;
-    }
+    return (fsObject.path.count(QStringLiteral("/"))>=1)&&(fsObject.path!=QStringLiteral("/"));
 }
 
 //=======================================================================================
@@ -1532,14 +1517,7 @@ void MSMailRu::filelist_populateChanges(const MSFSObject &changedFSObject){
 
 bool MSMailRu::testReplyBodyForError(const QString &body){
 
-    if(body.contains("Error transferring ")){
-
-        return false;
-
-    }
-    else{
-        return true;
-    }
+    return !body.contains("Error transferring ");
 }
 
 //=======================================================================================
@@ -1568,7 +1546,7 @@ bool MSMailRu::readRemote(const QString &path, MSNetworkCookieJar* cookie)
 
         this->auth();
 
-        if(this->providerAuthStatus == false){
+        if(!this->providerAuthStatus){
 
             qStdOut()<<QStringLiteral("Authentication failed. Possibly you need re-auth or login and passwrd is incorrect") <<endl ;
 
@@ -2000,10 +1978,7 @@ bool MSMailRu::readLocalSingle(const QString &path){
 
 bool MSMailRu::isFolder(const QJsonValue &remoteObject){
 
-    if(remoteObject.toObject()[".tag"].toString()=="folder"){
-        return true;
-    }
-    return false;
+    return remoteObject.toObject()[".tag"].toString()=="folder";
 }
 
 //=======================================================================================
@@ -2011,10 +1986,7 @@ bool MSMailRu::isFolder(const QJsonValue &remoteObject){
 
 bool MSMailRu::isFile(const QJsonValue &remoteObject){
 
-    if(remoteObject.toObject()[".tag"].toString()=="file"){
-        return true;
-    }
-    return false;
+    return remoteObject.toObject()[".tag"].toString()=="file";
 }
 
 //=======================================================================================
@@ -2128,7 +2100,7 @@ bool MSMailRu::createSyncFileList(){
 
     this->setFlag("singleThread",true); // avoid multithreading
 
-    if((keys.size()>3) && (this->getFlag("singleThread") == false)){// split list to few parts
+    if((keys.size()>3) && (!this->getFlag("singleThread"))){// split list to few parts
 
         this->threadsRunning = new QSemaphore(3);
 
@@ -2378,15 +2350,7 @@ bool MSMailRu::directUpload(const QString &url, const QString &remotePath){
     //this->cookies->deleteLater();//delete(this->cookies);
     delete(req);
 
-    if(status == 200){
-
-
-
-        return true;
-    }
-    else{
-        return false;
-    }
+    return status == 200;
 
 
 }

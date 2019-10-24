@@ -1193,12 +1193,7 @@ QString MSHttpRequest::readReplyText(){
 
 bool MSHttpRequest::replyOK(){
 
-    if(this->replyError == QNetworkReply::NetworkError::NoError){
-        return true;
-    }
-    else{
-        return false;
-    }
+    return this->replyError == QNetworkReply::NetworkError::NoError;
 }
 
 //==============================================================================================
