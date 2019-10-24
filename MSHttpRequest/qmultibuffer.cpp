@@ -153,15 +153,15 @@ qint64 QMultiBuffer::size() const{
 
     qint64 sz=0;
 
-    for(int i=0; i< this->items.size();i++){
+    for(const auto& item : this->items){
 
-        QString vt = this->items[i].slot.typeName();
+        QString vt = item.slot.typeName();
 
         if( vt == "QBuffer*"){
-            sz += ((QBuffer*)(qvariant_cast<QBuffer*> (this->items[i].slot)))->size();
+            sz += ((QBuffer*)(qvariant_cast<QBuffer*> (item.slot)))->size();
         }
         if( vt == "QIODevice*"){
-            sz += ((QFile*)(qvariant_cast<QFile*> (this->items[i].slot)))->size();
+            sz += ((QFile*)(qvariant_cast<QFile*> (item.slot)))->size();
         }
     }
 

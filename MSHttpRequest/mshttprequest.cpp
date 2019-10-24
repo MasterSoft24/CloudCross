@@ -115,13 +115,10 @@ QString MSHttpRequest::getReplyHeader(const QByteArray &headerName){
 
     QList<QPair<QByteArray,QByteArray>> hl = this->cUrlObject->replyHeaders;
 
-    for(int i=0;i<hl.size();i++){
-
-        if(hl[i].first == headerName){
-
-            return hl[i].second;
-        }
-    }
+    auto iter = std::find_if(hl.begin(), hl.end(),
+                             [&headerName](const QPair<QByteArray,QByteArray>& i) { return i.first == headerName; });
+    if (iter != hl.end())
+        return iter->second;
 
     return QString();
 }
@@ -160,16 +157,16 @@ void MSHttpRequest::setInputDataStream(QMultiBuffer *data){
 
     this->dataStreamType = dataStreamTypes::DS_MultiBuffer;
 
-    for(int i = 0;i < data->items.size(); i++){
+    for(auto & item : data->items){
 
-        if(data->items[i].fileName == ""){
-            QIODevice* dd = ((QIODevice*)qvariant_cast<QIODevice*> (data->items[i].slot));
+        if(item.fileName == ""){
+            QIODevice* dd = ((QIODevice*)qvariant_cast<QIODevice*> (item.slot));
             dd->open(QIODevice::ReadOnly);
             QByteArray b = dd->readAll();
             this->dataStreamMultiBuffer.append(QPair<dataStreamTypes,QByteArray>(dataStreamTypes::DS_ByteArray,b));
         }
         else{
-            QFile* f = qvariant_cast<QFile*> (data->items[i].slot);
+            QFile* f = qvariant_cast<QFile*> (item.slot);
             this->dataStreamMultiBuffer.append(QPair<dataStreamTypes,QByteArray>(dataStreamTypes::DS_File,f->fileName().toLocal8Bit()));
         }
 
@@ -1126,10 +1123,10 @@ void MSHttpRequest::exec(){
 
         ds << this->dataStreamMultiBuffer.size();
 
-        for(int i =0; i< this->dataStreamMultiBuffer.size(); i++){
+        for(const auto & i : this->dataStreamMultiBuffer){
 
-            ds << this->dataStreamMultiBuffer[i].first;
-            ds << this->dataStreamMultiBuffer[i].second;
+            ds << i.first;
+            ds << i.second;
 
         }
     }
