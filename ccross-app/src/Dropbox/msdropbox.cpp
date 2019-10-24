@@ -44,14 +44,12 @@
 
 //  150000000
 
-MSDropbox::MSDropbox() :
-    MSCloudProvider()
+MSDropbox::MSDropbox()
 {
     this->providerName=     QStringLiteral("Dropbox");
     this->tokenFileName=    QStringLiteral(".dbox");
     this->stateFileName=    QStringLiteral(".dbox_state");
     this->trashFileName=    QStringLiteral(".trash_dbox");
-
 }
 
 

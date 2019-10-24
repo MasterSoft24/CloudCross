@@ -45,14 +45,12 @@
 #define YADISK_MAX_FILESIZE  8000000
 //  150000000
 
-MSYandexDisk::MSYandexDisk() :
-    MSCloudProvider()
+MSYandexDisk::MSYandexDisk()
 {
     this->providerName=     QStringLiteral("YandexDisk");
     this->tokenFileName=    QStringLiteral(".yadisk");
     this->stateFileName=    QStringLiteral(".yadisk_state");
     this->trashFileName=    QStringLiteral(".trash_yadisk");
-
 }
 
 

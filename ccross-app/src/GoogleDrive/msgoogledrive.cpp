@@ -43,15 +43,12 @@
 #include "iostream"
 
 
-MSGoogleDrive::MSGoogleDrive() :
-    MSCloudProvider()
+MSGoogleDrive::MSGoogleDrive()
 {
     this->providerName="GoogleDrive";
     this->tokenFileName=".grive";
     this->stateFileName=".grive_state";
     this->trashFileName=".trash";
-
-
 }
 
 //=======================================================================================

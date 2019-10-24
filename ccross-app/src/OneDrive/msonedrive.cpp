@@ -38,9 +38,7 @@
 
 QByteArray excludeChars = "/:";
 
-MSOneDrive::MSOneDrive():
-    MSCloudProvider()
-
+MSOneDrive::MSOneDrive()
 {
     this->providerName=     QStringLiteral("OneDrive");
     this->tokenFileName=    QStringLiteral(".ondr");
