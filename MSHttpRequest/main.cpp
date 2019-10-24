@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
 
     QByteArray payload;
 
-    payload.append("{\"t_val\":\"This is payload for POST request\"}");
+    payload.append(R"({"t_val":"This is payload for POST request"})");
 
     req->addHeader(QStringLiteral("Content-Length"),QString::number(payload.length()).toLocal8Bit());
 
@@ -333,7 +333,7 @@ int main(int argc, char *argv[])
 
     QByteArray payload2;
 
-    payload2.append("{\"t_val\":\"This is payload for PUT request\"}");
+    payload2.append(R"({"t_val":"This is payload for PUT request"})");
 
     req->addHeader(QStringLiteral("Content-Length"),QString::number(payload2.length()).toLocal8Bit());
 

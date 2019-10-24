@@ -104,7 +104,7 @@ void printHelp(){
     qStdOut()<< QObject::tr("   -s [ --list ]              Print remote cloud file list") <<endl;
     qStdOut()<< QObject::tr("   --use-include              Use .include file. Without this option by default use .exclude file.\n"
                             "                              If these files does'nt exists, they  are ignore") <<endl;
-    qStdOut()<< QObject::tr("   --prefer arg               Define sync strategy. It can be a one of \"remote\" or \"local\". By default it's \"local\"") <<endl;
+    qStdOut()<< QObject::tr(R"(   --prefer arg               Define sync strategy. It can be a one of "remote" or "local". By default it's "local")") <<endl;
     qStdOut()<< QObject::tr("   --no-hidden                Not sync hidden files and folders") <<endl;
     qStdOut()<< QObject::tr("   --no-new-rev               Do not create new revisions of files, overwrite their instead") <<endl;
     qStdOut()<< QObject::tr("   --convert-doc              Convert office document to Google Doc format when upload\n"
@@ -1479,7 +1479,7 @@ int main(int argc, char *argv[])
                     s=MSCloudProvider::SyncStrategy::PreferRemote;
                 }
                 else{
-                    qStdOut()<< "--prefer option value must be an one of \"local\" or \"remote\""<<endl;
+                    qStdOut()<< R"(--prefer option value must be an one of "local" or "remote")"<<endl;
                     return 0;
                     break;
                 }
@@ -1577,7 +1577,7 @@ int main(int argc, char *argv[])
 
             }
             else{
-                qStdOut()<< "--force option value must be an one of \"upload\" or \"download\""<<endl;
+                qStdOut()<< R"(--force option value must be an one of "upload" or "download")"<<endl;
                 return 1;
 
             }

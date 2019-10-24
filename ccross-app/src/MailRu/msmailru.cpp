@@ -178,7 +178,7 @@ void MSMailRu::saveTokenFile(const QString &path)
     QFile key(path+"/"+this->tokenFileName);
     key.open(QIODevice::WriteOnly | QIODevice::Text);
     QTextStream outk(&key);
-    outk << "{\"access_token\" : \""+this->token+"\", \"build\": \""+this->build+"\", \"x_page_id\": \""+this->x_page_id+"\", \"login\": \""+this->login+"\", \"password\": \""+this->password+"\" }";
+    outk << R"({"access_token" : ")"+this->token+R"(", "build": ")"+this->build+R"(", "x_page_id": ")"+this->x_page_id+R"(", "login": ")"+this->login+R"(", "password": ")"+this->password+R"(" })";
     key.close();
 }
 
