@@ -202,7 +202,6 @@ bool MSCloudProvider::filterExcludeFileNames(const QString &path){// return fals
 void MSCloudProvider::saveTokenFile(const QString &path){
     // fix warning message
     Q_UNUSED(path);
-    return;
 }
 
 bool MSCloudProvider::loadTokenFile(const QString &path){

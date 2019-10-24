@@ -246,7 +246,6 @@ void MSGoogleDrive::loadStateFile(){
     this->lastSyncTime=QJsonValue(job[QStringLiteral("last_sync")].toObject()[QStringLiteral("sec")]).toVariant().toULongLong();
 
     key.close();
-    return;
 
 }
 

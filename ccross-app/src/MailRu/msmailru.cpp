@@ -246,7 +246,6 @@ void MSMailRu::loadStateFile()
     this->lastSyncTime=QJsonValue(job["last_sync"].toObject()["sec"]).toVariant().toULongLong();
 
     key.close();
-    return;
 }
 
 //=======================================================================================

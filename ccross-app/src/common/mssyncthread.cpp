@@ -16,5 +16,4 @@ void MSSyncThread::run(){
     }
     emit finished();
     this->thread()->quit();
-    return;
 }

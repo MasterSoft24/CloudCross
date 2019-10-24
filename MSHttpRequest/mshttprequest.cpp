@@ -177,7 +177,6 @@ void MSHttpRequest::setInputDataStream(QMultiBuffer *data){
 
     }
 
-    return;
 }
 
 //==============================================================================================
@@ -1158,8 +1157,6 @@ void MSHttpRequest::exec(){
         exe->waitForFinished(999999999);
 
         delete(exe);
-
-    return ;
 
 
 }
