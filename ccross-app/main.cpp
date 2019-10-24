@@ -1119,7 +1119,7 @@ int main(int argc, char *argv[])
 
     MSProvidersPool* providers=new MSProvidersPool();
 
-    QStringList opts=a.arguments();
+    QStringList opts=QCoreApplication::arguments();
 
     MSOptParser* parser=new MSOptParser();
 

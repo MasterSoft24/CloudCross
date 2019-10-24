@@ -454,9 +454,8 @@ QString MSCloudProvider::generateRandom(int count){
 
     int Low=0x41;
     int High=0x5a;
-    QDateTime d;
 
-    qsrand(d.currentDateTime().toMSecsSinceEpoch());
+    qsrand(QDateTime::currentDateTime().toMSecsSinceEpoch());
 
     QString token="";
 
