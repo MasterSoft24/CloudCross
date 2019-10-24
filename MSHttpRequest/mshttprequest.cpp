@@ -322,7 +322,7 @@ void MSHttpRequest::post(const QByteArray &data){
     }
 
     // set request headers
-    if(this->requestHeaders.size() > 0){
+    if(!this->requestHeaders.empty()){
 
         QStringList h;
         QHash<QString,QString>::iterator i = this->requestHeaders.begin();
@@ -518,7 +518,7 @@ void MSHttpRequest::post(QIODevice *data){
 
 
     // set request headers
-    if(this->requestHeaders.size() > 0){
+    if(!this->requestHeaders.empty()){
 
         QStringList h;
         QHash<QString,QString>::iterator i = this->requestHeaders.begin();
@@ -681,7 +681,7 @@ void MSHttpRequest::put(const QByteArray &data){
     }
 
     // set request headers
-    if(this->requestHeaders.size() > 0){
+    if(!this->requestHeaders.empty()){
 
         QStringList h;
         QHash<QString,QString>::iterator i = this->requestHeaders.begin();
@@ -867,7 +867,7 @@ void MSHttpRequest::put(QIODevice *data){
     }
 
     // set request headers
-    if(this->requestHeaders.size() > 0){
+    if(!this->requestHeaders.empty()){
 
         QStringList h;
         QHash<QString,QString>::iterator i = this->requestHeaders.begin();
@@ -946,7 +946,7 @@ void MSHttpRequest::deleteResource(){
 //    cUrlObject->requestOptions[CURLOPT_POSTFIELDSIZE] = 0;
 
     // set request headers
-    if(this->requestHeaders.size() > 0){
+    if(!this->requestHeaders.empty()){
 
         QStringList h;
         QHash<QString,QString>::iterator i = this->requestHeaders.begin();
@@ -1003,7 +1003,7 @@ void MSHttpRequest::get(){
 
     QString p = "";
 
-    if(this->queryItems.size() > 0){
+    if(!this->queryItems.empty()){
 
         QHash<QString,QString>::iterator i = this->queryItems.begin();
 
@@ -1024,7 +1024,7 @@ void MSHttpRequest::get(){
     }
 
     // set request headers
-    if(this->requestHeaders.size() > 0){
+    if(!this->requestHeaders.empty()){
 
         QStringList h;
         QHash<QString,QString>::iterator i = this->requestHeaders.begin();

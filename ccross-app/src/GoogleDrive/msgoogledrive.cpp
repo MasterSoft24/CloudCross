@@ -514,7 +514,7 @@ QHash<QString,QJsonValue> MSGoogleDrive::get(const QString &parentId, int target
 
         v= i.value();
 
-        if(v.toObject()[QStringLiteral("parents")].toArray().size()==0){
+        if(v.toObject()[QStringLiteral("parents")].toArray().empty()){
             if(i != driveJSONFileList.end()){
                 i++;
                 continue;
@@ -3245,7 +3245,7 @@ QString MSGoogleDrive::getInfo(){
 
     //int zz=job["storageQuota"].toObject().size();
 
-    if(job[QStringLiteral("storageQuota")].toObject().size()== 0){
+    if(job[QStringLiteral("storageQuota")].toObject().empty()){
         //qStdOut()<< "Error getting cloud information "  ;
         return QStringLiteral("false");
     }

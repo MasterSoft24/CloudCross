@@ -1171,7 +1171,7 @@ int main(int argc, char *argv[])
 
 
 
-    if(prov.size() != 0){
+    if(!prov.empty()){
         if(prov[0] == "google"){
             currentProvider=ProviderType::Google;
         }
@@ -1204,11 +1204,11 @@ int main(int argc, char *argv[])
 
 
     QStringList wp=parser->getParamByName("path");
-    if(wp.size()==0){
+    if(wp.empty()){
         wp=parser->getParamByName("p");
     }
 
-    if(wp.size()!=0){
+    if(!wp.empty()){
 
         providers->setWorkPath(wp[0]);
     }
@@ -1432,7 +1432,7 @@ int main(int argc, char *argv[])
                 mailru_login=parser->getParamByName("--login");
                 mailru_password=parser->getParamByName("--password");
 
-                if((mailru_login.size()==0)||(mailru_password.size()==0)){
+                if((mailru_login.empty())||(mailru_password.empty())){
                      qStdOut()<< "Provider Mail.ru. Login and password required. Application terminated."<< endl;
                      return 1;
                 }

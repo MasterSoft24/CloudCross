@@ -2799,7 +2799,7 @@ QString MSDropbox::getInfo(){
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject job = json.object();
 
-    if(job[QStringLiteral("allocation")].toObject().size()== 0){
+    if(job[QStringLiteral("allocation")].toObject().empty()){
         //qStdOut()<< "Error getting cloud information "  ;
         return QStringLiteral("false");
     }

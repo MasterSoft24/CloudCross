@@ -26,7 +26,7 @@ void QMultiBuffer::append(QIODevice* d){
         s.fileName = f->fileName();
     }
 
-    if(this->items.size() == 0){
+    if(this->items.empty()){
         s.beginPos = 0;
         s.endPos = d->size()-1;
     }
@@ -47,7 +47,7 @@ void QMultiBuffer::append(QByteArray *d){
 
     slotBound s = {this->items.size(),0,0,""};
 
-    if(this->items.size() == 0){
+    if(this->items.empty()){
         s.beginPos = 0;
         s.endPos = d->size()-1;
     }
