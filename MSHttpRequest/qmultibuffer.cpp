@@ -110,10 +110,9 @@ qint64 QMultiBuffer::readData(char *data, qint64 maxlen){
                  ((QIODevice*)(qvariant_cast<QIODevice*> (this->items[currentSlot].slot)))->close();
                  break;
              }
-             else{
-                ((QIODevice*)(qvariant_cast<QIODevice*> (this->items[currentSlot].slot)))->close();
-                currentSlot++;
-             }
+
+             ((QIODevice*)(qvariant_cast<QIODevice*> (this->items[currentSlot].slot)))->close();
+             currentSlot++;
          }
 
          this->cursor += w;
@@ -143,10 +142,8 @@ bool QMultiBuffer::seek(qint64 pos){
         this->cursor = pos;
         return true;
     }
-    else{
-        return false;
-    }
 
+    return false;
 
 }
 

@@ -282,10 +282,9 @@ bool MSOptParser::getArg(){
     if(QString(a.trimmed().at(0))==("-")){
         return false;
     }
-    else{
-        this->iit++;
-        return true;
-    }
+
+    this->iit++;
+    return true;
 
 }
 

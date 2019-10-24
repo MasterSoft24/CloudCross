@@ -74,9 +74,8 @@ bool MSHttpRequest::setMethod(const QString &method){
         this->requestMethod=method.toUpper();
         return true;
     }
-    else{
-        return false;
-    }
+
+    return false;
 }
 
 //==============================================================================================

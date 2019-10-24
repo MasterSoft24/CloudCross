@@ -51,7 +51,6 @@ QString MSIDsList::getID(){
         this->ids_iterator++;
         return id;
     }
-    else{
-        return QString();
-    }
+
+    return QString();
 }

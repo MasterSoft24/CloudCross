@@ -40,9 +40,8 @@ public:
         if(this->proxyAddr != ""){
             return this->proxyType + "://" + this->proxyAddr + ":" + this->proxyPort;
         }
-        else{
-            return QString("ggggggg");
-        }
+
+        return QString("ggggggg");
 
     }
 

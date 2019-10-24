@@ -163,14 +163,10 @@ bool MSMailRu::auth(){
         //req->deleteLater();
         return true;
     }
-    else{
-        this->providerAuthStatus=false;
-        delete(req);
-        return false;
-    }
 
-
-
+    this->providerAuthStatus=false;
+    delete(req);
+    return false;
 
 }
 
@@ -637,9 +633,8 @@ bool MSMailRu::remote_file_insert(MSFSObject *object, const char *newParameter){
 
          return true;
      }
-     else{
-         return false;
-     }
+
+     return false;
 
 }
 
@@ -963,20 +958,17 @@ MSFSObject::ObjectState MSMailRu::filelist_defineObjectState(const MSLocalFSObje
 //                }
 
             }
-            else{
 
-                if(local.objectType == MSLocalFSObject::Type::folder){
-                    return MSFSObject::ObjectState::Sync;
-                }
-
-                if(local.modifiedDate > remote.modifiedDate){
-                    return MSFSObject::ObjectState::ChangedLocal;
-                }
-                else{
-                    return MSFSObject::ObjectState::ChangedRemote;
-                }
-
+            if(local.objectType == MSLocalFSObject::Type::folder){
+                return MSFSObject::ObjectState::Sync;
             }
+
+            if(local.modifiedDate > remote.modifiedDate){
+                return MSFSObject::ObjectState::ChangedLocal;
+            }
+
+            return MSFSObject::ObjectState::ChangedRemote;
+
         }
 
 
@@ -988,9 +980,8 @@ MSFSObject::ObjectState MSMailRu::filelist_defineObjectState(const MSLocalFSObje
         if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
             return  MSFSObject::ObjectState::NewLocal;
         }
-        else{
-            return  MSFSObject::ObjectState::DeleteRemote;
-        }
+
+        return  MSFSObject::ObjectState::DeleteRemote;
     }
 
 
@@ -999,9 +990,8 @@ MSFSObject::ObjectState MSMailRu::filelist_defineObjectState(const MSLocalFSObje
         if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
             return  MSFSObject::ObjectState::DeleteLocal;
         }
-        else{
-            return  MSFSObject::ObjectState::NewRemote;
-        }
+
+        return  MSFSObject::ObjectState::NewRemote;
     }
 
 
@@ -1493,9 +1483,8 @@ MSFSObject MSMailRu::filelist_getParentFSObject(const MSFSObject &fsObject){
     if(parent != this->syncFileList.end()){
         return parent.value();
     }
-    else{
-        return MSFSObject();
-    }
+
+    return MSFSObject();
 }
 
 //=======================================================================================
@@ -2009,7 +1998,7 @@ bool MSMailRu::createSyncFileList(){
                     this->options.insert("filter-type", "wildcard");
                     continue;
                 }
-                else if(instream.pos() == 7 && line == "regexp"){
+                if(instream.pos() == 7 && line == "regexp"){
                     this->options.insert("filter-type", "regexp");
                     continue;
                 }
@@ -2042,7 +2031,7 @@ bool MSMailRu::createSyncFileList(){
                     this->options.insert("filter-type", "wildcard");
                     continue;
                 }
-                else if(instream.pos() == 7 && line == "regexp"){
+                if(instream.pos() == 7 && line == "regexp"){
                     this->options.insert("filter-type", "regexp");
                     continue;
                 }

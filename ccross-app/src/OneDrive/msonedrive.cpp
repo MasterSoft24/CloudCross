@@ -95,16 +95,15 @@ afterReauth:
         return true;
 
     }
-    else{
-       if(c.contains("expired_token")){
-            delete(req);
-            this->refreshToken();
-            req = new MSHttpRequest(this->proxyServer);
 
-            qStdOut() << QStringLiteral("OneDrive token expired. Refreshing token done. Retry last operation. ") <<endl;
+    if(c.contains("expired_token")){
+        delete(req);
+        this->refreshToken();
+        req = new MSHttpRequest(this->proxyServer);
 
-            goto afterReauth;
-        }
+        qStdOut() << QStringLiteral("OneDrive token expired. Refreshing token done. Retry last operation. ") <<endl;
+
+        goto afterReauth;
     }
 
     return false;
@@ -269,8 +268,8 @@ afterReauth:
         return true;
 
     }
-    else{ // multipass uploading
 
+    { // multipass uploading
         do{
 
             req = new MSHttpRequest(this->proxyServer);
@@ -377,11 +376,7 @@ afterReauth:
         file.close();
         delete(req);
         return true;
-
     }
-
-
-
 
 }
 
@@ -519,11 +514,9 @@ bool MSOneDrive::remote_file_trash(MSFSObject *object){
         delete(req);
         return true;
     }
-    else{
 
-        delete(req);
-        return false;
-    }
+    delete(req);
+    return false;
 
 }
 
@@ -819,31 +812,23 @@ MSFSObject::ObjectState MSOneDrive::filelist_defineObjectState(const MSLocalFSOb
                 return MSFSObject::ObjectState::Sync;
 
         }
-        else{
 
-            // compare last modified date for local and remote
-            if(local.modifiedDate==remote.modifiedDate){
+        // compare last modified date for local and remote
+        if(local.modifiedDate==remote.modifiedDate){
 
-                if(this->strategy==MSCloudProvider::SyncStrategy::PreferLocal){
-                    return MSFSObject::ObjectState::ChangedLocal;
-                }
-                else{
-                    return MSFSObject::ObjectState::ChangedRemote;
-                }
-
+            if(this->strategy==MSCloudProvider::SyncStrategy::PreferLocal){
+                return MSFSObject::ObjectState::ChangedLocal;
             }
-            else{
 
-                if(local.modifiedDate > remote.modifiedDate){
-                    return MSFSObject::ObjectState::ChangedLocal;
-                }
-                else{
-                    return MSFSObject::ObjectState::ChangedRemote;
-                }
+            return MSFSObject::ObjectState::ChangedRemote;
 
-            }
         }
 
+        if(local.modifiedDate > remote.modifiedDate){
+            return MSFSObject::ObjectState::ChangedLocal;
+        }
+
+        return MSFSObject::ObjectState::ChangedRemote;
 
     }
 
@@ -853,9 +838,8 @@ MSFSObject::ObjectState MSOneDrive::filelist_defineObjectState(const MSLocalFSOb
         if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
             return  MSFSObject::ObjectState::NewLocal;
         }
-        else{
-            return  MSFSObject::ObjectState::DeleteRemote;
-        }
+
+        return  MSFSObject::ObjectState::DeleteRemote;
     }
 
 
@@ -864,9 +848,8 @@ MSFSObject::ObjectState MSOneDrive::filelist_defineObjectState(const MSLocalFSOb
         if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
             return  MSFSObject::ObjectState::DeleteLocal;
         }
-        else{
-            return  MSFSObject::ObjectState::NewRemote;
-        }
+
+        return  MSFSObject::ObjectState::NewRemote;
     }
 
 
@@ -1353,9 +1336,8 @@ MSFSObject MSOneDrive::filelist_getParentFSObject(const MSFSObject &fsObject){
     if(parent != this->syncFileList.end()){
         return parent.value();
     }
-    else{
-        return MSFSObject();
-    }
+
+    return MSFSObject();
 
 }
 
@@ -1819,7 +1801,7 @@ bool MSOneDrive::createSyncFileList(){
                     this->options.insert(QStringLiteral("filter-type"), QStringLiteral("wildcard"));
                     continue;
                 }
-                else if(instream.pos() == 7 && line == QStringLiteral("regexp")){
+                if(instream.pos() == 7 && line == QStringLiteral("regexp")){
                     this->options.insert(QStringLiteral("filter-type"), QStringLiteral("regexp"));
                     continue;
                 }
@@ -1852,7 +1834,7 @@ bool MSOneDrive::createSyncFileList(){
                     this->options.insert(QStringLiteral("filter-type"), QStringLiteral("wildcard"));
                     continue;
                 }
-                else if(instream.pos() == 7 && line == QStringLiteral("regexp")){
+                if(instream.pos() == 7 && line == QStringLiteral("regexp")){
                     this->options.insert(QStringLiteral("filter-type"), QStringLiteral("regexp"));
                     continue;
                 }
@@ -2095,11 +2077,10 @@ bool MSOneDrive::onAuthFinished(const QString &html, MSCloudProvider *provider){
             emit providerAuthComplete();
             return true;
         }
-        else{
-            this->providerAuthStatus=false;
-            emit providerAuthComplete();
-            return false;
-        }
+
+        this->providerAuthStatus=false;
+        emit providerAuthComplete();
+        return false;
 
 }
 

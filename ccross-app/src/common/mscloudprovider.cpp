@@ -126,27 +126,25 @@ bool MSCloudProvider::filterIncludeFileNames(const QString &path){// return fals
         if(m != -1){
             return false;
         }
-        else{
-            return !isBegin;
-        }
-    }
-    else{
-        QStringList filters = this->includeList.split('|');
-        //qDebug() << filters;
-        //qDebug() << path;
-        for(QString &filt : filters){
-            QRegExp regex2(filt);
-            regex2.setPatternSyntax(QRegExp::Wildcard);
-            regex2.isValid();
-            int m = regex2.indexIn(path);
 
-            if(m != -1){
-                //qDebug() << path << "     match";
-                return false;
-            }
-        }
-        return true;
+        return !isBegin;
     }
+
+    QStringList filters = this->includeList.split('|');
+    //qDebug() << filters;
+    //qDebug() << path;
+    for(QString &filt : filters){
+        QRegExp regex2(filt);
+        regex2.setPatternSyntax(QRegExp::Wildcard);
+        regex2.isValid();
+        int m = regex2.indexIn(path);
+
+        if(m != -1){
+            //qDebug() << path << "     match";
+            return false;
+        }
+    }
+    return true;
 }
 
 //=======================================================================================
@@ -179,24 +177,22 @@ bool MSCloudProvider::filterExcludeFileNames(const QString &path){// return fals
         if(m != -1){
             return false;
         }
-        else{
-            return !isBegin;
-        }
-    }
-    else{
-        QStringList filters = this->excludeList.split('|');
-        for(QString &filt : filters){
-            QRegExp regex2(filt);
-            regex2.setPatternSyntax(QRegExp::Wildcard);
-            regex2.isValid();
-            int m = regex2.indexIn(path);
 
-            if(m != -1){
-                return false;
-            }
-        }
-        return true;
+        return !isBegin;
     }
+
+    QStringList filters = this->excludeList.split('|');
+    for(QString &filt : filters){
+        QRegExp regex2(filt);
+        regex2.setPatternSyntax(QRegExp::Wildcard);
+        regex2.isValid();
+        int m = regex2.indexIn(path);
+
+        if(m != -1){
+            return false;
+        }
+    }
+    return true;
 }
 
 void MSCloudProvider::saveTokenFile(const QString &path){
@@ -258,9 +254,8 @@ qint64 MSCloudProvider::toMilliseconds( QDateTime dateTime, bool isUTC){
         return dateTime1.toMSecsSinceEpoch() - delta;
 
     }
-    else{
-        return dateTime.toMSecsSinceEpoch();
-    }
+
+    return dateTime.toMSecsSinceEpoch();
 
 }
 
@@ -284,11 +279,9 @@ qint64 MSCloudProvider::toMilliseconds(const QString &dateTimeString, bool isUTC
 
         return  d1.toMSecsSinceEpoch() - delta;
     }
-    else{
 
-        QDateTime d=QDateTime::fromString(dateTimeString,Qt::DateFormat::ISODate);
-        return d.toMSecsSinceEpoch();
-    }
+    QDateTime d=QDateTime::fromString(dateTimeString,Qt::DateFormat::ISODate);
+    return d.toMSecsSinceEpoch();
 
 }
 
@@ -320,33 +313,30 @@ QString MSCloudProvider::toRFC3339(qint64 timestamp){
     if(d.timeSpec() == Qt::UTC){
         return result+"Z";
     }
-    else{
 
     //if(d.timeSpec() == Qt::LocalTime){
         //tz = d.timeZoneAbbreviation();
 
-        int offset = d.offsetFromUtc();
+    int offset = d.offsetFromUtc();
 
-        if(offset < 0){
-            offset = -offset;
-            sign="-";
+    if(offset < 0){
+        offset = -offset;
+        sign="-";
 
-        }
-        else{
-            sign="+";
-        }
-
-        offset /= 60;
-        offset /= 60;
-
-        QString offDig=QString::number(offset);
-        if(offDig.length()<2){
-            offDig="0"+offDig;
-        }
-
-        return result +sign +offDig;
+    }
+    else{
+        sign="+";
     }
 
+    offset /= 60;
+    offset /= 60;
+
+    QString offDig=QString::number(offset);
+    if(offDig.length()<2){
+        offDig="0"+offDig;
+    }
+
+    return result +sign +offDig;
 
 }
 
@@ -364,9 +354,8 @@ bool MSCloudProvider::getFlag(const QString &flagName){
     if(it != this->flags.end()){
         return it.value();
     }
-    else{
-        return false;
-    }
+
+    return false;
 }
 
 QString MSCloudProvider::getOption(const QString &optionName){
@@ -375,9 +364,8 @@ QString MSCloudProvider::getOption(const QString &optionName){
     if(it != this->options.end()){
         return it.value();
     }
-    else{
-        return QString();
-    }
+
+    return QString();
 }
 
 

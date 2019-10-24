@@ -1452,9 +1452,8 @@ int main(int argc, char *argv[])
             if(r){
                 return 0;
             }
-            else{
-                return 1;
-            }
+
+            return 1;
 
 
         case 3: // --version
@@ -1520,9 +1519,8 @@ int main(int argc, char *argv[])
             if(r){
                 return 0;
             }
-            else{
-                return 1;
-            }
+
+            return 1;
 
         case 6: // --no-hidden
 
@@ -1646,9 +1644,8 @@ int main(int argc, char *argv[])
             if(r){
                 return 0;
             }
-            else{
-                return 1;
-            }
+
+            return 1;
 
 
         case 20: // --filter-type
@@ -1692,9 +1689,8 @@ int main(int argc, char *argv[])
             if(r){
                 return 0;
             }
-            else{
-                return 1;
-            }
+
+            return 1;
 
 
         case 24: // --no-sync
@@ -1734,10 +1730,8 @@ int main(int argc, char *argv[])
             if(r){
                 return 0;
             }
-            else{
-                return 1;
-            }
 
+            return 1;
         }
     }
 

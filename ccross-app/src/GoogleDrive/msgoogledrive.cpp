@@ -166,12 +166,10 @@ bool MSGoogleDrive::onAuthFinished(const QString &html, MSCloudProvider *provide
 
         return true;
     }
-    else{
-        this->providerAuthStatus=false;
-        emit providerAuthComplete();
-        return false;
-    }
 
+    this->providerAuthStatus=false;
+    emit providerAuthComplete();
+    return false;
 
 }
 
@@ -317,10 +315,9 @@ bool MSGoogleDrive::refreshToken(){
         delete(req);
         return true;
     }
-    else{
-        delete(req);
-        return false;
-    }
+
+    delete(req);
+    return false;
 
 }
 
@@ -1173,7 +1170,7 @@ bool MSGoogleDrive::createSyncFileList(){
                     this->options.insert(QStringLiteral("filter-type"), QStringLiteral("wildcard"));
                     continue;
                 }
-                else if(instream.pos() == 7 && line == QStringLiteral("regexp")){
+                if(instream.pos() == 7 && line == QStringLiteral("regexp")){
                     this->options.insert(QStringLiteral("filter-type"), QStringLiteral("regexp"));
                     continue;
                 }
@@ -1207,7 +1204,7 @@ bool MSGoogleDrive::createSyncFileList(){
                     this->options.insert(QStringLiteral("filter-type"), QStringLiteral("wildcard"));
                     continue;
                 }
-                else if(instream.pos() == 7 && line == QStringLiteral("regexp")){
+                if(instream.pos() == 7 && line == QStringLiteral("regexp")){
                     this->options.insert(QStringLiteral("filter-type"), QStringLiteral("regexp"));
                     continue;
                 }
@@ -1339,31 +1336,23 @@ MSFSObject::ObjectState MSGoogleDrive::filelist_defineObjectState(const MSLocalF
             return MSFSObject::ObjectState::Sync;
 
         }
-        else{
 
-            // compare last modified date for local and remote
-            if(local.modifiedDate==remote.modifiedDate){
+        // compare last modified date for local and remote
+        if(local.modifiedDate==remote.modifiedDate){
 
-                if(this->strategy==MSCloudProvider::SyncStrategy::PreferLocal){
-                    return MSFSObject::ObjectState::ChangedLocal;
-                }
-                else{
-                    return MSFSObject::ObjectState::ChangedRemote;
-                }
-
+            if(this->strategy==MSCloudProvider::SyncStrategy::PreferLocal){
+                return MSFSObject::ObjectState::ChangedLocal;
             }
-            else{
 
-                if(local.modifiedDate > remote.modifiedDate){
-                    return MSFSObject::ObjectState::ChangedLocal;
-                }
-                else{
-                    return MSFSObject::ObjectState::ChangedRemote;
-                }
+            return MSFSObject::ObjectState::ChangedRemote;
 
-            }
         }
 
+        if(local.modifiedDate > remote.modifiedDate){
+            return MSFSObject::ObjectState::ChangedLocal;
+        }
+
+        return MSFSObject::ObjectState::ChangedRemote;
 
     }
 
@@ -1373,9 +1362,8 @@ MSFSObject::ObjectState MSGoogleDrive::filelist_defineObjectState(const MSLocalF
         if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
             return  MSFSObject::ObjectState::NewLocal;
         }
-        else{
-            return  MSFSObject::ObjectState::DeleteRemote;
-        }
+
+        return  MSFSObject::ObjectState::DeleteRemote;
     }
 
 
@@ -1384,9 +1372,8 @@ MSFSObject::ObjectState MSGoogleDrive::filelist_defineObjectState(const MSLocalF
         if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
             return  MSFSObject::ObjectState::DeleteLocal;
         }
-        else{
-            return  MSFSObject::ObjectState::NewRemote;
-        }
+
+        return  MSFSObject::ObjectState::NewRemote;
     }
 
 
@@ -1513,9 +1500,8 @@ MSFSObject MSGoogleDrive::filelist_getParentFSObject(const MSFSObject &fsObject)
     if(parent != this->syncFileList.end()){
         return parent.value();
     }
-    else{
-        return MSFSObject();
-    }
+
+    return MSFSObject();
 
 }
 
@@ -2940,16 +2926,12 @@ bool MSGoogleDrive::testReplyBodyForError(const QString &body){// return true if
         if(e.isNull()){
             return true;
         }
-        else{
 
-            int code=e.toInt(0);
-            return code == 0;
-        }
+        int code=e.toInt(0);
+        return code == 0;
+    }
 
-    }
-    else{
-        return true;
-    }
+    return true;
 }
 
 

@@ -167,11 +167,10 @@ bool MSDropbox::onAuthFinished(const QString &html, MSCloudProvider *provider){
         emit providerAuthComplete();
         return true;
     }
-    else{
-        this->providerAuthStatus=false;
-        emit providerAuthComplete();
-        return false;
-    }
+
+    this->providerAuthStatus=false;
+    emit providerAuthComplete();
+    return false;
 
 }
 
@@ -538,7 +537,7 @@ bool MSDropbox::createSyncFileList(){
                     this->options.insert(QStringLiteral("filter-type"), QStringLiteral("wildcard"));
                     continue;
                 }
-                else if(instream.pos() == 7 && line == QStringLiteral("regexp")){
+                if(instream.pos() == 7 && line == QStringLiteral("regexp")){
                     this->options.insert(QStringLiteral("filter-type"), QStringLiteral("regexp"));
                     continue;
                 }
@@ -571,7 +570,7 @@ bool MSDropbox::createSyncFileList(){
                     this->options.insert(QStringLiteral("filter-type"), QStringLiteral("wildcard"));
                     continue;
                 }
-                else if(instream.pos() == 7 && line == QStringLiteral("regexp")){
+                if(instream.pos() == 7 && line == QStringLiteral("regexp")){
                     this->options.insert(QStringLiteral("filter-type"), QStringLiteral("regexp"));
                     continue;
                 }
@@ -949,20 +948,17 @@ MSFSObject::ObjectState MSDropbox::filelist_defineObjectState(const MSLocalFSObj
 //                }
 
             }
-            else{
 
-                if(local.objectType == MSLocalFSObject::Type::folder){
-                    return MSFSObject::ObjectState::Sync;
-                }
-
-                if(local.modifiedDate > remote.modifiedDate){
-                    return MSFSObject::ObjectState::ChangedLocal;
-                }
-                else{
-                    return MSFSObject::ObjectState::ChangedRemote;
-                }
-
+            if(local.objectType == MSLocalFSObject::Type::folder){
+                return MSFSObject::ObjectState::Sync;
             }
+
+            if(local.modifiedDate > remote.modifiedDate){
+                return MSFSObject::ObjectState::ChangedLocal;
+            }
+
+            return MSFSObject::ObjectState::ChangedRemote;
+
         }
 
 
@@ -974,9 +970,9 @@ MSFSObject::ObjectState MSDropbox::filelist_defineObjectState(const MSLocalFSObj
         if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
             return  MSFSObject::ObjectState::NewLocal;
         }
-        else{
-            return  MSFSObject::ObjectState::DeleteRemote;
-        }
+
+        return  MSFSObject::ObjectState::DeleteRemote;
+
     }
 
 
@@ -985,9 +981,8 @@ MSFSObject::ObjectState MSDropbox::filelist_defineObjectState(const MSLocalFSObj
         if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
             return  MSFSObject::ObjectState::DeleteLocal;
         }
-        else{
-            return  MSFSObject::ObjectState::NewRemote;
-        }
+
+        return  MSFSObject::ObjectState::NewRemote;
     }
 
 
@@ -1481,9 +1476,8 @@ MSFSObject MSDropbox::filelist_getParentFSObject(const MSFSObject &fsObject){
     if(parent != this->syncFileList.end()){
         return parent.value();
     }
-    else{
-        return MSFSObject();
-    }
+
+    return MSFSObject();
 }
 
 
@@ -2202,9 +2196,8 @@ bool MSDropbox::remote_file_makeFolder(MSFSObject *object){
             //exit(1);
             return false;
         }
-        else{
-            return true;
-        }
+
+        return true;
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
@@ -2288,12 +2281,9 @@ bool MSDropbox::remote_file_trash(MSFSObject *object){
             delete(req);
             return false;
         }
-        else{
-            delete(req);
-            return true;
-        }
 
-
+        delete(req);
+        return true;
     }
 
 
