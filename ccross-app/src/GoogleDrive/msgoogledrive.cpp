@@ -89,16 +89,16 @@ bool MSGoogleDrive::auth(){
     this->startListener(1973);
 
     //    if(!this->testReplyBodyForError(req->readReplyText())){
-    //        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+    //        qInfo()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) ;
     //        exit(0);
     //    }
 
 
-    qStdOut()<< QStringLiteral("-------------------------------------")<<endl ;
-    qStdOut()<< tr("Please go to this URL and confirm application credentials") <<endl ;
+    qInfo()<< QStringLiteral("-------------------------------------") ;
+    qInfo()<< tr("Please go to this URL and confirm application credentials")  ;
 
-    qStdOut() << req->replyURL()<<endl;
-    qStdOut()<<"" <<endl;
+    qInfo() << req->replyURL();
+    qInfo() ;
     ;
 
     delete(req);
@@ -108,7 +108,7 @@ bool MSGoogleDrive::auth(){
     loop.exec();
 
     if(!this->providerAuthStatus){
-        qStdOut() << "Code was not received. Some browsers handle redirect incorrectly. If it this case please copy a value of \"code\" parameter to the terminal and press enter "<< endl;
+        qInfo() << "Code was not received. Some browsers handle redirect incorrectly. If it this case please copy a value of \"code\" parameter to the terminal and press enter ";
         QTextStream s(stdin);
         QString code =s.readLine();
         this->onAuthFinished(code,this);
@@ -152,7 +152,7 @@ bool MSGoogleDrive::onAuthFinished(const QString &html, MSCloudProvider *provide
 
     QString content= req->replyText;//lastReply->readAll();
 
-    //qStdOut() << content;
+    //qInfo() << content;
 
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject job = json.object();
@@ -163,7 +163,7 @@ bool MSGoogleDrive::onAuthFinished(const QString &html, MSCloudProvider *provide
     if(v!=""){
 
         this->token=v;
-        qStdOut() << QStringLiteral("Token was succesfully accepted and saved. To start working with the program run ccross without any options for start full synchronize.") <<endl;
+        qInfo() << QStringLiteral("Token was succesfully accepted and saved. To start working with the program run ccross without any options for start full synchronize.") ;
         this->providerAuthStatus=true;
         emit providerAuthComplete();
 
@@ -199,7 +199,7 @@ bool MSGoogleDrive::loadTokenFile(const QString &path){
 
     if(!key.open(QIODevice::ReadOnly))
     {
-        qStdOut() << QStringLiteral("Access key missing or corrupt. Start CloudCross with -a option for obtained private key.")<<endl   ;
+        qInfo() << QStringLiteral("Access key missing or corrupt. Start CloudCross with -a option for obtained private key.")   ;
         return false;
     }
 
@@ -229,7 +229,7 @@ void MSGoogleDrive::loadStateFile(){
 
     if(!key.open(QIODevice::ReadOnly))
     {
-        qStdOut() << QStringLiteral("Previous state file not found. Start in stateless mode.")<<endl  ;
+        qInfo() << QStringLiteral("Previous state file not found. Start in stateless mode.")  ;
         return;
     }
 
@@ -299,7 +299,7 @@ bool MSGoogleDrive::refreshToken(){
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
-        qStdOut()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) << endl;
+        qInfo()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) ;
         return false;
     }
 
@@ -351,7 +351,7 @@ bool MSGoogleDrive::createHashFromRemote(){
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
-        qStdOut()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) << endl;
+        qInfo()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) ;
         delete(req);
         return false;
     }
@@ -407,7 +407,7 @@ bool MSGoogleDrive::createHashFromRemote(){
         }
 
         if(!this->testReplyBodyForError(req->readReplyText())){
-            qStdOut()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) << endl;
+            qInfo()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) ;
             delete(req);
             return false;
         }
@@ -736,7 +736,7 @@ bool MSGoogleDrive::_readRemote(const QString &parentId){
 
     if(!this->createHashFromRemote()){
 
-        qStdOut() << QStringLiteral("Error occured on reading remote files") <<endl ;
+        qInfo() << QStringLiteral("Error occured on reading remote files")  ;
         return false;
     }
 
@@ -745,7 +745,7 @@ bool MSGoogleDrive::_readRemote(const QString &parentId){
 
 
     if(!this->readRemote(this->getRoot(),"/")){ // top level files and folders
-        qStdOut() << QStringLiteral("Error occured on reading remote files") <<endl ;
+        qInfo() << QStringLiteral("Error occured on reading remote files")  ;
         return false;
     }
 
@@ -1108,7 +1108,7 @@ void MSGoogleDrive::checkFolderStructures(){
 
         // create new folder structure on remote
 
-        qStdOut() << QStringLiteral("Checking folder structure on remote")<<endl  ;
+        qInfo() << QStringLiteral("Checking folder structure on remote")  ;
 
         QHash<QString,MSFSObject> localFolders=this->filelist_getFSObjectsByTypeLocal(MSLocalFSObject::Type::folder);
         localFolders=this->filelist_getFSObjectsByState(localFolders,MSFSObject::ObjectState::NewLocal);
@@ -1126,7 +1126,7 @@ void MSGoogleDrive::checkFolderStructures(){
 
         // create new folder structure on local
 
-        qStdOut() << QStringLiteral("Checking folder structure on local")<<endl  ;
+        qInfo() << QStringLiteral("Checking folder structure on local")  ;
 
         QHash<QString,MSFSObject> remoteFolders=this->filelist_getFSObjectsByTypeRemote(MSRemoteFSObject::Type::folder);
         remoteFolders=this->filelist_getFSObjectsByState(remoteFolders,MSFSObject::ObjectState::NewRemote);
@@ -1220,7 +1220,7 @@ bool MSGoogleDrive::createSyncFileList(){
             else
                 regex2.setPatternSyntax(QRegExp::Wildcard);
             if(!regex2.isValid()){
-                qStdOut() << QStringLiteral("Include filelist contains errors. Program will be terminated.")<<endl;
+                qInfo() << QStringLiteral("Include filelist contains errors. Program will be terminated.");
                 return false;
             }
         }
@@ -1256,26 +1256,26 @@ bool MSGoogleDrive::createSyncFileList(){
             else
                 regex2.setPatternSyntax(QRegExp::Wildcard);
             if(!regex2.isValid()){
-                qStdOut() << QStringLiteral("Exclude filelist contains errors. Program will be terminated.")<<endl;
+                qInfo() << QStringLiteral("Exclude filelist contains errors. Program will be terminated.");
                 return false;
             }
         }
     }
 
     if(this->getFlag("noSync")){
-        qStdOut() << "Synchronization capability was disabled."<<endl;
+        qInfo() << "Synchronization capability was disabled.";
     }
     else{
-        qStdOut()<< QStringLiteral("Reading remote files")<<endl ;
+        qInfo()<< QStringLiteral("Reading remote files") ;
 
         if(!this->createHashFromRemote()){
 
-            qStdOut() << QStringLiteral("Error occured on reading remote files") <<endl ;
+            qInfo() << QStringLiteral("Error occured on reading remote files")  ;
             return false;
         }
 
         if(!this->readRemote(this->getRoot(),QStringLiteral("/"))){ // top level files and folders
-            qStdOut() << QStringLiteral("Error occured on reading remote files")<<endl  ;
+            qInfo() << QStringLiteral("Error occured on reading remote files")  ;
             return false;
         }
     }
@@ -1284,10 +1284,10 @@ bool MSGoogleDrive::createSyncFileList(){
 
     this->driveJSONFileList.clear();
 
-    qStdOut() << QStringLiteral("Reading local files and folders") <<endl ;
+    qInfo() << QStringLiteral("Reading local files and folders")  ;
 
     if(!this->readLocal(this->workPath)){
-        qStdOut() << QStringLiteral("Error occured on reading local files and folders") <<endl ;
+        qInfo() << QStringLiteral("Error occured on reading local files and folders")  ;
         return false;
     }
 
@@ -1586,7 +1586,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
         if(this->getOption(QStringLiteral("force"))==QStringLiteral("download")){
 
-            qStdOut()<<QStringLiteral("Start downloading in force mode")<<endl  ;
+            qInfo()<<QStringLiteral("Start downloading in force mode")  ;
 
             lf=fsObjectList.begin();
 
@@ -1602,7 +1602,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                     if(obj.remote.objectType == MSRemoteFSObject::Type::file){
 
-                        qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Forced downloading.") )<<endl ;
+                        qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Forced downloading.") ) ;
 
                         this->remote_file_get(&obj);
                     }
@@ -1614,7 +1614,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
         else{
             if(this->getOption(QStringLiteral("force"))==QStringLiteral("upload")){
 
-                qStdOut()<<QStringLiteral("Start uploading in force mode")<<endl  ;
+                qInfo()<<QStringLiteral("Start uploading in force mode")  ;
 
                 lf=fsObjectList.begin();
 
@@ -1634,7 +1634,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                             if(obj.local.objectType == MSLocalFSObject::Type::file){
 
-                                qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Forced uploading.") )<<endl ;
+                                qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Forced uploading.") ) ;
 
                                 this->remote_file_update(&obj);
                             }
@@ -1643,7 +1643,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                             if(obj.local.objectType == MSLocalFSObject::Type::file){
 
-                                qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Forced uploading.") )<<endl ;
+                                qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Forced uploading.") ) ;
 
                                 this->remote_file_insert(&obj);
                             }
@@ -1668,7 +1668,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
         this->saveStateFile();
 
-        qStdOut()<<QStringLiteral("Syncronization end")<<endl  ;
+        qInfo()<<QStringLiteral("Syncronization end")  ;
 
         return;
     }
@@ -1677,7 +1677,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
     // SYNC FILES AND FOLDERS
 
-    qStdOut()<<QStringLiteral("Start syncronization") <<endl ;
+    qInfo()<<QStringLiteral("Start syncronization")  ;
 
     lf=fsObjectList.begin();
 
@@ -1694,7 +1694,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
         case MSFSObject::ObjectState::ChangedLocal:
 
-            qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Changed local. Uploading.") )<<endl ;
+            qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Changed local. Uploading.") ) ;
 
             this->remote_file_update(&obj);
 
@@ -1704,7 +1704,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
             if((obj.local.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") )<<endl ;
+                qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") ) ;
 
                 this->remote_file_insert(&obj);
 
@@ -1713,14 +1713,14 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                 if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") )<<endl ;
+                    qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") ) ;
 
                     this->remote_file_insert(&obj);
 
                 }
                 else{
 
-                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Delete local.") )<<endl ;
+                    qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Delete local.") ) ;
 
                     if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                         this->local_removeFile(obj.path+obj.fileName);
@@ -1738,7 +1738,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
         case MSFSObject::ObjectState::ChangedRemote:
 
-            qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Changed remote. Downloading.") )<<endl ;
+            qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Changed remote. Downloading.") ) ;
 
             this->remote_file_get(&obj);
 
@@ -1751,13 +1751,13 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                 if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote.") )<<endl ;
+                    qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote.") ) ;
 
                     this->remote_file_trash(&obj);
 
                 }
                 else{
-                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") ) <<endl;
+                    qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") ) ;
 
                     this->remote_file_get(&obj);
                 }
@@ -1768,13 +1768,13 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                 if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote.") )<<endl ;
+                    qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote.") ) ;
 
                     this->remote_file_trash(&obj);
                 }
                 else{
 
-                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") )<<endl ;
+                    qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") ) ;
 
                     this->remote_file_get(&obj);
                 }
@@ -1787,14 +1787,14 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
             if((obj.remote.modifiedDate > this->lastSyncTime)&&(this->lastSyncTime != 0)){// object was added after last sync
 
-                qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") ) <<endl;
+                qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" New remote. Downloading.") ) ;
 
                 this->remote_file_get(&obj);
 
                 break;
             }
 
-            qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote.") ) <<endl;
+            qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete local. Deleting remote.") ) ;
 
             this->remote_file_trash(&obj);
 
@@ -1806,12 +1806,12 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                 if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") )<<endl ;
+                    qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") ) ;
 
                     this->remote_file_insert(&obj);
                 }
                 else{
-                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Deleting local.") )<<endl ;
+                    qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Deleting local.") ) ;
 
                     if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                         this->local_removeFile(obj.path+obj.fileName);
@@ -1826,14 +1826,14 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
                 if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
 
-                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") )<<endl ;
+                    qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" New local. Uploading.") ) ;
 
                     this->remote_file_insert(&obj);
 
                 }
                 else{
 
-                    qStdOut()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Deleting local.") ) <<endl;
+                    qInfo()<< QString(obj.path+obj.fileName +QStringLiteral(" Delete remote. Deleting local.") ) ;
 
                     if((obj.local.objectType == MSLocalFSObject::Type::file)||(obj.remote.objectType == MSRemoteFSObject::Type::file)){
                         this->local_removeFile(obj.path+obj.fileName);
@@ -1863,7 +1863,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 
     this->saveStateFile();
 
-    qStdOut()<<QStringLiteral("Syncronization end") <<endl ;
+    qInfo()<<QStringLiteral("Syncronization end")  ;
 }
 
 
@@ -1905,7 +1905,7 @@ void MSGoogleDrive::doSync(QHash<QString, MSFSObject> fsObjectList){
 //        }
 
 //        if(!this->testReplyBodyForError(req->readReplyText())){
-//            qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+//            qInfo()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) ;
 //            exit(0);
 //        }
 
@@ -1945,7 +1945,7 @@ bool MSGoogleDrive::remote_file_get(MSFSObject* object){
 
     if(object->remote.objectType == MSRemoteFSObject::Type::folder){
 
-        qStdOut()<< object->fileName << QStringLiteral(" is a folder. Skipped.") <<endl ;
+        qInfo()<< object->fileName << QStringLiteral(" is a folder. Skipped.")  ;
         return true;
     }
 
@@ -2022,7 +2022,7 @@ afterReauth:
         this->refreshToken();
         req = new MSHttpRequest(this->proxyServer);
 
-        qStdOut() << QStringLiteral("GoogleDrive token expired. Refreshing token done. Retry last operation. ") ;
+        qInfo() << QStringLiteral("GoogleDrive token expired. Refreshing token done. Retry last operation. ") ;
 
         goto afterReauth;
     }
@@ -2047,7 +2047,7 @@ afterReauth:
 
     }
     else{
-        qStdOut() << QStringLiteral("Service error. ")<< this->getReplyErrorString(req->readReplyText())<< endl;
+        qInfo() << QStringLiteral("Service error. ")<< this->getReplyErrorString(req->readReplyText());
     }
 
     delete(req);
@@ -2061,7 +2061,7 @@ bool MSGoogleDrive::remote_file_insert(MSFSObject *object){
 
     if(object->local.objectType==MSLocalFSObject::Type::folder){
 
-        qStdOut()<< object->fileName << QStringLiteral(" is a folder. Skipped.")  <<endl;
+        qInfo()<< object->fileName << QStringLiteral(" is a folder. Skipped.")  ;
         return true;
     }
 
@@ -2190,7 +2190,7 @@ afterReauth:
     if (!file.open(QIODevice::ReadOnly)){
 
         //error file not found
-        qStdOut()<<QStringLiteral("Unable to open of ")+filePath <<endl ;
+        qInfo()<<QStringLiteral("Unable to open of ")+filePath  ;
         delete(req);
         return false;
     }
@@ -2212,7 +2212,7 @@ afterReauth:
             this->refreshToken();
             req = new MSHttpRequest(this->proxyServer);
 
-            qStdOut() << QStringLiteral("GoogleDrive token expired. Refreshing token done. Retry last operation. ") <<endl;
+            qInfo() << QStringLiteral("GoogleDrive token expired. Refreshing token done. Retry last operation. ") ;
 
             goto afterReauth;
         }
@@ -2223,7 +2223,7 @@ afterReauth:
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
-        qStdOut()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) << endl;
+        qInfo()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) ;
         delete(req);
         return false;
     }
@@ -2300,7 +2300,7 @@ afterReauth:
                     this->refreshToken();
                     req = new MSHttpRequest(this->proxyServer);
 
-                    qStdOut() << QStringLiteral("GoogleDrive token expired. Refreshing token done. Retry last operation. ")<<endl ;
+                    qInfo() << QStringLiteral("GoogleDrive token expired. Refreshing token done. Retry last operation. ") ;
 
                     goto afterReauth;
                 }
@@ -2358,7 +2358,7 @@ afterReauth2:
                 this->refreshToken();
                 req = new MSHttpRequest(this->proxyServer);
 
-                qStdOut() << QStringLiteral("GoogleDrive token expired. Refreshing token done. Retry last operation. ")<<endl ;
+                qInfo() << QStringLiteral("GoogleDrive token expired. Refreshing token done. Retry last operation. ") ;
 
                 goto afterReauth2;
             }
@@ -2370,7 +2370,7 @@ afterReauth2:
         }
 
         if(!this->testReplyBodyForError(req->readReplyText())){
-            qStdOut()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) << endl;
+            qInfo()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) ;
             // delete(req->query);
             delete(req);
             return false;
@@ -2396,7 +2396,7 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
 
     if(object->local.objectType==MSLocalFSObject::Type::folder){
 
-        qStdOut()<< object->fileName << QStringLiteral(" is a folder. Skipped.") <<endl ;
+        qInfo()<< object->fileName << QStringLiteral(" is a folder. Skipped.")  ;
         return true;
     }
 
@@ -2477,7 +2477,7 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
     if (!file.open(QIODevice::ReadOnly)){
 
         //error file not found
-        qStdOut()<<QStringLiteral("Unable to open of ")+filePath <<endl  ;
+        qInfo()<<QStringLiteral("Unable to open of ")+filePath   ;
         delete(req);
         return false;
     }
@@ -2500,7 +2500,7 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
-        qStdOut()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) << endl;
+        qInfo()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) ;
         delete(req);
         return false;
     }
@@ -2604,7 +2604,7 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
         }
 
         if(!this->testReplyBodyForError(req->readReplyText())){
-            qStdOut()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) << endl;
+            qInfo()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) ;
             // delete(req->query);
             delete(req);
             return false;
@@ -2658,7 +2658,7 @@ bool MSGoogleDrive::remote_file_makeFolder(MSFSObject *object){
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
-        qStdOut()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) << endl;
+        qInfo()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) ;
         delete(req);
         return false;
     }
@@ -2681,7 +2681,7 @@ bool MSGoogleDrive::remote_file_makeFolder(MSFSObject *object){
     object->remote.exist=true;
 
     if(job["id"].toString()==QStringLiteral("")){
-        qStdOut()<< QStringLiteral("Error when folder create ")+filePath+QStringLiteral(" on remote") <<endl ;
+        qInfo()<< QStringLiteral("Error when folder create ")+filePath+QStringLiteral(" on remote")  ;
         delete(req);
         return false;
     }
@@ -2741,7 +2741,7 @@ bool MSGoogleDrive::remote_file_makeFolder(MSFSObject *object, const QString &pa
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
-        qStdOut()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) << endl;
+        qInfo()<< "Service error. " << this->getReplyErrorString(req->readReplyText()) ;
         delete(req);
         return false;
     }
@@ -2764,7 +2764,7 @@ bool MSGoogleDrive::remote_file_makeFolder(MSFSObject *object, const QString &pa
     object->remote.exist=true;
 
     if(job["id"].toString()==QStringLiteral("")){
-        qStdOut()<< QStringLiteral("Error when folder create ")+filePath+QStringLiteral(" on remote") <<endl ;
+        qInfo()<< QStringLiteral("Error when folder create ")+filePath+QStringLiteral(" on remote")  ;
         delete(req);
         return false;
     }
@@ -2803,7 +2803,7 @@ bool MSGoogleDrive::remote_file_trash(MSFSObject *object){
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
-        qStdOut()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) << endl;
+        qInfo()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) ;
         delete(req);
         return false;
     }
@@ -2816,7 +2816,7 @@ bool MSGoogleDrive::remote_file_trash(MSFSObject *object){
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject job = json.object();
     if(job[QStringLiteral("id")].toString()==QStringLiteral("")){
-        qStdOut()<< QStringLiteral("Error when move to trash ")+filePath+QStringLiteral(" on remote")  <<endl;
+        qInfo()<< QStringLiteral("Error when move to trash ")+filePath+QStringLiteral(" on remote")  ;
     }
 
     delete(req);
@@ -3011,7 +3011,7 @@ QString MSGoogleDrive::getReplyErrorString(const QString &body){
 
 bool MSGoogleDrive::directUpload(const QString &url, const QString &remotePath){
 
-    qStdOut() << "NOT INPLEMENTED YET"<<endl;
+    qInfo() << "NOT INPLEMENTED YET";
     return false;
 
     // get remote filelist
@@ -3193,7 +3193,7 @@ bool MSGoogleDrive::directUpload(const QString &url, const QString &remotePath){
     if (!file.open(QIODevice::ReadOnly)){
 
         //error file not found
-        qStdOut()<<QStringLiteral("Unable to open of ")+filePath  ;
+        qInfo()<<QStringLiteral("Unable to open of ")+filePath  ;
         delete(req);
         return false;
     }
@@ -3220,7 +3220,7 @@ bool MSGoogleDrive::directUpload(const QString &url, const QString &remotePath){
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
-        qStdOut()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) << endl;
+        qInfo()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) ;
 
         exit(0);
     }
@@ -3234,7 +3234,7 @@ bool MSGoogleDrive::directUpload(const QString &url, const QString &remotePath){
     object->local.newRemoteID=job[QStringLiteral("id")].toString();
 
     if(job[QStringLiteral("id")].toString()==""){
-        qStdOut()<< QStringLiteral("Error when upload ")+filePath+QStringLiteral(" on remote")  ;
+        qInfo()<< QStringLiteral("Error when upload ")+filePath+QStringLiteral(" on remote")  ;
     }
 
     delete(req);
@@ -3274,7 +3274,7 @@ QString MSGoogleDrive::getInfo(){
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
-        qStdOut()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) << endl;
+        qInfo()<< QStringLiteral("Service error. ") << this->getReplyErrorString(req->readReplyText()) ;
         delete(req);
         return QStringLiteral("false");
     }
@@ -3288,7 +3288,7 @@ QString MSGoogleDrive::getInfo(){
     //int zz=job["storageQuota"].toObject().size();
 
     if(job[QStringLiteral("storageQuota")].toObject().size()== 0){
-        //qStdOut()<< "Error getting cloud information "  ;
+        //qInfo()<< "Error getting cloud information "  ;
         return QStringLiteral("false");
     }
 
@@ -3329,8 +3329,8 @@ bool MSGoogleDrive::remote_file_empty_trash(){
         return false;
     }
 
-    qStdOut() << endl;
-    qStdOut() << "Trash bin of cloud was been cleared"<<endl;
+    qInfo() ;
+    qInfo() << "Trash bin of cloud was been cleared";
     delete(req);
     return true;
 
