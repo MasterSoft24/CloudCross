@@ -44,14 +44,12 @@
 
 //  150000000
 
-MSDropbox::MSDropbox() :
-    MSCloudProvider()
+MSDropbox::MSDropbox()
 {
     this->providerName=     QStringLiteral("Dropbox");
     this->tokenFileName=    QStringLiteral(".dbox");
     this->stateFileName=    QStringLiteral(".dbox_state");
     this->trashFileName=    QStringLiteral(".trash_dbox");
-
 }
 
 
@@ -169,11 +167,10 @@ bool MSDropbox::onAuthFinished(const QString &html, MSCloudProvider *provider){
         emit providerAuthComplete();
         return true;
     }
-    else{
-        this->providerAuthStatus=false;
-        emit providerAuthComplete();
-        return false;
-    }
+
+    this->providerAuthStatus=false;
+    emit providerAuthComplete();
+    return false;
 
 }
 
@@ -245,7 +242,6 @@ void MSDropbox::loadStateFile(){
     this->lastSyncTime=QJsonValue(job[QStringLiteral("last_sync")].toObject()[QStringLiteral("sec")]).toVariant().toULongLong();
 
     key.close();
-    return;
 }
 
 
@@ -491,7 +487,7 @@ bool MSDropbox::readRemote(){ //QString parentId,QString currentPath
 
 
 
-    }while(hasMore==true);
+    }while(hasMore);
 
 
     return true;
@@ -511,19 +507,13 @@ bool MSDropbox::_readRemote(const QString &rootPath){
 
 
 bool MSDropbox::isFile(const QJsonValue &remoteObject){
-    if(remoteObject.toObject()[".tag"].toString()=="file"){
-        return true;
-    }
-    return false;
+    return remoteObject.toObject()[".tag"].toString()=="file";
 }
 
 //=======================================================================================
 
 bool MSDropbox::isFolder(const QJsonValue &remoteObject){
-    if(remoteObject.toObject()[QStringLiteral(".tag")].toString()==QStringLiteral("folder")){
-        return true;
-    }
-    return false;
+    return remoteObject.toObject()[QStringLiteral(".tag")].toString()==QStringLiteral("folder");
 }
 
 //=======================================================================================
@@ -547,7 +537,7 @@ bool MSDropbox::createSyncFileList(){
                     this->options.insert(QStringLiteral("filter-type"), QStringLiteral("wildcard"));
                     continue;
                 }
-                else if(instream.pos() == 7 && line == QStringLiteral("regexp")){
+                if(instream.pos() == 7 && line == QStringLiteral("regexp")){
                     this->options.insert(QStringLiteral("filter-type"), QStringLiteral("regexp"));
                     continue;
                 }
@@ -580,7 +570,7 @@ bool MSDropbox::createSyncFileList(){
                     this->options.insert(QStringLiteral("filter-type"), QStringLiteral("wildcard"));
                     continue;
                 }
-                else if(instream.pos() == 7 && line == QStringLiteral("regexp")){
+                if(instream.pos() == 7 && line == QStringLiteral("regexp")){
                     this->options.insert(QStringLiteral("filter-type"), QStringLiteral("regexp"));
                     continue;
                 }
@@ -635,7 +625,7 @@ bool MSDropbox::createSyncFileList(){
     // make separately lists of objects
     QList<QString> keys = this->syncFileList.uniqueKeys();
 
-    if((keys.size()>3) && (this->getFlag(QStringLiteral("singleThread")) == false)){// split list to few parts
+    if((keys.size()>3) && (!this->getFlag(QStringLiteral("singleThread")))){// split list to few parts
 
         this->threadsRunning = new QSemaphore(3);
 
@@ -664,8 +654,8 @@ bool MSDropbox::createSyncFileList(){
 
         MSSyncThread* threads[3] = {thr1, thr2, thr3};
         int j = 0;
-        for(int i = 0; i<keys.size(); i++ ){
-            threads[j++]->threadSyncList.insert(keys[i],this->syncFileList.find(keys[i]).value());
+        for(const auto & key : keys){
+            threads[j++]->threadSyncList.insert(key,this->syncFileList.find(key).value());
             if (j == 3) j = 0;
         }
 
@@ -958,20 +948,17 @@ MSFSObject::ObjectState MSDropbox::filelist_defineObjectState(const MSLocalFSObj
 //                }
 
             }
-            else{
 
-                if(local.objectType == MSLocalFSObject::Type::folder){
-                    return MSFSObject::ObjectState::Sync;
-                }
-
-                if(local.modifiedDate > remote.modifiedDate){
-                    return MSFSObject::ObjectState::ChangedLocal;
-                }
-                else{
-                    return MSFSObject::ObjectState::ChangedRemote;
-                }
-
+            if(local.objectType == MSLocalFSObject::Type::folder){
+                return MSFSObject::ObjectState::Sync;
             }
+
+            if(local.modifiedDate > remote.modifiedDate){
+                return MSFSObject::ObjectState::ChangedLocal;
+            }
+
+            return MSFSObject::ObjectState::ChangedRemote;
+
         }
 
 
@@ -983,9 +970,9 @@ MSFSObject::ObjectState MSDropbox::filelist_defineObjectState(const MSLocalFSObj
         if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
             return  MSFSObject::ObjectState::NewLocal;
         }
-        else{
-            return  MSFSObject::ObjectState::DeleteRemote;
-        }
+
+        return  MSFSObject::ObjectState::DeleteRemote;
+
     }
 
 
@@ -994,9 +981,8 @@ MSFSObject::ObjectState MSDropbox::filelist_defineObjectState(const MSLocalFSObj
         if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
             return  MSFSObject::ObjectState::DeleteLocal;
         }
-        else{
-            return  MSFSObject::ObjectState::NewRemote;
-        }
+
+        return  MSFSObject::ObjectState::NewRemote;
     }
 
 
@@ -1462,12 +1448,7 @@ bool MSDropbox::filelist_FSObjectHasParent(const MSFSObject &fsObject){
 //        return true;
 //    }
 
-    if((fsObject.path.count(QStringLiteral("/"))>=1)&&(fsObject.path!=QStringLiteral("/"))){
-        return true;
-    }
-    else{
-        return false;
-    }
+    return (fsObject.path.count(QStringLiteral("/"))>=1)&&(fsObject.path!=QStringLiteral("/"));
 
 }
 
@@ -1495,9 +1476,8 @@ MSFSObject MSDropbox::filelist_getParentFSObject(const MSFSObject &fsObject){
     if(parent != this->syncFileList.end()){
         return parent.value();
     }
-    else{
-        return MSFSObject();
-    }
+
+    return MSFSObject();
 }
 
 
@@ -1515,14 +1495,7 @@ void MSDropbox::filelist_populateChanges(const MSFSObject &changedFSObject){
 
 bool MSDropbox::testReplyBodyForError(const QString &body) {
 
-    if(body.contains(QStringLiteral("\"error\": {"))){
-
-        return false;
-
-    }
-    else{
-        return true;
-    }
+    return !body.contains(QStringLiteral("\"error\": {"));
 
 }
 
@@ -2223,9 +2196,8 @@ bool MSDropbox::remote_file_makeFolder(MSFSObject *object){
             //exit(1);
             return false;
         }
-        else{
-            return true;
-        }
+
+        return true;
     }
 
     if(!this->testReplyBodyForError(req->readReplyText())){
@@ -2309,12 +2281,9 @@ bool MSDropbox::remote_file_trash(MSFSObject *object){
             delete(req);
             return false;
         }
-        else{
-            delete(req);
-            return true;
-        }
 
-
+        delete(req);
+        return true;
     }
 
 
@@ -2820,7 +2789,7 @@ QString MSDropbox::getInfo(){
     QJsonDocument json = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject job = json.object();
 
-    if(job[QStringLiteral("allocation")].toObject().size()== 0){
+    if(job[QStringLiteral("allocation")].toObject().empty()){
         //qInfo()<< "Error getting cloud information "  ;
         return QStringLiteral("false");
     }

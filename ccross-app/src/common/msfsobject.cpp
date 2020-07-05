@@ -60,7 +60,6 @@ QString MSFSObject::getObjectExtension(){
     if(p >= 0){
         return this->fileName.right(this->fileName.length() - p - 1);
     }
-    else{
-        return QString("");
-    }
+
+    return QString("");
 }

@@ -7,7 +7,7 @@ MSSyncThread::MSSyncThread(QObject *parent,MSCloudProvider* p) : QObject(parent)
 
 void MSSyncThread::run(){
 
-    if(this->threadSyncList.size()>0){
+    if(!this->threadSyncList.empty()){
         this->provider->threadsRunning->acquire(1);
         this->provider->doSync(this->threadSyncList);
         this->provider->threadsRunning->release(1);
@@ -16,5 +16,4 @@ void MSSyncThread::run(){
     }
     emit finished();
     this->thread()->quit();
-    return;
 }

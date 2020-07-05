@@ -120,13 +120,10 @@ void MSProvidersPool::setWorkPath(const QString &path){
 }
 
 MSCloudProvider* MSProvidersPool::getProvider(const QString &providerName){
-    for(int i=0; i< this->pool.size();i++){
-
-        if(this->pool[i]->providerName==providerName){
-            return (MSCloudProvider*)this->pool[i];
-        }
-
-    }
+    auto iter = std::find_if(pool.begin(), pool.end(),
+                             [&providerName](const MSCloudProvider* provider) { return provider->providerName==providerName; });
+    if (iter != pool.end())
+        return *iter;
     return NULL;
 }
 

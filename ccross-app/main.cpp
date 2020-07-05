@@ -104,7 +104,7 @@ void printHelp(){
     qInfo()<< QObject::tr("   -s [ --list ]              Print remote cloud file list") ;
     qInfo()<< QObject::tr("   --use-include              Use .include file. Without this option by default use .exclude file.\n"
                             "                              If these files does'nt exists, they  are ignore") ;
-    qInfo()<< QObject::tr("   --prefer arg               Define sync strategy. It can be a one of \"remote\" or \"local\". By default it's \"local\"") ;
+    qInfo()<< QObject::tr(R"(   --prefer arg               Define sync strategy. It can be a one of "remote" or "local". By default it's "local")") ;
     qInfo()<< QObject::tr("   --no-hidden                Not sync hidden files and folders") ;
     qInfo()<< QObject::tr("   --no-new-rev               Do not create new revisions of files, overwrite their instead") ;
     qInfo()<< QObject::tr("   --convert-doc              Convert office document to Google Doc format when upload\n"
@@ -1119,7 +1119,7 @@ int main(int argc, char *argv[])
 
     MSProvidersPool* providers=new MSProvidersPool();
 
-    QStringList opts=a.arguments();
+    QStringList opts=QCoreApplication::arguments();
 
     MSOptParser* parser=new MSOptParser();
 
@@ -1171,7 +1171,7 @@ int main(int argc, char *argv[])
 
 
 
-    if(prov.size() != 0){
+    if(!prov.empty()){
         if(prov[0] == "google"){
             currentProvider=ProviderType::Google;
         }
@@ -1204,11 +1204,11 @@ int main(int argc, char *argv[])
 
 
     QStringList wp=parser->getParamByName("path");
-    if(wp.size()==0){
+    if(wp.empty()){
         wp=parser->getParamByName("p");
     }
 
-    if(wp.size()!=0){
+    if(!wp.empty()){
 
         providers->setWorkPath(wp[0]);
     }
@@ -1432,7 +1432,7 @@ int main(int argc, char *argv[])
                 mailru_login=parser->getParamByName("--login");
                 mailru_password=parser->getParamByName("--password");
 
-                if((mailru_login.size()==0)||(mailru_password.size()==0)){
+                if((mailru_login.empty())||(mailru_password.empty())){
                      qInfo()<< "Provider Mail.ru. Login and password required. Application terminated.";
                      return 1;
                 }
@@ -1452,9 +1452,8 @@ int main(int argc, char *argv[])
             if(r){
                 return 0;
             }
-            else{
-                return 1;
-            }
+
+            return 1;
 
 
         case 3: // --version
@@ -1480,7 +1479,7 @@ int main(int argc, char *argv[])
                     s=MSCloudProvider::SyncStrategy::PreferRemote;
                 }
                 else{
-                    qInfo()<< "--prefer option value must be an one of \"local\" or \"remote\"";
+                    qInfo()<< R"(--prefer option value must be an one of "local" or "remote")";
                     return 0;
                     break;
                 }
@@ -1520,9 +1519,8 @@ int main(int argc, char *argv[])
             if(r){
                 return 0;
             }
-            else{
-                return 1;
-            }
+
+            return 1;
 
         case 6: // --no-hidden
 
@@ -1579,7 +1577,7 @@ int main(int argc, char *argv[])
 
             }
             else{
-                qInfo()<< "--force option value must be an one of \"upload\" or \"download\"";
+                qInfo()<< R"(--force option value must be an one of "upload" or "download")";
                 return 1;
 
             }
@@ -1646,9 +1644,8 @@ int main(int argc, char *argv[])
             if(r){
                 return 0;
             }
-            else{
-                return 1;
-            }
+
+            return 1;
 
 
         case 20: // --filter-type
@@ -1692,9 +1689,8 @@ int main(int argc, char *argv[])
             if(r){
                 return 0;
             }
-            else{
-                return 1;
-            }
+
+            return 1;
 
 
         case 24: // --no-sync
@@ -1734,10 +1730,8 @@ int main(int argc, char *argv[])
             if(r){
                 return 0;
             }
-            else{
-                return 1;
-            }
 
+            return 1;
         }
     }
 

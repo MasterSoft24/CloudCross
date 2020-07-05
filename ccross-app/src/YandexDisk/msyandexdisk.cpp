@@ -45,14 +45,12 @@
 #define YADISK_MAX_FILESIZE  8000000
 //  150000000
 
-MSYandexDisk::MSYandexDisk() :
-    MSCloudProvider()
+MSYandexDisk::MSYandexDisk()
 {
     this->providerName=     QStringLiteral("YandexDisk");
     this->tokenFileName=    QStringLiteral(".yadisk");
     this->stateFileName=    QStringLiteral(".yadisk_state");
     this->trashFileName=    QStringLiteral(".trash_yadisk");
-
 }
 
 
@@ -135,11 +133,10 @@ Q_UNUSED(provider)
         emit providerAuthComplete();
         return true;
     }
-    else{
-        this->providerAuthStatus=false;
-        emit providerAuthComplete();
-        return false;
-    }
+
+    this->providerAuthStatus=false;
+    emit providerAuthComplete();
+    return false;
 }
 
 //=======================================================================================
@@ -210,7 +207,6 @@ void MSYandexDisk::loadStateFile(){
     this->lastSyncTime=QJsonValue(job[QStringLiteral("last_sync")].toObject()[QStringLiteral("sec")]).toVariant().toULongLong();
 
     key.close();
-    return ;
 }
 
 //=======================================================================================
@@ -473,19 +469,13 @@ bool MSYandexDisk::_readRemote(const QString &rootPath){
 
 
 bool MSYandexDisk::isFile(const QJsonValue &remoteObject){
-    if(remoteObject.toObject()[QStringLiteral("type")].toString()==QStringLiteral("file")){
-        return true;
-    }
-    return false;
+    return remoteObject.toObject()[QStringLiteral("type")].toString()==QStringLiteral("file");
 }
 
 //=======================================================================================
 
 bool MSYandexDisk::isFolder(const QJsonValue &remoteObject){
-    if(remoteObject.toObject()[QStringLiteral("type")].toString()==QStringLiteral("dir")){
-        return true;
-    }
-    return false;
+    return remoteObject.toObject()[QStringLiteral("type")].toString()==QStringLiteral("dir");
 }
 
 //=======================================================================================
@@ -509,7 +499,7 @@ bool MSYandexDisk::createSyncFileList(){
                     this->options.insert(QStringLiteral("filter-type"), QStringLiteral("wildcard"));
                     continue;
                 }
-                else if(instream.pos() == 7 && line == QStringLiteral("regexp")){
+                if(instream.pos() == 7 && line == QStringLiteral("regexp")){
                     this->options.insert(QStringLiteral("filter-type"), QStringLiteral("regexp"));
                     continue;
                 }
@@ -542,7 +532,7 @@ bool MSYandexDisk::createSyncFileList(){
                     this->options.insert(QStringLiteral("filter-type"), QStringLiteral("wildcard"));
                     continue;
                 }
-                else if(instream.pos() == 7 && line == QStringLiteral("regexp")){
+                if(instream.pos() == 7 && line == QStringLiteral("regexp")){
                     this->options.insert(QStringLiteral("filter-type"), QStringLiteral("regexp"));
                     continue;
                 }
@@ -598,7 +588,7 @@ bool MSYandexDisk::createSyncFileList(){
     // make separately lists of objects
     QList<QString> keys = this->syncFileList.uniqueKeys();
 
-    if((keys.size()>3) && (this->getFlag(QStringLiteral("singleThread")) == false)){// split list to few parts
+    if((keys.size()>3) && (!this->getFlag(QStringLiteral("singleThread")))){// split list to few parts
 
         this->threadsRunning = new QSemaphore(3);
 
@@ -631,8 +621,8 @@ bool MSYandexDisk::createSyncFileList(){
 
         MSSyncThread* threads[3] = {thr1, thr2, thr3};
         int j = 0;
-        for(int i = 0; i<keys.size(); i++ ){
-            threads[j++]->threadSyncList.insert(keys[i],this->syncFileList.find(keys[i]).value());
+        for(const auto& key : keys){
+            threads[j++]->threadSyncList.insert(key,this->syncFileList.find(key).value());
             if (j == 3) j = 0;
         }
 
@@ -912,33 +902,26 @@ MSFSObject::ObjectState MSYandexDisk::filelist_defineObjectState(const MSLocalFS
                 return MSFSObject::ObjectState::Sync;
 
         }
-        else{
 
-            // compare last modified date for local and remote
-            if(local.modifiedDate==remote.modifiedDate){
 
-               // return MSFSObject::ObjectState::Sync;
+        // compare last modified date for local and remote
+        if(local.modifiedDate==remote.modifiedDate){
 
-                if(this->strategy==MSCloudProvider::SyncStrategy::PreferLocal){
-                    return MSFSObject::ObjectState::ChangedLocal;
-                }
-                else{
-                    return MSFSObject::ObjectState::ChangedRemote;
-                }
+           // return MSFSObject::ObjectState::Sync;
 
+            if(this->strategy==MSCloudProvider::SyncStrategy::PreferLocal){
+                return MSFSObject::ObjectState::ChangedLocal;
             }
-            else{
 
-                if(local.modifiedDate > remote.modifiedDate){
-                    return MSFSObject::ObjectState::ChangedLocal;
-                }
-                else{
-                    return MSFSObject::ObjectState::ChangedRemote;
-                }
+            return MSFSObject::ObjectState::ChangedRemote;
 
-            }
         }
 
+        if(local.modifiedDate > remote.modifiedDate){
+            return MSFSObject::ObjectState::ChangedLocal;
+        }
+
+        return MSFSObject::ObjectState::ChangedRemote;
 
     }
 
@@ -948,9 +931,8 @@ MSFSObject::ObjectState MSYandexDisk::filelist_defineObjectState(const MSLocalFS
         if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
             return  MSFSObject::ObjectState::NewLocal;
         }
-        else{
-            return  MSFSObject::ObjectState::DeleteRemote;
-        }
+
+        return  MSFSObject::ObjectState::DeleteRemote;
     }
 
 
@@ -959,9 +941,8 @@ MSFSObject::ObjectState MSYandexDisk::filelist_defineObjectState(const MSLocalFS
         if(this->strategy == MSCloudProvider::SyncStrategy::PreferLocal){
             return  MSFSObject::ObjectState::DeleteLocal;
         }
-        else{
-            return  MSFSObject::ObjectState::NewRemote;
-        }
+
+        return  MSFSObject::ObjectState::NewRemote;
     }
 
     return  MSFSObject::ObjectState::ErrorState;
@@ -1422,12 +1403,7 @@ bool MSYandexDisk::filelist_FSObjectHasParent(const MSFSObject &fsObject){
 //        return true;
 //    }
 
-    if((fsObject.path.count(QStringLiteral("/"))>=1)&&(fsObject.path!=QStringLiteral("/"))){
-        return true;
-    }
-    else{
-        return false;
-    }
+    return (fsObject.path.count(QStringLiteral("/"))>=1)&&(fsObject.path!=QStringLiteral("/"));
 
 }
 
@@ -1455,9 +1431,8 @@ MSFSObject MSYandexDisk::filelist_getParentFSObject(const MSFSObject &fsObject){
     if(parent != this->syncFileList.end()){
         return parent.value();
     }
-    else{
-        return MSFSObject();
-    }
+
+    return MSFSObject();
 }
 
 
@@ -1479,11 +1454,7 @@ bool MSYandexDisk::testReplyBodyForError(const QString &body) {
         QJsonObject job = json.object();
 
         QJsonValue e=(job[QStringLiteral("error")]);
-        if(e.isNull()){
-            return true;
-        }
-
-        return false;
+        return e.isNull();
 
 
 }
@@ -1795,10 +1766,9 @@ bool MSYandexDisk::remote_file_makeFolder(MSFSObject *object){
             //exit(1);
             return false;
         }
-        else{
-            delete(req);
-            return true;
-        }
+
+        delete(req);
+        return true;
 
     }
 
@@ -1896,12 +1866,9 @@ bool MSYandexDisk::remote_file_trash(MSFSObject *object){
             delete(req);
             return false;
         }
-        else{
-            delete(req);
-            return true;
-        }
 
-
+        delete(req);
+        return true;
     }
 
 

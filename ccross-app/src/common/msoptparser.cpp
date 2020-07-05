@@ -282,10 +282,9 @@ bool MSOptParser::getArg(){
     if(QString(a.trimmed().at(0))==("-")){
         return false;
     }
-    else{
-        this->iit++;
-        return true;
-    }
+
+    this->iit++;
+    return true;
 
 }
 
@@ -302,9 +301,9 @@ QStringList MSOptParser::getParamByName(const QString &paramName){
             optItem opi;
 
             // find corresponding option at list
-            for(int opt=0;opt<this->opts.size();opt++){
+            for(const auto& opt : opts){
 
-                opi=this->opts.at(opt);
+                opi=opt;
                 if((opi.longOpt == this->input.at(i)) || (opi.shortOpt == this->input.at(i))  ){
                     break;
                 }

@@ -74,9 +74,8 @@ bool MSHttpRequest::setMethod(const QString &method){
         this->requestMethod=method.toUpper();
         return true;
     }
-    else{
-        return false;
-    }
+
+    return false;
 }
 
 //==============================================================================================
@@ -116,13 +115,10 @@ QString MSHttpRequest::getReplyHeader(const QByteArray &headerName){
 
     QList<QPair<QByteArray,QByteArray>> hl = this->cUrlObject->replyHeaders;
 
-    for(int i=0;i<hl.size();i++){
-
-        if(hl[i].first == headerName){
-
-            return hl[i].second;
-        }
-    }
+    auto iter = std::find_if(hl.begin(), hl.end(),
+                             [&headerName](const QPair<QByteArray,QByteArray>& i) { return i.first == headerName; });
+    if (iter != hl.end())
+        return iter->second;
 
     return QString();
 }
@@ -161,23 +157,22 @@ void MSHttpRequest::setInputDataStream(QMultiBuffer *data){
 
     this->dataStreamType = dataStreamTypes::DS_MultiBuffer;
 
-    for(int i = 0;i < data->items.size(); i++){
+    for(auto & item : data->items){
 
-        if(data->items[i].fileName == ""){
-            QIODevice* dd = ((QIODevice*)qvariant_cast<QIODevice*> (data->items[i].slot));
+        if(item.fileName == ""){
+            QIODevice* dd = ((QIODevice*)qvariant_cast<QIODevice*> (item.slot));
             dd->open(QIODevice::ReadOnly);
             QByteArray b = dd->readAll();
             this->dataStreamMultiBuffer.append(QPair<dataStreamTypes,QByteArray>(dataStreamTypes::DS_ByteArray,b));
         }
         else{
-            QFile* f = qvariant_cast<QFile*> (data->items[i].slot);
+            QFile* f = qvariant_cast<QFile*> (item.slot);
             this->dataStreamMultiBuffer.append(QPair<dataStreamTypes,QByteArray>(dataStreamTypes::DS_File,f->fileName().toLocal8Bit()));
         }
 
 
     }
 
-    return;
 }
 
 //==============================================================================================
@@ -323,7 +318,7 @@ void MSHttpRequest::post(const QByteArray &data){
     }
 
     // set request headers
-    if(this->requestHeaders.size() > 0){
+    if(!this->requestHeaders.empty()){
 
         QStringList h;
         QHash<QString,QString>::iterator i = this->requestHeaders.begin();
@@ -519,7 +514,7 @@ void MSHttpRequest::post(QIODevice *data){
 
 
     // set request headers
-    if(this->requestHeaders.size() > 0){
+    if(!this->requestHeaders.empty()){
 
         QStringList h;
         QHash<QString,QString>::iterator i = this->requestHeaders.begin();
@@ -682,7 +677,7 @@ void MSHttpRequest::put(const QByteArray &data){
     }
 
     // set request headers
-    if(this->requestHeaders.size() > 0){
+    if(!this->requestHeaders.empty()){
 
         QStringList h;
         QHash<QString,QString>::iterator i = this->requestHeaders.begin();
@@ -868,7 +863,7 @@ void MSHttpRequest::put(QIODevice *data){
     }
 
     // set request headers
-    if(this->requestHeaders.size() > 0){
+    if(!this->requestHeaders.empty()){
 
         QStringList h;
         QHash<QString,QString>::iterator i = this->requestHeaders.begin();
@@ -947,7 +942,7 @@ void MSHttpRequest::deleteResource(){
 //    cUrlObject->requestOptions[CURLOPT_POSTFIELDSIZE] = 0;
 
     // set request headers
-    if(this->requestHeaders.size() > 0){
+    if(!this->requestHeaders.empty()){
 
         QStringList h;
         QHash<QString,QString>::iterator i = this->requestHeaders.begin();
@@ -1004,7 +999,7 @@ void MSHttpRequest::get(){
 
     QString p = "";
 
-    if(this->queryItems.size() > 0){
+    if(!this->queryItems.empty()){
 
         QHash<QString,QString>::iterator i = this->queryItems.begin();
 
@@ -1025,7 +1020,7 @@ void MSHttpRequest::get(){
     }
 
     // set request headers
-    if(this->requestHeaders.size() > 0){
+    if(!this->requestHeaders.empty()){
 
         QStringList h;
         QHash<QString,QString>::iterator i = this->requestHeaders.begin();
@@ -1128,10 +1123,10 @@ void MSHttpRequest::exec(){
 
         ds << this->dataStreamMultiBuffer.size();
 
-        for(int i =0; i< this->dataStreamMultiBuffer.size(); i++){
+        for(const auto & i : this->dataStreamMultiBuffer){
 
-            ds << this->dataStreamMultiBuffer[i].first;
-            ds << this->dataStreamMultiBuffer[i].second;
+            ds << i.first;
+            ds << i.second;
 
         }
     }
@@ -1158,8 +1153,6 @@ void MSHttpRequest::exec(){
         exe->waitForFinished(999999999);
 
         delete(exe);
-
-    return ;
 
 
 }
@@ -1193,12 +1186,7 @@ QString MSHttpRequest::readReplyText(){
 
 bool MSHttpRequest::replyOK(){
 
-    if(this->replyError == QNetworkReply::NetworkError::NoError){
-        return true;
-    }
-    else{
-        return false;
-    }
+    return this->replyError == QNetworkReply::NetworkError::NoError;
 }
 
 //==============================================================================================

@@ -26,7 +26,7 @@ void QMultiBuffer::append(QIODevice* d){
         s.fileName = f->fileName();
     }
 
-    if(this->items.size() == 0){
+    if(this->items.empty()){
         s.beginPos = 0;
         s.endPos = d->size()-1;
     }
@@ -47,7 +47,7 @@ void QMultiBuffer::append(QByteArray *d){
 
     slotBound s = {this->items.size(),0,0,""};
 
-    if(this->items.size() == 0){
+    if(this->items.empty()){
         s.beginPos = 0;
         s.endPos = d->size()-1;
     }
@@ -110,10 +110,9 @@ qint64 QMultiBuffer::readData(char *data, qint64 maxlen){
                  ((QIODevice*)(qvariant_cast<QIODevice*> (this->items[currentSlot].slot)))->close();
                  break;
              }
-             else{
-                ((QIODevice*)(qvariant_cast<QIODevice*> (this->items[currentSlot].slot)))->close();
-                currentSlot++;
-             }
+
+             ((QIODevice*)(qvariant_cast<QIODevice*> (this->items[currentSlot].slot)))->close();
+             currentSlot++;
          }
 
          this->cursor += w;
@@ -143,10 +142,8 @@ bool QMultiBuffer::seek(qint64 pos){
         this->cursor = pos;
         return true;
     }
-    else{
-        return false;
-    }
 
+    return false;
 
 }
 
@@ -156,15 +153,15 @@ qint64 QMultiBuffer::size() const{
 
     qint64 sz=0;
 
-    for(int i=0; i< this->items.size();i++){
+    for(const auto& item : this->items){
 
-        QString vt = this->items[i].slot.typeName();
+        QString vt = item.slot.typeName();
 
         if( vt == "QBuffer*"){
-            sz += ((QBuffer*)(qvariant_cast<QBuffer*> (this->items[i].slot)))->size();
+            sz += ((QBuffer*)(qvariant_cast<QBuffer*> (item.slot)))->size();
         }
         if( vt == "QIODevice*"){
-            sz += ((QFile*)(qvariant_cast<QFile*> (this->items[i].slot)))->size();
+            sz += ((QFile*)(qvariant_cast<QFile*> (item.slot)))->size();
         }
     }
 
