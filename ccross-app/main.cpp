@@ -66,7 +66,7 @@
 
 #define APP_MAJOR_VERSION 1
 #define APP_MINOR_VERSION 4
-#define APP_BUILD_NUMBER  "5"
+#define APP_BUILD_NUMBER  "6"
 
 #define CCROSS_HOME_DIR ".ccross"
 #define CCROSS_CONFIG_FILE "ccross.conf"
@@ -88,58 +88,58 @@
 
 
 void printVersion(){
-    qStdOut() << APP_NAME << " v"<<APP_MAJOR_VERSION<<"."<<APP_MINOR_VERSION<<"."<<APP_BUILD_NUMBER<<APP_SUFFIX <<endl;
+    qInfo() << APP_NAME << " v"<<APP_MAJOR_VERSION<<"."<<APP_MINOR_VERSION<<"."<<APP_BUILD_NUMBER<<APP_SUFFIX ;
 }
 
 void printHelp(){
     printVersion();
-    qStdOut()<< QObject::tr("is a opensource program for sync local files with a many cloud storages.\n") <<endl;
-    qStdOut()<< QObject::tr("Options:") <<endl;
-    qStdOut()<< QObject::tr("   -h [ --help ]              Produce help message") <<endl;
-    qStdOut()<< QObject::tr("   -v [ --version ]           Display CloudCross version") <<endl;
-    qStdOut()<< QObject::tr("   -a [ --auth ]              Request authorization token") <<endl;
-    qStdOut()<< QObject::tr("   -p [ --path ] arg          Path to sync directory") <<endl;
-    qStdOut()<< QObject::tr("   --dry-run                  Only detect which files need to be uploaded/downloaded,\n"
-                            "                              without actually performing them.") <<endl;
-    qStdOut()<< QObject::tr("   -s [ --list ]              Print remote cloud file list") <<endl;
-    qStdOut()<< QObject::tr("   --use-include              Use .include file. Without this option by default use .exclude file.\n"
-                            "                              If these files does'nt exists, they  are ignore") <<endl;
-    qStdOut()<< QObject::tr(R"(   --prefer arg               Define sync strategy. It can be a one of "remote" or "local". By default it's "local")") <<endl;
-    qStdOut()<< QObject::tr("   --no-hidden                Not sync hidden files and folders") <<endl;
-    qStdOut()<< QObject::tr("   --no-new-rev               Do not create new revisions of files, overwrite their instead") <<endl;
-    qStdOut()<< QObject::tr("   --convert-doc              Convert office document to Google Doc format when upload\n"
-                            "                              and convert him back when download") <<endl;
-    qStdOut()<< QObject::tr("   --force arg                Forcing upload or download files. It can be a one of \"upload\" or \"download\".\n"
-                            "                              This option overrides --prefer option value.") <<endl;
+    qInfo()<< QObject::tr("is a opensource program for sync local files with a many cloud storages.\n") ;
+    qInfo()<< QObject::tr("Options:") ;
+    qInfo()<< QObject::tr("   -h [ --help ]              Produce help message") ;
+    qInfo()<< QObject::tr("   -v [ --version ]           Display CloudCross version") ;
+    qInfo()<< QObject::tr("   -a [ --auth ]              Request authorization token") ;
+    qInfo()<< QObject::tr("   -p [ --path ] arg          Path to sync directory") ;
+    qInfo()<< QObject::tr("   --dry-run                  Only detect which files need to be uploaded/downloaded,\n"
+                            "                              without actually performing them.") ;
+    qInfo()<< QObject::tr("   -s [ --list ]              Print remote cloud file list") ;
+    qInfo()<< QObject::tr("   --use-include              Use .include file. Without this option by default use .exclude file.\n"
+                            "                              If these files does'nt exists, they  are ignore") ;
+    qInfo()<< QObject::tr(R"(   --prefer arg               Define sync strategy. It can be a one of "remote" or "local". By default it's "local")") ;
+    qInfo()<< QObject::tr("   --no-hidden                Not sync hidden files and folders") ;
+    qInfo()<< QObject::tr("   --no-new-rev               Do not create new revisions of files, overwrite their instead") ;
+    qInfo()<< QObject::tr("   --convert-doc              Convert office document to Google Doc format when upload\n"
+                            "                              and convert him back when download") ;
+    qInfo()<< QObject::tr("   --force arg                Forcing upload or download files. It can be a one of \"upload\" or \"download\".\n"
+                            "                              This option overrides --prefer option value.") ;
 
-    qStdOut()<< QObject::tr("   --provider arg             Set cloud provider for current sync operation. On this moment this option can be \n"
-                            "                              a \"google\", \"yandex\", \"mailru\", \"onedrive\" or \"dropbox\". Default provider is Google Drive") <<endl;
+    qInfo()<< QObject::tr("   --provider arg             Set cloud provider for current sync operation. On this moment this option can be \n"
+                            "                              a \"google\", \"yandex\", \"mailru\", \"onedrive\" or \"dropbox\". Default provider is Google Drive") ;
 
-//    qStdOut()<< QObject::tr("   --direct-upload url path   Allow upload file directly to cloud from URL.\n"
+//    qInfo()<< QObject::tr("   --direct-upload url path   Allow upload file directly to cloud from URL.\n"
 //                            "                              All options, except --provider and --path, are ignored.\n"
 //                            "                              Uploaded file will be stored on remote storage into location which was defined by path.\n"
-//                            "                              NOTE: Direct upload to OneDrive does not supported.") <<endl;
-    qStdOut()<< QObject::tr("   --login arg                Set login for access to cloud provider. \n"
-                            "                              Now it used only for Cloud Mail.ru") <<endl;
-    qStdOut()<< QObject::tr("   --password arg             Set password for access to cloud provider. \n"
-                            "                              Now it used only for Cloud Mail.ru") <<endl;
-    qStdOut()<< QObject::tr("   --http-proxy arg           Use http proxy server for connection to cloud provider. \n"
-                            "                              <arg> must be in a ip_address_or_host_name:port_number format") <<endl;
-    qStdOut()<< QObject::tr("   --socks5-proxy arg         Use socks5 proxy server for connection to cloud provider. \n"
-                            "                              <arg> must be in a ip_address_or_host_name:port_number format") <<endl;
-    qStdOut()<< QObject::tr("   --cloud-space              Showing total and free space  of cloud \n")<<endl;
-    qStdOut()<< QObject::tr("   --filter-type              Filter type for .include and .exclude files. Can be set to \"regexp\" or \"wildcard\". "
-                            "                              Ignored if it set in files") <<endl;
-    qStdOut()<< QObject::tr("   --single-thread            Run as single threaded") <<endl;
+//                            "                              NOTE: Direct upload to OneDrive does not supported.") ;
+    qInfo()<< QObject::tr("   --login arg                Set login for access to cloud provider. \n"
+                            "                              Now it used only for Cloud Mail.ru") ;
+    qInfo()<< QObject::tr("   --password arg             Set password for access to cloud provider. \n"
+                            "                              Now it used only for Cloud Mail.ru") ;
+    qInfo()<< QObject::tr("   --http-proxy arg           Use http proxy server for connection to cloud provider. \n"
+                            "                              <arg> must be in a ip_address_or_host_name:port_number format") ;
+    qInfo()<< QObject::tr("   --socks5-proxy arg         Use socks5 proxy server for connection to cloud provider. \n"
+                            "                              <arg> must be in a ip_address_or_host_name:port_number format") ;
+    qInfo()<< QObject::tr("   --cloud-space              Showing total and free space  of cloud \n");
+    qInfo()<< QObject::tr("   --filter-type              Filter type for .include and .exclude files. Can be set to \"regexp\" or \"wildcard\". "
+                            "                              Ignored if it set in files") ;
+    qInfo()<< QObject::tr("   --single-thread            Run as single threaded") ;
 
-    qStdOut()<< QObject::tr("   --low-memory               Reduce memory utilization during reading a remote file list. Using of this"
-                          "                                option may do increase of synchronization time ") <<endl;
+    qInfo()<< QObject::tr("   --low-memory               Reduce memory utilization during reading a remote file list. Using of this"
+                          "                                option may do increase of synchronization time ") ;
 
-    qStdOut()<< QObject::tr("   --empty-trash              Delete all files from cloud trash bin.")<<endl;
+    qInfo()<< QObject::tr("   --empty-trash              Delete all files from cloud trash bin.");
 
-    qStdOut()<< QObject::tr("   --no-sync                  If this option is set synchronization mechanism will be disabled and remote file list"
+    qInfo()<< QObject::tr("   --no-sync                  If this option is set synchronization mechanism will be disabled and remote file list"
                             "                              not be a readed. Local files will be uploaded without consideration of existence"
-                            "                              of this files on remote. Use with carefully")<<endl;
+                            "                              of this files on remote. Use with carefully");
 }
 
 
@@ -157,7 +157,7 @@ bool authGrive(MSProvidersPool* providers){
         providers->saveTokenFile("GoogleDrive");
     }
     else{
-       qStdOut() << "Authentication failed"<<endl;
+       qInfo() << "Authentication failed";
        return  false;
     }
     return true;
@@ -177,7 +177,7 @@ bool listGrive(MSProvidersPool* providers){
 
     if(! providers->refreshToken("GoogleDrive")){
 
-        qStdOut()<< "Unauthorized client"<<endl;
+        qInfo()<< "Unauthorized client";
        return false;
     }
 
@@ -204,7 +204,7 @@ bool listGrive(MSProvidersPool* providers){
 
     // print remote file list
     while(si != sorted.end()){
-        qStdOut() << si.key()<< endl;
+        qInfo() << si.key();
         si++;
     }
     return true;
@@ -224,7 +224,7 @@ bool syncGrive(MSProvidersPool* providers){
     }
 
     if(!providers->refreshToken("GoogleDrive")){
-        qStdOut()<<"Unauthorized access. Aborted."<<endl;
+        qInfo()<<"Unauthorized access. Aborted.";
         //exit(0);
         return false;
     }
@@ -247,7 +247,7 @@ bool infoGrive(MSProvidersPool* providers){
 
     if(! providers->refreshToken("GoogleDrive")){
 
-        qStdOut()<< "Unauthorized client"<<endl;
+        qInfo()<< "Unauthorized client";
        return false;
     }
 
@@ -256,7 +256,7 @@ bool infoGrive(MSProvidersPool* providers){
 
     if(info == "false"){
 
-        qStdOut()<< "Error getting cloud information " <<endl;
+        qInfo()<< "Error getting cloud information " ;
         return false;
     }
 
@@ -267,10 +267,10 @@ bool infoGrive(MSProvidersPool* providers){
     double total=  job["total"].toString().toDouble();
     double free= total - usage;
 
-    qStdOut()<< job["account"].toString()<< endl << endl << "total: "<< (uint64_t)total <<endl << "usage: "<< (uint64_t)usage << endl << "free: "<< (uint64_t)free <<endl;
-    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1048576<<" MB" <<endl << "usage: "<< (uint64_t)usage/1048576<<" MB"  << endl << "free: "<< (uint64_t)free/1048576<<" MB"  <<endl;
-//    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)free/1073741824<<" GB"  <<endl;
-    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)qRound(free/1073741824.0)<<" GB"  <<endl;
+    qInfo()<< job["account"].toString()  << "total: "<< (uint64_t)total  << "usage: "<< (uint64_t)usage  << "free: "<< (uint64_t)free ;
+    qInfo()  << "total: "<< (uint64_t)total/1048576<<" MB"  << "usage: "<< (uint64_t)usage/1048576<<" MB"   << "free: "<< (uint64_t)free/1048576<<" MB"  ;
+//    qInfo()  << "total: "<< (uint64_t)total/1073741824<<" GB"  << "usage: "<< (uint64_t)usage/1073741824<<" GB"   << "free: "<< (uint64_t)free/1073741824<<" GB"  ;
+    qInfo()  << "total: "<< (uint64_t)total/1073741824<<" GB"  << "usage: "<< (uint64_t)usage/1073741824<<" GB"   << "free: "<< (uint64_t)qRound(free/1073741824.0)<<" GB"  ;
 
     return true;
 }
@@ -289,7 +289,7 @@ bool emptyTrashGrive(MSProvidersPool* providers){
     }
 
     if(!providers->refreshToken("GoogleDrive")){
-        qStdOut()<<"Unauthorized access. Aborted."<<endl;
+        qInfo()<<"Unauthorized access. Aborted.";
         //exit(0);
         return false;
     }
@@ -312,7 +312,7 @@ bool authDropbox(MSProvidersPool* providers){
         providers->saveTokenFile("Dropbox");
     }
     else{
-       qStdOut() << "Authentication failed"<<endl;
+       qInfo() << "Authentication failed";
        return false;
     }
 
@@ -333,7 +333,7 @@ bool listDropbox(MSProvidersPool* providers){
 
     if(! providers->refreshToken("Dropbox")){
 
-        qStdOut()<< "Unauthorized client"<<endl;
+        qInfo()<< "Unauthorized client";
         //exit(0);
         return false;
     }
@@ -359,7 +359,7 @@ bool listDropbox(MSProvidersPool* providers){
 
     // print remote file list
     while(si != sorted.end()){
-        qStdOut() << si.key()<< endl;
+        qInfo() << si.key();
         si++;
     }
 
@@ -380,7 +380,7 @@ bool syncDropbox(MSProvidersPool* providers){
     }
 
     if(!providers->refreshToken("Dropbox")){
-        qStdOut()<<"Unauthorized access. Aborted."<<endl;
+        qInfo()<<"Unauthorized access. Aborted.";
         //exit(0);
         return false;
     }
@@ -403,7 +403,7 @@ bool infoDropbox(MSProvidersPool* providers){
 
     if(! providers->refreshToken("Dropbox")){
 
-        qStdOut()<< "Unauthorized client"<<endl;
+        qInfo()<< "Unauthorized client";
        return false;
     }
 
@@ -412,7 +412,7 @@ bool infoDropbox(MSProvidersPool* providers){
 
     if(info == "false"){
 
-        qStdOut()<< "Error getting cloud information " <<endl;
+        qInfo()<< "Error getting cloud information " ;
         return false;
     }
 
@@ -423,10 +423,10 @@ bool infoDropbox(MSProvidersPool* providers){
     double total=  job["total"].toString().toDouble();
     double free= total - usage;
 
-    qStdOut()<< job["account"].toString()<< endl << endl << "total: "<< (uint64_t)total <<endl << "usage: "<< (uint64_t)usage << endl << "free: "<< (uint64_t)free <<endl;
-    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1048576<<" MB" <<endl << "usage: "<< (uint64_t)usage/1048576<<" MB"  << endl << "free: "<< (uint64_t)free/1048576<<" MB"  <<endl;
-//    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)free/1073741824<<" GB"  <<endl;
-    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)qRound(free/1073741824.0)<<" GB"  <<endl;
+    qInfo()<< job["account"].toString()  << "total: "<< (uint64_t)total  << "usage: "<< (uint64_t)usage  << "free: "<< (uint64_t)free ;
+    qInfo()  << "total: "<< (uint64_t)total/1048576<<" MB"  << "usage: "<< (uint64_t)usage/1048576<<" MB"   << "free: "<< (uint64_t)free/1048576<<" MB"  ;
+//    qInfo()  << "total: "<< (uint64_t)total/1073741824<<" GB"  << "usage: "<< (uint64_t)usage/1073741824<<" GB"   << "free: "<< (uint64_t)free/1073741824<<" GB"  ;
+    qInfo()  << "total: "<< (uint64_t)total/1073741824<<" GB"  << "usage: "<< (uint64_t)usage/1073741824<<" GB"   << "free: "<< (uint64_t)qRound(free/1073741824.0)<<" GB"  ;
 
     return true;
 }
@@ -444,7 +444,7 @@ bool emptyTrashDropbox(MSProvidersPool* providers){
     }
 
     if(!providers->refreshToken("Dropbox")){
-        qStdOut()<<"Unauthorized access. Aborted."<<endl;
+        qInfo()<<"Unauthorized access. Aborted.";
         //exit(0);
         return false;
     }
@@ -466,7 +466,7 @@ bool authYandex(MSProvidersPool* providers){
         providers->saveTokenFile("YandexDisk");
     }
     else{
-       qStdOut() << "Authentication failed"<<endl;
+       qInfo() << "Authentication failed";
        return false;
     }
     return true;
@@ -486,7 +486,7 @@ bool listYandex(MSProvidersPool* providers){
 
     if(! providers->refreshToken("YandexDisk")){
 
-        qStdOut()<< "Unauthorized client"<<endl;
+        qInfo()<< "Unauthorized client";
         return false;
     }
 
@@ -511,7 +511,7 @@ bool listYandex(MSProvidersPool* providers){
 
     // print remote file list
     while(si != sorted.end()){
-        qStdOut() << si.key()<< endl;
+        qInfo() << si.key();
         si++;
     }
     return true;
@@ -531,7 +531,7 @@ bool syncYandex(MSProvidersPool* providers){
     }
 
     if(!providers->refreshToken("YandexDisk")){
-        qStdOut()<<"Unauthorized access. Aborted."<<endl;
+        qInfo()<<"Unauthorized access. Aborted.";
         //exit(0);
         return false;
     }
@@ -554,7 +554,7 @@ bool infoYandex(MSProvidersPool* providers){
 
     if(! providers->refreshToken("YandexDisk")){
 
-        qStdOut()<< "Unauthorized client"<<endl;
+        qInfo()<< "Unauthorized client";
        return false;
     }
 
@@ -563,7 +563,7 @@ bool infoYandex(MSProvidersPool* providers){
 
     if(info == "false"){
 
-        qStdOut()<< "Error getting cloud information " <<endl;
+        qInfo()<< "Error getting cloud information " ;
         return false;
     }
 
@@ -574,10 +574,10 @@ bool infoYandex(MSProvidersPool* providers){
     double total=  job["total"].toString().toDouble();
     double free= total - usage;
 
-    qStdOut()<< job["account"].toString()<< endl << endl << "total: "<< (uint64_t)total <<endl << "usage: "<< (uint64_t)usage << endl << "free: "<< (uint64_t)free <<endl;
-    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1048576<<" MB" <<endl << "usage: "<< (uint64_t)usage/1048576<<" MB"  << endl << "free: "<< (uint64_t)free/1048576<<" MB"  <<endl;
-//    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)free/1073741824<<" GB"  <<endl;
-    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)qRound(free/1073741824.0)<<" GB"  <<endl;
+    qInfo()<< job["account"].toString()  << "total: "<< (uint64_t)total  << "usage: "<< (uint64_t)usage  << "free: "<< (uint64_t)free ;
+    qInfo()  << "total: "<< (uint64_t)total/1048576<<" MB"  << "usage: "<< (uint64_t)usage/1048576<<" MB"   << "free: "<< (uint64_t)free/1048576<<" MB"  ;
+//    qInfo()  << "total: "<< (uint64_t)total/1073741824<<" GB"  << "usage: "<< (uint64_t)usage/1073741824<<" GB"   << "free: "<< (uint64_t)free/1073741824<<" GB"  ;
+    qInfo()  << "total: "<< (uint64_t)total/1073741824<<" GB"  << "usage: "<< (uint64_t)usage/1073741824<<" GB"   << "free: "<< (uint64_t)qRound(free/1073741824.0)<<" GB"  ;
 
     return true;
 }
@@ -596,7 +596,7 @@ bool emptyTrashYandex(MSProvidersPool* providers){
     }
 
     if(!providers->refreshToken("YandexDisk")){
-        qStdOut()<<"Unauthorized access. Aborted."<<endl;
+        qInfo()<<"Unauthorized access. Aborted.";
         //exit(0);
         return false;
     }
@@ -619,11 +619,11 @@ bool authMailru(MSProvidersPool* providers,QString login,QString password){
 
         providers->addProvider(mrp,true);
         providers->saveTokenFile("MailRu");
-        qStdOut() << "Token was succesfully accepted and saved."<<endl;
+        qInfo() << "Token was succesfully accepted and saved.";
 
     }
     else{
-       qStdOut() << "Authentication failed"<<endl;
+       qInfo() << "Authentication failed";
        return false;
     }
 
@@ -645,7 +645,7 @@ bool listMailru(MSProvidersPool* providers){
 
     if(! providers->refreshToken("MailRu")){
 
-        qStdOut()<< "Unauthorized client"<<endl;
+        qInfo()<< "Unauthorized client";
         return false;
     }
 
@@ -670,7 +670,7 @@ bool listMailru(MSProvidersPool* providers){
 
     // print remote file list
     while(si != sorted.end()){
-        qStdOut() << si.key()<< endl;
+        qInfo() << si.key();
         si++;
     }
     return true;
@@ -691,7 +691,7 @@ bool syncMailru(MSProvidersPool* providers){
     }
 
     if(!providers->refreshToken("MailRu")){
-        qStdOut()<<"Unauthorized access. Aborted."<<endl;
+        qInfo()<<"Unauthorized access. Aborted.";
         delete(mrp->cookies);
         //exit(0);
         return false;
@@ -718,7 +718,7 @@ bool infoMailru(MSProvidersPool* providers){
     if(! providers->refreshToken("MailRu")){
 
         delete(dbp->cookies);
-        qStdOut()<< "Unauthorized client"<<endl;
+        qInfo()<< "Unauthorized client";
         return false;
     }
 
@@ -727,7 +727,7 @@ bool infoMailru(MSProvidersPool* providers){
 
     if(info == "false"){
 
-        qStdOut()<< "Error getting cloud information " <<endl;
+        qInfo()<< "Error getting cloud information " ;
         delete(dbp->cookies);
         return false;
     }
@@ -739,10 +739,10 @@ bool infoMailru(MSProvidersPool* providers){
     double total=  job["total"].toString().toDouble();
     double free= total - usage;
 
-    qStdOut()<< job["account"].toString()<< endl << endl << "total: "<< (uint)total <<endl << "usage: "<< (uint)usage << endl << "free: "<< (uint)free <<endl;
-    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1048576<<" MB" <<endl << "usage: "<< (uint64_t)usage/1048576<<" MB"  << endl << "free: "<< (uint64_t)free/1048576<<" MB"  <<endl;
-//    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1000<<" GB" <<endl << "usage: "<< (uint64_t)usage/1000<<" GB"  << endl << "free: "<< (uint64_t)free/1000<<" GB"  <<endl;
-    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)qRound(free/1073741824.0)<<" GB"  <<endl;
+    qInfo()<< job["account"].toString()  << "total: "<< (uint)total  << "usage: "<< (uint)usage  << "free: "<< (uint)free ;
+    qInfo()  << "total: "<< (uint64_t)total/1048576<<" MB"  << "usage: "<< (uint64_t)usage/1048576<<" MB"   << "free: "<< (uint64_t)free/1048576<<" MB"  ;
+//    qInfo()  << "total: "<< (uint64_t)total/1000<<" GB"  << "usage: "<< (uint64_t)usage/1000<<" GB"   << "free: "<< (uint64_t)free/1000<<" GB"  ;
+    qInfo()  << "total: "<< (uint64_t)total/1073741824<<" GB"  << "usage: "<< (uint64_t)usage/1073741824<<" GB"   << "free: "<< (uint64_t)qRound(free/1073741824.0)<<" GB"  ;
 
 
     delete(dbp->cookies);
@@ -764,7 +764,7 @@ bool emptyTrashMailru(MSProvidersPool* providers){
     }
 
     if(!providers->refreshToken("MailRu")){
-        qStdOut()<<"Unauthorized access. Aborted."<<endl;
+        qInfo()<<"Unauthorized access. Aborted.";
         delete(mrp->cookies);
         //exit(0);
         return false;
@@ -791,7 +791,7 @@ bool authOneDrive(MSProvidersPool* providers){
         providers->saveTokenFile("OneDrive");
     }
     else{
-       qStdOut() << "Authentication failed"<<endl;
+       qInfo() << "Authentication failed";
        return false;
     }
     return true;
@@ -811,7 +811,7 @@ bool listOneDrive(MSProvidersPool* providers){
 
     if(! providers->refreshToken("OneDrive")){
 
-        qStdOut()<< "Unauthorized client"<<endl;
+        qInfo()<< "Unauthorized client";
         return false;
     }
 
@@ -838,7 +838,7 @@ bool listOneDrive(MSProvidersPool* providers){
 
     // print remote file list
     while(si != sorted.end()){
-        qStdOut() << si.key()<< endl;
+        qInfo() << si.key();
         si++;
     }
     return true;
@@ -857,7 +857,7 @@ bool syncOneDrive(MSProvidersPool* providers){
     }
 
     if(!providers->refreshToken("OneDrive")){
-        qStdOut()<<"Unauthorized access. Aborted."<<endl;
+        qInfo()<<"Unauthorized access. Aborted.";
         //exit(0);
         return false;
     }
@@ -879,7 +879,7 @@ bool infoOneDrive(MSProvidersPool* providers){
 
     if(! providers->refreshToken("OneDrive")){
 
-        qStdOut()<< "Unauthorized client"<<endl;
+        qInfo()<< "Unauthorized client";
        return false;
     }
 
@@ -888,7 +888,7 @@ bool infoOneDrive(MSProvidersPool* providers){
 
     if(info == "false"){
 
-        qStdOut()<< "Error getting cloud information " <<endl;
+        qInfo()<< "Error getting cloud information " ;
         return false;
     }
 
@@ -899,10 +899,10 @@ bool infoOneDrive(MSProvidersPool* providers){
     double total=  job["total"].toString().toDouble();
     double free= total - usage;
 
-    qStdOut()<< job["account"].toString()<<" at OneDrive.com"<< endl << endl << "total: "<< (uint64_t)total <<endl << "usage: "<< (uint64_t)usage << endl << "free: "<< (uint64_t)free <<endl;
-    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1048576<<" MB" <<endl << "usage: "<< (uint64_t)usage/1048576<<" MB"  << endl << "free: "<< (uint64_t)free/1048576<<" MB"  <<endl;
-//    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)free/1073741824<<" GB"  <<endl;
-    qStdOut()<< "" << endl << "total: "<< (uint64_t)total/1073741824<<" GB" <<endl << "usage: "<< (uint64_t)usage/1073741824<<" GB"  << endl << "free: "<< (uint64_t)qRound(free/1073741824.0)<<" GB"  <<endl;
+    qInfo()<< job["account"].toString()<<" at OneDrive.com"  << "total: "<< (uint64_t)total  << "usage: "<< (uint64_t)usage  << "free: "<< (uint64_t)free ;
+    qInfo()  << "total: "<< (uint64_t)total/1048576<<" MB"  << "usage: "<< (uint64_t)usage/1048576<<" MB"   << "free: "<< (uint64_t)free/1048576<<" MB"  ;
+//    qInfo()  << "total: "<< (uint64_t)total/1073741824<<" GB"  << "usage: "<< (uint64_t)usage/1073741824<<" GB"   << "free: "<< (uint64_t)free/1073741824<<" GB"  ;
+    qInfo()  << "total: "<< (uint64_t)total/1073741824<<" GB"  << "usage: "<< (uint64_t)usage/1073741824<<" GB"   << "free: "<< (uint64_t)qRound(free/1073741824.0)<<" GB"  ;
 
 
     return true;
@@ -922,7 +922,7 @@ bool emptyTrashOneDrive(MSProvidersPool *providers){
     }
 
     if(!providers->refreshToken("OneDrive")){
-        qStdOut()<<"Unauthorized access. Aborted."<<endl;
+        qInfo()<<"Unauthorized access. Aborted.";
         //exit(0);
         return false;
     }
@@ -1104,7 +1104,7 @@ int main(int argc, char *argv[])
     if( b64.size() == 0){
 
         delete(exe);
-        qStdOut() << "A part of CloudCross (ccross-curl) not found in PATH. Terminated..."<<endl;
+        qInfo() << "A part of CloudCross (ccross-curl) not found in PATH. Terminated...";
         return 0;
     }
 
@@ -1188,7 +1188,7 @@ int main(int argc, char *argv[])
             currentProvider=ProviderType::OneDrive;
         }
         else {
-            qStdOut()<< "Unknown cloud provider. Application terminated."<< endl;
+            qInfo()<< "Unknown cloud provider. Application terminated.";
             return 1;
         }
     }
@@ -1230,10 +1230,10 @@ int main(int argc, char *argv[])
     // ATTENTION!! since v1.4.1 direct uploading is not supports
     if(parser->isParamExist("direct-upload")){
 
-        qStdOut() << "Direct uploading is not supports. Terminate"<<endl;
+        qInfo() << "Direct uploading is not supports. Terminate";
         return 0;
 
-        qStdOut() << "Start direct uploading..."<<endl;
+        qInfo() << "Start direct uploading...";
 
         switch(currentProvider){
 
@@ -1251,19 +1251,19 @@ int main(int argc, char *argv[])
             }
 
             if(!providers->refreshToken("GoogleDrive")){
-                qStdOut()<<"Unauthorized access. Aborted."<<endl;
+                qInfo()<<"Unauthorized access. Aborted.";
                 delete(providers);
                 return 1;
             }
 
             QStringList p=parser->getParamByName("direct-upload");
             if(p.size()<2){
-                qStdOut()<<"Option --direct-upload. Missing required argument"<<endl;
+                qInfo()<<"Option --direct-upload. Missing required argument";
                 return 1;
             }
             cp->directUpload(p[0],p[1]);
 
-            qStdOut() << "Uploaded file was  stored in google:/"<< p[1]<<endl;
+            qInfo() << "Uploaded file was  stored in google:/"<< p[1];
         }
             break;
 
@@ -1281,7 +1281,7 @@ int main(int argc, char *argv[])
             }
 
             if(!providers->refreshToken("Dropbox")){
-                qStdOut()<<"Unauthorized access. Aborted."<<endl;
+                qInfo()<<"Unauthorized access. Aborted.";
                 delete(providers);
                 return 1;
             }
@@ -1289,13 +1289,13 @@ int main(int argc, char *argv[])
 
             QStringList p=parser->getParamByName("direct-upload");
             if(p.size()<2){
-                qStdOut()<<"Option --direct-upload. Missing required argument"<<endl;
+                qInfo()<<"Option --direct-upload. Missing required argument";
                 delete(providers);
                 return 1;
             }
             cp->directUpload(p[0],p[1]);
 
-            qStdOut() << "Uploaded file was stored in dropbox:/"<< p[1]<<endl;
+            qInfo() << "Uploaded file was stored in dropbox:/"<< p[1];
         }
             break;
 
@@ -1313,20 +1313,20 @@ int main(int argc, char *argv[])
             }
 
             if(!providers->refreshToken("YandexDisk")){
-                qStdOut()<<"Unauthorized access. Aborted."<<endl;
+                qInfo()<<"Unauthorized access. Aborted.";
                 delete(providers);
                 return 1;
             }
 
             QStringList p=parser->getParamByName("direct-upload");
             if(p.size()<2){
-                qStdOut()<<"Option --direct-upload. Missing required argument"<<endl;
+                qInfo()<<"Option --direct-upload. Missing required argument";
                 delete(providers);
                 return 1;
             }
             cp->directUpload(p[0],p[1]);
 
-            qStdOut() << "Uploaded file was stored in yandex:/"<< p[1]<<endl;
+            qInfo() << "Uploaded file was stored in yandex:/"<< p[1];
         }
             break;
 
@@ -1344,20 +1344,20 @@ int main(int argc, char *argv[])
             }
 
             if(!providers->refreshToken("MailRu")){
-                qStdOut()<<"Unauthorized access. Aborted."<<endl;
+                qInfo()<<"Unauthorized access. Aborted.";
                 delete(providers);
                 return 1;
             }
 
             QStringList p=parser->getParamByName("direct-upload");
             if(p.size()<2){
-                qStdOut()<<"Option --direct-upload. Missing required argument"<<endl;
+                qInfo()<<"Option --direct-upload. Missing required argument";
                 delete(providers);
                 return 1;
             }
             cp->directUpload(p[0],p[1]);
 
-            qStdOut() << "Uploaded file was stored in mail.ru:/"<< p[1]<<endl;
+            qInfo() << "Uploaded file was stored in mail.ru:/"<< p[1];
         }
             break;
 
@@ -1375,20 +1375,20 @@ int main(int argc, char *argv[])
             }
 
             if(!providers->refreshToken("OneDrive")){
-                qStdOut()<<"Unauthorized access. Aborted."<<endl;
+                qInfo()<<"Unauthorized access. Aborted.";
                 delete(providers);
                 return 1;
             }
 
             QStringList p=parser->getParamByName("direct-upload");
             if(p.size()<2){
-                qStdOut()<<"Option --direct-upload. Missing required argument"<<endl;
+                qInfo()<<"Option --direct-upload. Missing required argument";
                 delete(providers);
                 return 1;
             }
             cp->directUpload(p[0],p[1]);
 
-            qStdOut() << "Uploaded file was stored in OneDrive:/"<< p[1]<<endl;
+            qInfo() << "Uploaded file was stored in OneDrive:/"<< p[1];
         }
             break;
 
@@ -1397,7 +1397,7 @@ int main(int argc, char *argv[])
             break;
         }
 
-        qStdOut() << "Direct uploading completed"<<endl;
+        qInfo() << "Direct uploading completed";
 
         delete(providers);
 
@@ -1433,7 +1433,7 @@ int main(int argc, char *argv[])
                 mailru_password=parser->getParamByName("--password");
 
                 if((mailru_login.empty())||(mailru_password.empty())){
-                     qStdOut()<< "Provider Mail.ru. Login and password required. Application terminated."<< endl;
+                     qInfo()<< "Provider Mail.ru. Login and password required. Application terminated.";
                      return 1;
                 }
 
@@ -1479,7 +1479,7 @@ int main(int argc, char *argv[])
                     s=MSCloudProvider::SyncStrategy::PreferRemote;
                 }
                 else{
-                    qStdOut()<< R"(--prefer option value must be an one of "local" or "remote")"<<endl;
+                    qInfo()<< R"(--prefer option value must be an one of "local" or "remote")";
                     return 0;
                     break;
                 }
@@ -1489,7 +1489,7 @@ int main(int argc, char *argv[])
                 providers->setStrategy(s);
             }
             else{
-                qStdOut()<< "--no-sync was defined. --prefer option will be ignored."<<endl;
+                qInfo()<< "--no-sync was defined. --prefer option will be ignored.";
             }
             break;
 
@@ -1538,7 +1538,7 @@ int main(int argc, char *argv[])
                 providers->setFlag("noNewRev",true);
             }
             else{
-                qStdOut()<< "--no-new-rev option doesn't matter for this provider. "<<endl;
+                qInfo()<< "--no-new-rev option doesn't matter for this provider. ";
             }
             break;
 
@@ -1553,7 +1553,7 @@ int main(int argc, char *argv[])
                 providers->setFlag("convertDoc",true);
             }
             else{
-                qStdOut()<< "--convert-doc option doesn't matter for this provider. "<<endl;
+                qInfo()<< "--convert-doc option doesn't matter for this provider. ";
                 return 1;
             }
             break;
@@ -1577,7 +1577,7 @@ int main(int argc, char *argv[])
 
             }
             else{
-                qStdOut()<< R"(--force option value must be an one of "upload" or "download")"<<endl;
+                qInfo()<< R"(--force option value must be an one of "upload" or "download")";
                 return 1;
 
             }
@@ -1593,7 +1593,7 @@ int main(int argc, char *argv[])
 //            }
 
 //            if(!providers->refreshToken("YandexDisk")){
-//                qStdOut()<<"Unauthorized access. Aborted."<<endl;
+//                qInfo()<<"Unauthorized access. Aborted.";
 //                return 1;
 //            }
 
@@ -1708,19 +1708,19 @@ int main(int argc, char *argv[])
                 break;
             case ProviderType::Dropbox:
                 r = syncDropbox(providers);
-//                qStdOut()<< "sync dropbox"<<endl;
+//                qInfo()<< "sync dropbox";
                 break;
             case ProviderType::Yandex:
                 r = syncYandex(providers);
-//                qStdOut()<< "sync yandex"<<endl;
+//                qInfo()<< "sync yandex";
                 break;
             case ProviderType::Mailru:
                 r = syncMailru(providers);
-//                qStdOut()<< "sync mailru"<<endl;
+//                qInfo()<< "sync mailru";
                 break;
             case ProviderType::OneDrive:
                 r = syncOneDrive(providers);
-//                qStdOut()<< "sync onedrive"<<endl;
+//                qInfo()<< "sync onedrive";
                 break;
 
 //            default:
@@ -1736,7 +1736,7 @@ int main(int argc, char *argv[])
     }
 
     if(parser->erorrNum!=0){
-        qStdOut()<< parser->errorString<<endl;
+        qInfo()<< parser->errorString;
         return 1;
     }
 

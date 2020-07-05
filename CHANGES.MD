@@ -1,5 +1,7 @@
 ## Change log:
 
+### v1.4.6
+- fix console log printing and segfaults caused by it
 ### v1.4.5
 - fix working with Mail.Ru cloud
 ### v1.4.4
