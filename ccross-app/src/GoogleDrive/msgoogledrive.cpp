@@ -68,7 +68,8 @@ bool MSGoogleDrive::auth(){
     req->setRequestUrl(QStringLiteral("https://accounts.google.com/o/oauth2/v2/auth"));
     req->setMethod(QStringLiteral("get"));
 
-    req->addQueryItem(QStringLiteral("scope"),                  QStringLiteral("https://www.googleapis.com/auth/drive+https://www.googleapis.com/auth/userinfo.email+https://www.googleapis.com/auth/userinfo.profile+https://docs.google.com/feeds/+https://docs.googleusercontent.com/+https://spreadsheets.google.com/feeds/"));
+//    req->addQueryItem(QStringLiteral("scope"),                  QStringLiteral("https://www.googleapis.com/auth/drive+https://www.googleapis.com/auth/userinfo.email+https://www.googleapis.com/auth/userinfo.profile+https://docs.google.com/feeds/+https://docs.googleusercontent.com/+https://spreadsheets.google.com/feeds/"));
+    req->addQueryItem(QStringLiteral("scope"),                  QStringLiteral("https://www.googleapis.com/auth/drive"));
     req->addQueryItem(QStringLiteral("redirect_uri"),           QStringLiteral("http://127.0.0.1:1973"));
     req->addQueryItem(QStringLiteral("response_type"),          QStringLiteral("code"));
     req->addQueryItem(QStringLiteral("client_id"),              QStringLiteral("834415955748-oq0p2m5dro2bvh3bu0o5bp19ok3qrs3f.apps.googleusercontent.com"));
@@ -95,7 +96,11 @@ bool MSGoogleDrive::auth(){
 
 
     qInfo()<< QStringLiteral("-------------------------------------") ;
+    qInfo()<< tr("The CloudCross needs a follow permissions:");
+    qInfo()<< tr(" - Full access to your GoogleDrive content (https://www.googleapis.com/auth/drive)")<<endl;
+
     qInfo()<< tr("Please go to this URL and confirm application credentials")  ;
+
 
     qInfo() << req->replyURL();
     qInfo() ;
