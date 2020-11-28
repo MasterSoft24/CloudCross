@@ -88,7 +88,8 @@ bool MSGoogleDrive::auth(){
 //    }
 
     QString r = "https://accounts.google.com/o/oauth2/v2/auth?";
-    r.append("client_id=251547413210-t1iem90k7hobv18fl2qtfbckic22lml3.apps.googleusercontent.com&scope=https://www.googleapis.com/auth/drive+https://www.googleapis.com/auth/userinfo.email+https://www.googleapis.com/auth/userinfo.profile+https://docs.google.com/feeds/+https://docs.googleusercontent.com/+https://spreadsheets.google.com/feeds/&");
+//    r.append("client_id=251547413210-t1iem90k7hobv18fl2qtfbckic22lml3.apps.googleusercontent.com&scope=https://www.googleapis.com/auth/drive+https://www.googleapis.com/auth/userinfo.email+https://www.googleapis.com/auth/userinfo.profile+https://docs.google.com/feeds/+https://docs.googleusercontent.com/+https://spreadsheets.google.com/feeds/&");
+    r.append("client_id=251547413210-t1iem90k7hobv18fl2qtfbckic22lml3.apps.googleusercontent.com&scope=https://www.googleapis.com/auth/drive+https://www.googleapis.com/auth/userinfo.email+https://www.googleapis.com/auth/userinfo.profile+https://www.googleapis.com/auth/spreadsheets&");
     r.append("redirect_uri=http%3a//127.0.0.1:1973&");
     r.append("response_type=code&");
     r.append("access_type=offline&");
