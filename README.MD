@@ -1,10 +1,16 @@
 # The CloudCross Project
 
-## Current version: 1.4.6
-Release date: **2020-01-16**
+## Current version: 1.4.7
+Release date: **2020-11-28**
 
 Author: **Kamensky Vladimir**
 
+
+***
+
+**WARNING!! This version has a new Google API Key, and this means that a previous GoogleDrive auth will be broken**
+
+***
 
 
 The CloudCross is a open source project for a synchronization between your devices and various cloud storages. This software is a cross-platform and could be run on Linux, Windows and Mac OS. 

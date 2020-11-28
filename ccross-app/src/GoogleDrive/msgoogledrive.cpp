@@ -63,30 +63,39 @@ bool MSGoogleDrive::auth(){
     connect(this,SIGNAL(oAuthError(QString,MSCloudProvider*)),this,SLOT(onAuthFinished(QString, MSCloudProvider*)));
 
 
-    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
+//    MSHttpRequest* req=new MSHttpRequest(this->proxyServer);
 
-    req->setRequestUrl(QStringLiteral("https://accounts.google.com/o/oauth2/v2/auth"));
-    req->setMethod(QStringLiteral("get"));
+//    req->setRequestUrl(QStringLiteral("https://accounts.google.com/o/oauth2/v2/auth"));
+//    req->setMethod(QStringLiteral("get"));
 
 //    req->addQueryItem(QStringLiteral("scope"),                  QStringLiteral("https://www.googleapis.com/auth/drive+https://www.googleapis.com/auth/userinfo.email+https://www.googleapis.com/auth/userinfo.profile+https://docs.google.com/feeds/+https://docs.googleusercontent.com/+https://spreadsheets.google.com/feeds/"));
-    req->addQueryItem(QStringLiteral("scope"),                  QStringLiteral("https://www.googleapis.com/auth/drive"));
-    req->addQueryItem(QStringLiteral("redirect_uri"),           QStringLiteral("http://127.0.0.1:1973"));
-    req->addQueryItem(QStringLiteral("response_type"),          QStringLiteral("code"));
-    req->addQueryItem(QStringLiteral("client_id"),              QStringLiteral("834415955748-oq0p2m5dro2bvh3bu0o5bp19ok3qrs3f.apps.googleusercontent.com"));
-    req->addQueryItem(QStringLiteral("access_type"),            QStringLiteral("offline"));
-    req->addQueryItem(QStringLiteral("approval_prompt"),        QStringLiteral("force"));
-    req->addQueryItem(QStringLiteral("state"),                  QStringLiteral("1"));
+////    req->addQueryItem(QStringLiteral("scope"),                  QStringLiteral("https://www.googleapis.com/auth/drive"));
+//    req->addQueryItem(QStringLiteral("redirect_uri"),           QStringLiteral("http://127.0.0.1:1973"));
+//    req->addQueryItem(QStringLiteral("response_type"),          QStringLiteral("code"));
+//    req->addQueryItem(QStringLiteral("client_id"),              QStringLiteral("251547413210-t1iem90k7hobv18fl2qtfbckic22lml3.apps.googleusercontent.com"));
+////    req->addQueryItem(QStringLiteral("access_type"),            QStringLiteral("offline"));
+////    req->addQueryItem(QStringLiteral("approval_prompt"),        QStringLiteral("force"));
+////    req->addQueryItem(QStringLiteral("state"),                  QStringLiteral("1"));
 
-    req->exec();
+//    req->exec();
 
 
-    if(!req->replyOK()){
-        req->printReplyError();
-        delete(req);
-        this->providerAuthStatus=false;
-        return false;
-    }
+//    if(!req->replyOK()){
+//        req->printReplyError();
+//        delete(req);
+//        this->providerAuthStatus=false;
+//        return false;
+//    }
 
+    QString r = "https://accounts.google.com/o/oauth2/v2/auth?";
+    r.append("client_id=251547413210-t1iem90k7hobv18fl2qtfbckic22lml3.apps.googleusercontent.com&scope=https://www.googleapis.com/auth/drive+https://www.googleapis.com/auth/userinfo.email+https://www.googleapis.com/auth/userinfo.profile+https://docs.google.com/feeds/+https://docs.googleusercontent.com/+https://spreadsheets.google.com/feeds/&");
+    r.append("redirect_uri=http%3a//127.0.0.1:1973&");
+    r.append("response_type=code&");
+    r.append("access_type=offline&");
+    r.append("approval_prompt=force&state=1&");
+//    r.append("client_id=251547413210-t1iem90k7hobv18fl2qtfbckic22lml3.apps.googleusercontent.com");
+
+    this->skipRedirectsCount = 1;
     this->startListener(1973);
 
     //    if(!this->testReplyBodyForError(req->readReplyText())){
@@ -96,17 +105,17 @@ bool MSGoogleDrive::auth(){
 
 
     qInfo()<< QStringLiteral("-------------------------------------") ;
-    qInfo()<< tr("The CloudCross needs a follow permissions:");
-    qInfo()<< tr(" - Full access to your GoogleDrive content (https://www.googleapis.com/auth/drive)")<<endl;
+//    qInfo()<< tr("The CloudCross needs a follow permissions:") << endl;
+//    qInfo()<< tr(" - Full access to your GoogleDrive content (https://www.googleapis.com/auth/drive)")<<endl;
 
-    qInfo()<< tr("Please go to this URL and confirm application credentials")  ;
+    qInfo()<< tr("Please go to this URL and confirm application credentials") <<endl ;
 
 
-    qInfo() << req->replyURL();
+    qInfo() << r;
     qInfo() ;
     ;
 
-    delete(req);
+//    delete(req);
 
     QEventLoop loop;
     connect(this, SIGNAL(providerAuthComplete()), &loop, SLOT(quit()));
@@ -137,8 +146,8 @@ bool MSGoogleDrive::onAuthFinished(const QString &html, MSCloudProvider *provide
     req->setRequestUrl(QStringLiteral("https://www.googleapis.com/oauth2/v4/token"));
     req->setMethod(QStringLiteral("post"));
 
-    req->addQueryItem(QStringLiteral("client_id"),          QStringLiteral("834415955748-oq0p2m5dro2bvh3bu0o5bp19ok3qrs3f.apps.googleusercontent.com"));
-    req->addQueryItem(QStringLiteral("client_secret"),      QStringLiteral("YMBWydU58CvF3UP9CSna-BwS"));
+    req->addQueryItem(QStringLiteral("client_id"),          QStringLiteral("251547413210-t1iem90k7hobv18fl2qtfbckic22lml3.apps.googleusercontent.com"));
+    req->addQueryItem(QStringLiteral("client_secret"),      QStringLiteral("k_SO_6HgLC02gZfy3mMy4P46"));
     req->addQueryItem(QStringLiteral("code"),               html.trimmed());
     req->addQueryItem(QStringLiteral("grant_type"),         QStringLiteral("authorization_code"));
     req->addQueryItem(QStringLiteral("redirect_uri"),           QStringLiteral("http://127.0.0.1:1973"));
@@ -290,8 +299,8 @@ bool MSGoogleDrive::refreshToken(){
     req->setMethod(QStringLiteral("post"));
 
     req->addQueryItem(QStringLiteral("refresh_token"),          this->token);
-    req->addQueryItem(QStringLiteral("client_id"),              QStringLiteral("834415955748-oq0p2m5dro2bvh3bu0o5bp19ok3qrs3f.apps.googleusercontent.com"));
-    req->addQueryItem(QStringLiteral("client_secret"),          QStringLiteral("YMBWydU58CvF3UP9CSna-BwS"));
+    req->addQueryItem(QStringLiteral("client_id"),              QStringLiteral("251547413210-t1iem90k7hobv18fl2qtfbckic22lml3.apps.googleusercontent.com"));
+    req->addQueryItem(QStringLiteral("client_secret"),          QStringLiteral("k_SO_6HgLC02gZfy3mMy4P46"));
     req->addQueryItem(QStringLiteral("grant_type"),             QStringLiteral("refresh_token"));
 
     req->exec();
@@ -2234,7 +2243,7 @@ afterReauth:
     }
 
 
-    QString uploadURI = req->getReplyHeader(QByteArray("Location"));//   header(QNetworkRequest::LocationHeader).toString();
+    QString uploadURI = req->getReplyHeader(QByteArray("location"));//   header(QNetworkRequest::LocationHeader).toString();
 
     req->replyText.clear();
 
@@ -2510,7 +2519,7 @@ bool MSGoogleDrive::remote_file_update(MSFSObject *object){
         return false;
     }
 
-    QString uploadURI = req->getReplyHeader(QByteArray("Location"));//   header(QNetworkRequest::LocationHeader).toString();
+    QString uploadURI = req->getReplyHeader(QByteArray("location"));//   header(QNetworkRequest::LocationHeader).toString();
 
     delete(req);
 

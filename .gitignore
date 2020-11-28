@@ -1,0 +1,5 @@
+build/*
+*.pro.user*
+ccross-fuse/*
+ccross-fuse-worker/*
+.directory

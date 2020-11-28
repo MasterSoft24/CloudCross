@@ -1,5 +1,8 @@
 ## Change log:
 
+### v1.4.7
+- fix GoogleDrive auth problem (**WARNING!! This version has a new Google API Key, and this means that a previous GoogleDrive auth will be broken**)
+
 ### v1.4.6
 - fix console log printing and segfaults caused by it
 ### v1.4.5

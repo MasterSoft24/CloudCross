@@ -501,6 +501,10 @@ QString MSCloudProvider::generateRandom(int count){
 
 void MSCloudProvider::onIncomingConnection(){
 
+    if(this->skipRedirectsCount > 0){
+        this->skipRedirectsCount--;
+        return;
+    }
 
     this->oauthListenerSocket = this->oauthListener->nextPendingConnection();
     //QHostAddress pa=this->oauthListenerSocket->co;

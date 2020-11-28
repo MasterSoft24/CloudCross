@@ -77,6 +77,8 @@ private:
 
 public:
 
+    int skipRedirectsCount =0;
+
     MSNetworkProxy* proxyServer;
 
     QString currentPath;// directory where program was run
